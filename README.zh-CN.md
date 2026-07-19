@@ -1,5 +1,9 @@
 # PELab
 
+<p align="center">
+  <img src="docs/assets/pelab-icon.png" alt="PELab 图标" width="128">
+</p>
+
 [English](README.md) | **简体中文** | [Français](README.fr.md)
 
 PELab 全称为 Penguito Effect Lab，旨在从零开始构建一个完整的、具备图形渲染能力的 Android 应用。

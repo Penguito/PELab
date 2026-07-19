@@ -1,5 +1,9 @@
 # PELab
 
+<p align="center">
+  <img src="docs/assets/pelab-icon.png" alt="Icône PELab" width="128">
+</p>
+
 [English](README.md) | [简体中文](README.zh-CN.md) | **Français**
 
 PELab, abréviation de Penguito Effect Lab, a pour objectif de construire de zéro une application Android complète dotée de fonctionnalités de rendu graphique.
