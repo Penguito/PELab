@@ -20,6 +20,31 @@ PELab 全称为 Penguito Effect Lab，旨在从零开始构建一个完整的、
 - applicationId：`com.penguito.effectlab`；
 - 最低系统版本：Android 8.0（API 26）。
 
+#### 0.1.2
+
+- 完成 Android 工程的模块划分；
+- 新增 `render-ui`、`render-core-camera`、`render-core-permission`、`render-core-material` 和 `render-sdk` Android Library 模块。
+
+## 模块架构
+
+```text
+app
+└── render-ui
+    ├── render-core-camera
+    ├── render-core-permission
+    ├── render-core-material
+    └── render-sdk
+```
+
+| 模块 | 职责 |
+| --- | --- |
+| `app` | 应用入口 |
+| `render-ui` | 负责 UI 与页面生命周期的管理 |
+| `render-core-camera` | 相机功能模块 —— 管理相机输入及其生命周期 |
+| `render-core-permission` | 权限申请功能模块 —— 负责权限申请与结果处理 |
+| `render-core-material` | 素材管理功能模块 —— 负责特效素材的存储与加载 |
+| `render-sdk` | 渲染 SDK 模块 —— 对外提供 Java 接口并承载 Native 渲染实现 |
+
 ## 固定工具链
 
 | 组件 | 版本 |

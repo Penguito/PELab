@@ -16,4 +16,11 @@ dependencyResolutionManagement {
 
 rootProject.name = "PELab"
 
-include(":app")
+include(
+    ":app",
+    ":render-ui",
+    ":render-core-camera",
+    ":render-core-permission",
+    ":render-core-material",
+    ":render-sdk",
+)
