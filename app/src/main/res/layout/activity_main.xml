@@ -5,10 +5,11 @@
     android:background="@color/background">
 
     <TextView
+        android:id="@+id/native_bridge_test"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="center"
-        android:text="@string/test"
+        android:text="@string/native_bridge_checking"
         android:textColor="@color/on_background"
         android:textSize="20sp" />
 

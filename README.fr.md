@@ -25,6 +25,11 @@ PELab, abréviation de Penguito Effect Lab, a pour objectif de construire de zé
 - Finalisation du découpage en modules du projet Android ;
 - Ajout des modules Android Library `render-ui`, `render-core-camera`, `render-core-permission`, `render-core-material` et `render-sdk`.
 
+#### 0.1.3
+
+- Vérification de la chaîne d'appel minimale Java → JNI → C++.
+- Ajout du point d'entrée Java `RenderEngine` dans `render-sdk` et chargement de `libpelab_sdk.so` ;
+
 ## Architecture modulaire
 
 ```text
@@ -43,7 +48,7 @@ app
 | `render-core-camera` | Module caméra — gestion de l'entrée caméra et de son cycle de vie |
 | `render-core-permission` | Module d'autorisations — gestion des demandes d'autorisations et de leurs résultats |
 | `render-core-material` | Module de gestion des ressources — stockage et chargement des ressources d'effets |
-| `render-sdk` | Module SDK de rendu — expose les interfaces Java et contient l'implémentation du rendu natif |
+| `render-sdk` | Module SDK de rendu — fournit les interfaces Java et contient l'implémentation du rendu natif |
 
 ## Chaîne d'outils fixée
 
@@ -67,3 +72,5 @@ La compilation actuelle nécessite JDK 17 et Android SDK 36.1.
 ```
 
 L'APK de débogage est généré dans `app/build/outputs/apk/debug/app-debug.apk`.
+
+La bibliothèque Native est compilée séparément pour `arm64-v8a`, `armeabi-v7a` et `x86_64`, puis intégrée automatiquement dans l'APK.

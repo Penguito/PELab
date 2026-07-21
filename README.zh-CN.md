@@ -25,6 +25,11 @@ PELab 全称为 Penguito Effect Lab，旨在从零开始构建一个完整的、
 - 完成 Android 工程的模块划分；
 - 新增 `render-ui`、`render-core-camera`、`render-core-permission`、`render-core-material` 和 `render-sdk` Android Library 模块。
 
+#### 0.1.3
+
+- 验证从 Java → JNI → C++ 的最小调用链路。
+- 在 `render-sdk` 中新增 `RenderEngine` Java SDK 入口，并加载 `libpelab_sdk.so`；
+
 ## 模块架构
 
 ```text
@@ -43,7 +48,7 @@ app
 | `render-core-camera` | 相机功能模块 —— 管理相机输入及其生命周期 |
 | `render-core-permission` | 权限申请功能模块 —— 负责权限申请与结果处理 |
 | `render-core-material` | 素材管理功能模块 —— 负责特效素材的存储与加载 |
-| `render-sdk` | 渲染 SDK 模块 —— 对外提供 Java 接口并承载 Native 渲染实现 |
+| `render-sdk` | 渲染 SDK 模块 —— 提供 Java 接口并承载 Native 渲染实现 |
 
 ## 固定工具链
 
@@ -67,3 +72,5 @@ app
 ```
 
 Debug APK 的输出路径是 `app/build/outputs/apk/debug/app-debug.apk`。
+
+Native Library 会针对 `arm64-v8a`、`armeabi-v7a` 和 `x86_64` 分别构建并自动打包进 APK。

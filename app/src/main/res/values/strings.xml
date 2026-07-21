@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">PELab</string>
-    <string name="test">Welcome to PELab v0.1</string>
+    <string name="native_bridge_checking">Checking Native bridge…</string>
+    <string name="native_bridge_ready">Java → JNI → C++:\n%1$s</string>
 </resources>
