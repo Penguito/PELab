@@ -10,6 +10,15 @@ PELab, short for Penguito Effect Lab, aims to build a complete Android applicati
 
 ## Current Development Progress
 
+### 0.2
+
+- Establish the basic camera rendering path.
+
+#### 0.2.1
+
+- Centralized camera permission checks, requests, and result parsing in `render-core-permission`;
+- Added `CaptureActivity` to verify the camera permission gate and basic page lifecycle.
+
 ### 0.1
 
 - Establish the project's foundational architecture and module structure.

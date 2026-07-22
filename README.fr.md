@@ -10,6 +10,15 @@ PELab, abréviation de Penguito Effect Lab, a pour objectif de construire de zé
 
 ## Avancement actuel du développement
 
+### 0.2
+
+- Établir la chaîne de rendu caméra de base.
+
+#### 0.2.1
+
+- Centralisation de la vérification, de la demande et du traitement du résultat de l'autorisation caméra dans `render-core-permission` ;
+- Ajout de `CaptureActivity` pour vérifier la barrière d'autorisation caméra et le cycle de vie élémentaire de la page.
+
 ### 0.1
 
 - Mettre en place l'architecture de base du projet et son découpage en modules.

@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="capture_title">Capture</string>
+    <string name="capture_created">Capture: created</string>
+    <string name="capture_resumed">Capture: resumed</string>
+    <string name="capture_paused">Capture: paused</string>
+</resources>
