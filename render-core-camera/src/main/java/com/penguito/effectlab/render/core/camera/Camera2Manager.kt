@@ -50,7 +50,6 @@ class Camera2Manager(
         cameraHandler.post(::releaseCamera)
     }
 
-    @SuppressLint("MissingPermission")
     private fun openCamera(
         outputSurface: Surface,
         configuration: CameraConfiguration,
@@ -144,6 +143,7 @@ class Camera2Manager(
         }
     }
 
+    @Suppress("DEPRECATION")
     private fun createPreviewSession(
         cameraCallback: CameraDevice.StateCallback,
         camera: CameraDevice,
