@@ -19,7 +19,7 @@ class CaptureActivity : Activity() {
     private val cameraConfigurationProvider by lazy {
         Camera2ConfigurationProvider(
             context = this,
-            errorListener = ::onCameraError,
+            onError = ::onCameraError,
         )
     }
     private var lifecycleStatus: TextView? = null
@@ -90,6 +90,9 @@ class CaptureActivity : Activity() {
             CameraErrorCode.PERMISSION_MISSING -> R.string.capture_camera_permission_missing
             CameraErrorCode.CAMERA_NOT_FOUND -> R.string.capture_camera_not_found
             CameraErrorCode.PREVIEW_CONFIGURATION_MISSING -> R.string.capture_preview_configuration_missing
+            CameraErrorCode.CAMERA_DISCONNECTED -> R.string.capture_camera_disconnected
+            CameraErrorCode.CAMERA_DEVICE_FAILED -> R.string.capture_camera_device_failed
+            CameraErrorCode.CAPTURE_SESSION_FAILED -> R.string.capture_camera_session_failed
         }
         lifecycleStatus?.setText(messageResId)
     }

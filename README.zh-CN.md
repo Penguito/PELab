@@ -24,6 +24,10 @@ PELab 全称为 Penguito Effect Lab，旨在从零开始构建一个完整的、
 - 在 `render-core-camera` 中新增 Camera2 创建之前设备的检测；
 - 新增 `CameraErrorListener`，将相机访问、权限、设备检测及配置错误回调给业务层。
 
+#### 0.2.3
+
+- 在 `render-core-camera` 中新增 `Camera2Manager`，创建并维护 `CameraDevice` 和 `CaptureSession`的生命周期；
+
 ### 0.1
 
 - 完成项目基础架构的搭建和模块划分。

@@ -12,4 +12,7 @@
     <string name="capture_camera_permission_missing">Camera permission unavailable</string>
     <string name="capture_camera_not_found">Requested camera unavailable</string>
     <string name="capture_preview_configuration_missing">Camera preview configuration unavailable</string>
+    <string name="capture_camera_disconnected">Camera disconnected</string>
+    <string name="capture_camera_device_failed">Camera device unavailable</string>
+    <string name="capture_camera_session_failed">Camera preview session unavailable</string>
 </resources>

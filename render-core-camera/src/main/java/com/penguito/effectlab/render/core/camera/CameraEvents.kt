@@ -5,6 +5,9 @@ enum class CameraErrorCode {
     PERMISSION_MISSING,
     CAMERA_NOT_FOUND,
     PREVIEW_CONFIGURATION_MISSING,
+    CAMERA_DISCONNECTED,
+    CAMERA_DEVICE_FAILED,
+    CAPTURE_SESSION_FAILED,
 }
 
 data class CameraError(
@@ -14,9 +17,11 @@ data class CameraError(
     val cause: Throwable? = null,
 )
 
-fun interface CameraErrorListener {
-    /**
-     * Receive errors when detecting camera2.
-     */
+/** Receives Camera2 start, stop, and error events. */
+interface Camera2Listener {
+    fun onCameraStarted(configuration: CameraConfiguration)
+
+    fun onCameraStopped()
+
     fun onCameraError(error: CameraError)
 }

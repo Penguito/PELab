@@ -12,7 +12,7 @@ import kotlin.math.abs
  */
 class Camera2ConfigurationProvider(
     context: Context,
-    private val errorListener: CameraErrorListener,
+    private val onError: (CameraError) -> Unit,
 ) {
     private val cameraManager = context.applicationContext
         .getSystemService(CameraManager::class.java)
@@ -153,7 +153,7 @@ class Camera2ConfigurationProvider(
         lensFacing: LensFacing? = null,
         cause: Throwable? = null,
     ) {
-        errorListener.onCameraError(
+        onError(
             CameraError(
                 code = code,
                 cameraId = cameraId,
