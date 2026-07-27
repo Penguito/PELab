@@ -28,6 +28,10 @@ PELab, short for Penguito Effect Lab, aims to build a complete Android applicati
 
 - Added `Camera2Manager` to `render-core-camera` to create and manage the lifecycle of `CameraDevice` and `CaptureSession`.
 
+#### 0.2.4
+
+- Added an initialization method to `RenderEngine` in `render-sdk` to create and release the GL environment.
+
 ### 0.1
 
 - Establish the project's foundational architecture and module structure.

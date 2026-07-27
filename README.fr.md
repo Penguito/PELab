@@ -28,6 +28,10 @@ PELab, abréviation de Penguito Effect Lab, a pour objectif de construire de zé
 
 - Ajout de `Camera2Manager` dans `render-core-camera` pour créer et gérer le cycle de vie de `CameraDevice` et de `CaptureSession`.
 
+#### 0.2.4
+
+- Ajout d'une méthode d'initialisation à `RenderEngine` dans `render-sdk` pour créer et libérer l'environnement GL.
+
 ### 0.1
 
 - Mettre en place l'architecture de base du projet et son découpage en modules.

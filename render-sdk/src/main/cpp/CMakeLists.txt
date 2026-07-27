@@ -6,6 +6,7 @@ add_library(
     pelab_sdk
     SHARED
     native_bridge.cpp
+    native_renderer.cpp
 )
 
 target_compile_features(
@@ -24,6 +25,7 @@ target_compile_options(
 target_link_libraries(
     pelab_sdk
     PRIVATE
+    android
     EGL
     GLESv3
     log
