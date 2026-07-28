@@ -32,6 +32,10 @@ PELab, short for Penguito Effect Lab, aims to build a complete Android applicati
 
 - Added an initialization method to `RenderEngine` in `render-sdk` to create and release the GL environment.
 
+#### 0.2.5
+
+- Added GL rendering in `render-sdk` to complete the preview path from `Camera2` to `SurfaceView`.
+
 ### 0.1
 
 - Establish the project's foundational architecture and module structure.

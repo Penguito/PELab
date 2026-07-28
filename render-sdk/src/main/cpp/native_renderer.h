@@ -1,6 +1,7 @@
 #pragma once
 
 #include <EGL/egl.h>
+#include <GLES3/gl3.h>
 #include <android/native_window.h>
 
 namespace pelab {
@@ -14,8 +15,12 @@ public:
     NativeRenderer& operator=(const NativeRenderer&) = delete;
 
     bool Init(ANativeWindow* output_window);
+    GLuint GetInputTexture() const;
+    void RenderFrame(const float* texture_matrix);
 
 private:
+    bool CreateInputTexture();
+    bool CreatePreviewProgram();
     void Release();
 
     ANativeWindow* output_window_ = nullptr;
@@ -23,6 +28,14 @@ private:
     EGLConfig config_ = nullptr;
     EGLContext context_ = EGL_NO_CONTEXT;
     EGLSurface surface_ = EGL_NO_SURFACE;
+    GLuint input_texture_ = 0;
+    GLuint preview_program_ = 0;
+    GLuint vertex_array_ = 0;
+    GLuint vertex_buffer_ = 0;
+    GLint texture_matrix_location_ = -1;
+    GLint input_texture_location_ = -1;
+    int output_width_ = 0;
+    int output_height_ = 0;
 };
 
 }  // namespace pelab

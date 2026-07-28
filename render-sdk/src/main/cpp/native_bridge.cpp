@@ -43,6 +43,25 @@ Java_com_penguito_effectlab_render_sdk_RenderEngine_nativeInitRenderer(
     return reinterpret_cast<jlong>(renderer.release());
 }
 
+extern "C" JNIEXPORT jint JNICALL
+Java_com_penguito_effectlab_render_sdk_RenderEngine_nativeGetInputTexture(
+        JNIEnv*,
+        jclass,
+        jlong handle) {
+    return static_cast<jint>(FromHandle(handle)->GetInputTexture());
+}
+
+extern "C" JNIEXPORT void JNICALL
+Java_com_penguito_effectlab_render_sdk_RenderEngine_nativeRenderFrame(
+        JNIEnv* env,
+        jclass,
+        jlong handle,
+        jfloatArray texture_matrix) {
+    jfloat matrix[16];
+    env->GetFloatArrayRegion(texture_matrix, 0, 16, matrix);
+    FromHandle(handle)->RenderFrame(matrix);
+}
+
 extern "C" JNIEXPORT void JNICALL
 Java_com_penguito_effectlab_render_sdk_RenderEngine_nativeDestroyRenderer(
         JNIEnv*,

@@ -32,6 +32,10 @@ PELab, abréviation de Penguito Effect Lab, a pour objectif de construire de zé
 
 - Ajout d'une méthode d'initialisation à `RenderEngine` dans `render-sdk` pour créer et libérer l'environnement GL.
 
+#### 0.2.5
+
+- Ajout du rendu GL dans `render-sdk` pour compléter la chaîne d'aperçu de `Camera2` à `SurfaceView`.
+
 ### 0.1
 
 - Mettre en place l'architecture de base du projet et son découpage en modules.

@@ -6,6 +6,7 @@
     <string name="capture_camera_ready">Camera %1$s · %2$s · %3$d × %4$d</string>
     <string name="capture_lens_front">front</string>
     <string name="capture_lens_back">back</string>
+    <string name="capture_render_initialization_failed">Render initialization failed</string>
 
     <!--  camera detect errors  -->
     <string name="capture_camera_access_failed">Camera configuration unavailable</string>

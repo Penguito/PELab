@@ -5,16 +5,22 @@ import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import android.util.Log
+import android.view.Surface
+import android.view.SurfaceHolder
+import android.view.SurfaceView
 import android.widget.TextView
 import com.penguito.effectlab.render.core.camera.Camera2ConfigurationProvider
+import com.penguito.effectlab.render.core.camera.Camera2Listener
+import com.penguito.effectlab.render.core.camera.Camera2Manager
 import com.penguito.effectlab.render.core.camera.CameraConfiguration
 import com.penguito.effectlab.render.core.camera.CameraError
 import com.penguito.effectlab.render.core.camera.CameraErrorCode
 import com.penguito.effectlab.render.core.camera.LensFacing
 import com.penguito.effectlab.render.core.camera.PreviewSize
 import com.penguito.effectlab.render.core.permission.CameraPermissionGate
+import com.penguito.effectlab.render.sdk.RenderEngine
 
-class CaptureActivity : Activity() {
+class CaptureActivity : Activity(), SurfaceHolder.Callback, Camera2Listener, RenderEngine.Listener {
     private val permissionGate by lazy { CameraPermissionGate(this) }
     private val cameraConfigurationProvider by lazy {
         Camera2ConfigurationProvider(
@@ -22,8 +28,14 @@ class CaptureActivity : Activity() {
             onError = ::onCameraError,
         )
     }
+    private val cameraManager by lazy { Camera2Manager(this, this) }
+    private val renderEngine by lazy { RenderEngine() }
+
+    private var previewView: SurfaceView? = null
     private var lifecycleStatus: TextView? = null
+    private var outputSurface: Surface? = null
     private var cameraConfiguration: CameraConfiguration? = null
+    private var isCaptureResumed = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -34,6 +46,9 @@ class CaptureActivity : Activity() {
 
         setContentView(R.layout.activity_capture)
         lifecycleStatus = findViewById(R.id.capture_status)
+        previewView = findViewById<SurfaceView>(R.id.capture_preview).also {
+            it.holder.addCallback(this)
+        }
     }
 
     override fun onResume() {
@@ -42,26 +57,69 @@ class CaptureActivity : Activity() {
             finish()
             return
         }
+        isCaptureResumed = true
         resumeCapture()
     }
 
     override fun onPause() {
+        isCaptureResumed = false
         pauseCapture()
         super.onPause()
     }
 
+    override fun onDestroy() {
+        previewView?.holder?.removeCallback(this)
+        cameraManager.close()
+        renderEngine.close()
+        super.onDestroy()
+    }
+
+    override fun surfaceCreated(holder: SurfaceHolder) {
+        outputSurface = holder.surface
+        resumeCapture()
+    }
+
+    override fun surfaceChanged(
+        holder: SurfaceHolder,
+        format: Int,
+        width: Int,
+        height: Int,
+    ) = Unit
+
+    override fun surfaceDestroyed(holder: SurfaceHolder) {
+        outputSurface = null
+        pauseCapture()
+    }
+
     private fun resumeCapture() {
+        if (!isCaptureResumed) return
+        val surface = outputSurface ?: return
+
         Log.d(LOG_TAG, "Capture lifecycle resumed")
         val configuration = cameraConfiguration
             ?: cameraConfigurationProvider.createConfiguration(
                 lensFacing = LensFacing.BACK,
                 targetPreviewSize = PreviewSize(width = 1280, height = 720),
-            )?.also { cameraConfiguration = it }
-        configuration?.let(::showCameraConfiguration)
+            )?.also {
+                cameraConfiguration = it
+            }
+        configuration?.let {
+            showCameraConfiguration(it)
+
+            // init render  engine
+            renderEngine.init(
+                surface,
+                it.previewSize.width,
+                it.previewSize.height,
+                this,
+            )
+        }
     }
 
     private fun pauseCapture() {
         Log.d(LOG_TAG, "Capture lifecycle paused")
+        cameraManager.stop()
+        renderEngine.stop()
         lifecycleStatus?.setText(R.string.capture_paused)
     }
 
@@ -79,7 +137,32 @@ class CaptureActivity : Activity() {
         )
     }
 
-    private fun onCameraError(error: CameraError) {
+    override fun onRenderReady(inputSurface: Surface) {
+        val configuration = cameraConfiguration ?: return
+        if (!isCaptureResumed || outputSurface == null) return
+
+        cameraManager.start(
+            outputSurface = inputSurface,
+            configuration = configuration,
+        )
+    }
+
+    override fun onRenderError() {
+        Log.e(LOG_TAG, "Render initialization failed")
+        lifecycleStatus?.setText(R.string.capture_render_initialization_failed)
+    }
+
+    override fun onCameraStarted(configuration: CameraConfiguration) {
+        showCameraConfiguration(configuration)
+    }
+
+    override fun onCameraStopped() {
+        if (!isCaptureResumed) {
+            lifecycleStatus?.setText(R.string.capture_paused)
+        }
+    }
+
+    override fun onCameraError(error: CameraError) {
         Log.e(
             LOG_TAG,
             "Camera configuration error: " + "code=${error.code}, cameraId=${error.cameraId}, lensFacing=${error.lensFacing}",
