@@ -98,7 +98,7 @@ class CaptureActivity : Activity(), SurfaceHolder.Callback, Camera2Listener, Ren
         Log.d(LOG_TAG, "Capture lifecycle resumed")
         val configuration = cameraConfiguration
             ?: cameraConfigurationProvider.createConfiguration(
-                lensFacing = LensFacing.BACK,
+                lensFacing = LensFacing.FRONT,
                 targetPreviewSize = PreviewSize(width = 1280, height = 720),
             )?.also {
                 cameraConfiguration = it

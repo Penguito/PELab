@@ -10,8 +10,7 @@ namespace {
 
 constexpr char kLogTag[] = "PELabEGL";
 
-constexpr char kVertexShaderSource[] = R"(
-#version 300 es
+constexpr char kVertexShaderSource[] = R"(#version 300 es
 
 layout(location = 0) in vec2 position;
 layout(location = 1) in vec2 textureCoordinate;
@@ -27,8 +26,7 @@ void main() {
 }
 )";
 
-constexpr char kFragmentShaderSource[] = R"(
-#version 300 es
+constexpr char kFragmentShaderSource[] = R"(#version 300 es
 #extension GL_OES_EGL_image_external_essl3 : require
 
 precision mediump float;
