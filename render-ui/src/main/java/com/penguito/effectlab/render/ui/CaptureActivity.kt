@@ -8,8 +8,8 @@ import android.util.Log
 import android.view.Surface
 import android.view.SurfaceHolder
 import android.view.SurfaceView
+import android.widget.Button
 import android.widget.TextView
-import com.penguito.effectlab.render.core.camera.Camera2ConfigurationProvider
 import com.penguito.effectlab.render.core.camera.Camera2Listener
 import com.penguito.effectlab.render.core.camera.Camera2Manager
 import com.penguito.effectlab.render.core.camera.CameraConfiguration
@@ -22,17 +22,13 @@ import com.penguito.effectlab.render.sdk.RenderEngine
 
 class CaptureActivity : Activity(), SurfaceHolder.Callback, Camera2Listener, RenderEngine.Listener {
     private val permissionGate by lazy { CameraPermissionGate(this) }
-    private val cameraConfigurationProvider by lazy {
-        Camera2ConfigurationProvider(
-            context = this,
-            onError = ::onCameraError,
-        )
-    }
     private val cameraManager by lazy { Camera2Manager(this, this) }
     private val renderEngine by lazy { RenderEngine() }
 
     private var previewView: SurfaceView? = null
     private var lifecycleStatus: TextView? = null
+    private var debugInfo: TextView? = null
+    private var switchCameraButton: Button? = null
     private var outputSurface: Surface? = null
     private var cameraConfiguration: CameraConfiguration? = null
     private var isCaptureResumed = false
@@ -48,6 +44,10 @@ class CaptureActivity : Activity(), SurfaceHolder.Callback, Camera2Listener, Ren
         lifecycleStatus = findViewById(R.id.capture_status)
         previewView = findViewById<SurfaceView>(R.id.capture_preview).also {
             it.holder.addCallback(this)
+        }
+        debugInfo = findViewById(R.id.capture_debug_info)
+        switchCameraButton = findViewById<Button>(R.id.capture_switch_camera).also {
+            it.setOnClickListener { cameraManager.switchCamera() }
         }
     }
 
@@ -97,7 +97,7 @@ class CaptureActivity : Activity(), SurfaceHolder.Callback, Camera2Listener, Ren
 
         Log.d(LOG_TAG, "Capture lifecycle resumed")
         val configuration = cameraConfiguration
-            ?: cameraConfigurationProvider.createConfiguration(
+            ?: cameraManager.createConfiguration(
                 lensFacing = LensFacing.FRONT,
                 targetPreviewSize = PreviewSize(width = 1280, height = 720),
             )?.also {
@@ -120,6 +120,10 @@ class CaptureActivity : Activity(), SurfaceHolder.Callback, Camera2Listener, Ren
         Log.d(LOG_TAG, "Capture lifecycle paused")
         cameraManager.stop()
         renderEngine.stop()
+        // adjust buttons
+        switchCameraButton?.isEnabled = false
+        // adjust textViews
+        debugInfo?.setText(R.string.capture_debug_info_empty)
         lifecycleStatus?.setText(R.string.capture_paused)
     }
 
@@ -152,7 +156,30 @@ class CaptureActivity : Activity(), SurfaceHolder.Callback, Camera2Listener, Ren
         lifecycleStatus?.setText(R.string.capture_render_initialization_failed)
     }
 
+    override fun onDebugInfo(
+        frameDurationMillis: Float,
+        framesPerSecond: Float,
+    ) {
+        if (!isCaptureResumed) return
+
+        debugInfo?.text = getString(
+            R.string.capture_debug_info,
+            frameDurationMillis,
+            framesPerSecond,
+        )
+    }
+
     override fun onCameraStarted(configuration: CameraConfiguration) {
+        if (!isCaptureResumed) return
+
+        cameraConfiguration = configuration
+        switchCameraButton?.setText(
+            when (configuration.lensFacing) {
+                LensFacing.FRONT -> R.string.capture_lens_front
+                LensFacing.BACK -> R.string.capture_lens_back
+            },
+        )
+        switchCameraButton?.isEnabled = true
         showCameraConfiguration(configuration)
     }
 

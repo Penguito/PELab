@@ -36,6 +36,10 @@ PELab, abréviation de Penguito Effect Lab, a pour objectif de construire de zé
 
 - Ajout du rendu GL dans `render-sdk` pour compléter la chaîne d'aperçu de `Camera2` à `SurfaceView`.
 
+#### 0.2.6
+
+- Ajout sur la page Capture du basculement entre les caméras avant et arrière, avec affichage du temps par image et des FPS actuels.
+
 ### 0.1
 
 - Mettre en place l'architecture de base du projet et son découpage en modules.

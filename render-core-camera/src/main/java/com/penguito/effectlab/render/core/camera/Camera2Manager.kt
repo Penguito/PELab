@@ -1,6 +1,5 @@
 package com.penguito.effectlab.render.core.camera
 
-import android.annotation.SuppressLint
 import android.content.Context
 import android.hardware.camera2.CameraAccessException
 import android.hardware.camera2.CameraCaptureSession
@@ -24,23 +23,64 @@ class Camera2Manager(
 
     private val cameraManager = context.applicationContext.getSystemService(CameraManager::class.java)
     private val mainHandler = Handler(Looper.getMainLooper())
+    private val configurationProvider = Camera2ConfigurationProvider(context) { error ->
+        mainHandler.post {
+            listener.onCameraError(error)
+        }
+    }
     private val cameraThread = HandlerThread("PELab-Camera").apply { start() }
     private val cameraHandler = Handler(cameraThread.looper)
 
+    private var outputSurface: Surface? = null
+    private var cameraConfiguration: CameraConfiguration? = null
     private var cameraCallback: CameraDevice.StateCallback? = null
     private var cameraDevice: CameraDevice? = null
     private var captureSession: CameraCaptureSession? = null
     private var isClosed = false
+
+    fun createConfiguration(
+        lensFacing: LensFacing,
+        targetPreviewSize: PreviewSize,
+    ): CameraConfiguration? {
+        return configurationProvider.createConfiguration(
+            lensFacing = lensFacing,
+            targetPreviewSize = targetPreviewSize,
+        )
+    }
 
     fun start(
         outputSurface: Surface,
         configuration: CameraConfiguration,
     ) {
         cameraHandler.post {
+            this.outputSurface = outputSurface
+            cameraConfiguration = configuration
             releaseCamera()
             openCamera(
                 outputSurface = outputSurface,
                 configuration = configuration,
+            )
+        }
+    }
+
+    fun switchCamera() {
+        cameraHandler.post {
+            val surface = outputSurface ?: return@post
+            val configuration = cameraConfiguration ?: return@post
+            val lensFacing = when (configuration.lensFacing) {
+                LensFacing.FRONT -> LensFacing.BACK
+                LensFacing.BACK -> LensFacing.FRONT
+            }
+            val switchedConfiguration = configurationProvider.createConfiguration(
+                lensFacing = lensFacing,
+                targetPreviewSize = configuration.previewSize,
+            ) ?: return@post
+
+            releaseCamera()
+            cameraConfiguration = switchedConfiguration
+            openCamera(
+                outputSurface = surface,
+                configuration = switchedConfiguration,
             )
         }
     }
@@ -268,6 +308,8 @@ class Camera2Manager(
 
         cameraHandler.post {
             releaseCamera()
+            outputSurface = null
+            cameraConfiguration = null
             cameraThread.quitSafely()
         }
     }

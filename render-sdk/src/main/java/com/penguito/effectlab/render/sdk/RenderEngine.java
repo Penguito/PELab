@@ -13,6 +13,8 @@ public final class RenderEngine implements Closeable {
     public interface Listener {
         void onRenderReady(Surface inputSurface);
 
+        void onDebugInfo(float frameDurationMillis, float framesPerSecond);
+
         void onRenderError();
     }
 
@@ -27,7 +29,11 @@ public final class RenderEngine implements Closeable {
 
     private SurfaceTexture inputSurfaceTexture;
     private Surface inputSurface;
+    private Listener listener;
     private long nativeHandle;
+    private long debugInfoStartNanos;
+    private long renderDurationNanos;
+    private int renderedFrameCount;
     private boolean isClosed;
 
     public RenderEngine() {
@@ -46,6 +52,7 @@ public final class RenderEngine implements Closeable {
             Listener listener) {
         renderHandler.post(() -> {
             releaseOnRenderThread();
+            this.listener = listener;
             long handle = nativeInitRenderer(outputSurface);
             nativeHandle = handle;
             if (handle != 0L) {
@@ -81,9 +88,36 @@ public final class RenderEngine implements Closeable {
             return;
         }
 
+        long frameStartNanos = System.nanoTime();
         surfaceTexture.updateTexImage();
         surfaceTexture.getTransformMatrix(textureMatrix);
         nativeRenderFrame(nativeHandle, textureMatrix);
+        updateDebugInfo(frameStartNanos, System.nanoTime());
+    }
+
+    private void updateDebugInfo(long frameStartNanos, long frameEndNanos) {
+        if (debugInfoStartNanos == 0L) {
+            debugInfoStartNanos = frameStartNanos;
+        }
+
+        renderedFrameCount++;
+        renderDurationNanos += frameEndNanos - frameStartNanos;
+        long debugInfoDurationNanos = frameEndNanos - debugInfoStartNanos;
+        if (debugInfoDurationNanos < DEBUG_INFO_INTERVAL_NANOS) {
+            return;
+        }
+
+        float framesPerSecond = renderedFrameCount * (float) DEBUG_INFO_INTERVAL_NANOS / debugInfoDurationNanos;
+        float frameDurationMillis = renderDurationNanos / (float) renderedFrameCount / NANOS_PER_MILLISECOND;
+        Listener callback = listener;
+        if (callback != null) {
+            mainHandler.post(() ->
+                callback.onDebugInfo(frameDurationMillis, framesPerSecond));
+        }
+
+        debugInfoStartNanos = frameEndNanos;
+        renderDurationNanos = 0L;
+        renderedFrameCount = 0;
     }
 
     private void releaseOnRenderThread() {
@@ -100,6 +134,10 @@ public final class RenderEngine implements Closeable {
             nativeDestroyRenderer(nativeHandle);
             nativeHandle = 0L;
         }
+        listener = null;
+        debugInfoStartNanos = 0L;
+        renderDurationNanos = 0L;
+        renderedFrameCount = 0;
     }
 
     @Override
@@ -124,4 +162,7 @@ public final class RenderEngine implements Closeable {
     private static native void nativeRenderFrame(long nativeHandle, float[] textureMatrix);
 
     private static native void nativeDestroyRenderer(long nativeHandle);
+
+    private static final long DEBUG_INFO_INTERVAL_NANOS = 1_000_000_000L;
+    private static final float NANOS_PER_MILLISECOND = 1_000_000F;
 }

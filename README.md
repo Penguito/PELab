@@ -36,6 +36,10 @@ PELab, short for Penguito Effect Lab, aims to build a complete Android applicati
 
 - Added GL rendering in `render-sdk` to complete the preview path from `Camera2` to `SurfaceView`.
 
+#### 0.2.6
+
+- Added front and rear camera switching with frame-time and current FPS display to the Capture page.
+
 ### 0.1
 
 - Establish the project's foundational architecture and module structure.

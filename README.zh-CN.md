@@ -36,6 +36,10 @@ PELab 全称为 Penguito Effect Lab，旨在从零开始构建一个完整的、
 
 - 在 `render-sdk` 中新增 GL 渲染实现，完成 `Camera2` 到 `SurfaceView` 的预览链路。
 
+#### 0.2.6
+
+- 在 Capture 页面支持前后摄切换，并显示每帧耗时和当前帧率。
+
 ### 0.1
 
 - 完成项目基础架构的搭建和模块划分。
