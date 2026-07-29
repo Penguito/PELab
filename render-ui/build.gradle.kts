@@ -35,6 +35,7 @@ java {
 }
 
 dependencies {
+    implementation("androidx.constraintlayout:constraintlayout:2.2.1")
     implementation(project(":render-core-camera"))
     implementation(project(":render-core-permission"))
     implementation(project(":render-core-material"))
