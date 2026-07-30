@@ -22,7 +22,7 @@ PELab, short for Penguito Effect Lab, aims to build a complete Android applicati
 #### 0.2.2
 
 - Added Camera2 device detection before camera creation in `render-core-camera`;
-- Added `CameraErrorListener` to report camera access, permission, device detection, and configuration errors to the business layer.
+- ~~Added `CameraErrorListener` to report camera access, permission, device detection, and configuration errors to the business layer.~~
 
 #### 0.2.3
 
@@ -39,6 +39,10 @@ PELab, short for Penguito Effect Lab, aims to build a complete Android applicati
 #### 0.2.6
 
 - Added front and rear camera switching with frame-time and current FPS display to the Capture page.
+
+#### 0.2.7
+
+- Fixed the selectable preview resolutions to 1280×720 and 1920×1080.
 
 ### 0.1
 

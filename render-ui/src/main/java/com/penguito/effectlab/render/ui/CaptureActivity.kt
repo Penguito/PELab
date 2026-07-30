@@ -16,8 +16,8 @@ import com.penguito.effectlab.render.core.camera.CameraConfiguration
 import com.penguito.effectlab.render.core.camera.CameraError
 import com.penguito.effectlab.render.core.camera.CameraErrorCode
 import com.penguito.effectlab.render.core.camera.LensFacing
-import com.penguito.effectlab.render.core.camera.PreviewSize
 import com.penguito.effectlab.render.core.permission.CameraPermissionGate
+import com.penguito.effectlab.render.sdk.PreviewResolution
 import com.penguito.effectlab.render.sdk.RenderEngine
 
 class CaptureActivity : Activity(), SurfaceHolder.Callback, Camera2Listener, RenderEngine.Listener {
@@ -99,7 +99,7 @@ class CaptureActivity : Activity(), SurfaceHolder.Callback, Camera2Listener, Ren
         val configuration = cameraConfiguration
             ?: cameraManager.createConfiguration(
                 lensFacing = LensFacing.FRONT,
-                targetPreviewSize = PreviewSize(width = 1280, height = 720),
+                previewResolution = PreviewResolution.P720,
             )?.also {
                 cameraConfiguration = it
             }
@@ -109,8 +109,7 @@ class CaptureActivity : Activity(), SurfaceHolder.Callback, Camera2Listener, Ren
             // init render  engine
             renderEngine.init(
                 surface,
-                it.previewSize.width,
-                it.previewSize.height,
+                it.previewResolution,
                 this,
             )
         }

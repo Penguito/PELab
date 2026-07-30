@@ -47,8 +47,7 @@ public final class RenderEngine implements Closeable {
 
     public void init(
             Surface outputSurface,
-            int inputWidth,
-            int inputHeight,
+            PreviewResolution previewResolution,
             Listener listener) {
         renderHandler.post(() -> {
             releaseOnRenderThread();
@@ -60,7 +59,7 @@ public final class RenderEngine implements Closeable {
 
                 // init surface texture
                 inputSurfaceTexture = new SurfaceTexture(textureId);
-                inputSurfaceTexture.setDefaultBufferSize(inputWidth, inputHeight);
+                inputSurfaceTexture.setDefaultBufferSize(previewResolution.getWidth(), previewResolution.getHeight());
                 inputSurfaceTexture.setOnFrameAvailableListener(this::renderFrameOnRenderThread, renderHandler);
                 inputSurface = new Surface(inputSurfaceTexture);
             }

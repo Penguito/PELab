@@ -11,6 +11,7 @@ import android.os.HandlerThread
 import android.os.Looper
 import android.util.Log
 import android.view.Surface
+import com.penguito.effectlab.render.sdk.PreviewResolution
 import java.io.Closeable
 
 /**
@@ -40,11 +41,11 @@ class Camera2Manager(
 
     fun createConfiguration(
         lensFacing: LensFacing,
-        targetPreviewSize: PreviewSize,
+        previewResolution: PreviewResolution = PreviewResolution.P720,
     ): CameraConfiguration? {
         return configurationProvider.createConfiguration(
             lensFacing = lensFacing,
-            targetPreviewSize = targetPreviewSize,
+            previewResolution = previewResolution,
         )
     }
 
@@ -73,7 +74,7 @@ class Camera2Manager(
             }
             val switchedConfiguration = configurationProvider.createConfiguration(
                 lensFacing = lensFacing,
-                targetPreviewSize = configuration.previewSize,
+                previewResolution = configuration.previewResolution,
             ) ?: return@post
 
             releaseCamera()

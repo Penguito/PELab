@@ -22,7 +22,7 @@ PELab 全称为 Penguito Effect Lab，旨在从零开始构建一个完整的、
 #### 0.2.2
 
 - 在 `render-core-camera` 中新增 Camera2 创建之前设备的检测；
-- 新增 `CameraErrorListener`，将相机访问、权限、设备检测及配置错误回调给业务层。
+- ~~新增 `CameraErrorListener`，将相机访问、权限、设备检测及配置错误回调给业务层。~~
 
 #### 0.2.3
 
@@ -39,6 +39,10 @@ PELab 全称为 Penguito Effect Lab，旨在从零开始构建一个完整的、
 #### 0.2.6
 
 - 在 Capture 页面支持前后摄切换，并显示每帧耗时和当前帧率。
+
+#### 0.2.7
+
+- 固定预览分辨率为 1280×720 和 1920×1080 可选。
 
 ### 0.1
 

@@ -33,3 +33,7 @@ java {
         languageVersion.set(JavaLanguageVersion.of(17))
     }
 }
+
+dependencies {
+    implementation(project(":render-sdk"))
+}

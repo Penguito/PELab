@@ -22,7 +22,7 @@ PELab, abréviation de Penguito Effect Lab, a pour objectif de construire de zé
 #### 0.2.2
 
 - Ajout dans `render-core-camera` de la détection des appareils Camera2 avant la création de la caméra ;
-- Ajout de `CameraErrorListener` pour transmettre à la couche métier les erreurs d'accès à la caméra, d'autorisation, de détection des appareils et de configuration.
+- ~~Ajout de `CameraErrorListener` pour transmettre à la couche métier les erreurs d'accès à la caméra, d'autorisation, de détection des appareils et de configuration.~~
 
 #### 0.2.3
 
@@ -39,6 +39,10 @@ PELab, abréviation de Penguito Effect Lab, a pour objectif de construire de zé
 #### 0.2.6
 
 - Ajout sur la page Capture du basculement entre les caméras avant et arrière, avec affichage du temps par image et des FPS actuels.
+
+#### 0.2.7
+
+- Limitation des résolutions d’aperçu sélectionnables à 1280×720 et 1920×1080.
 
 ### 0.1
 

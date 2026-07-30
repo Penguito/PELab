@@ -1,5 +1,7 @@
 package com.penguito.effectlab.render.core.camera
 
+import com.penguito.effectlab.render.sdk.PreviewResolution
+
 /** camera lens directions **/
 enum class LensFacing {
     FRONT,
@@ -19,9 +21,6 @@ data class PreviewSize(
 
     internal val area: Long
         get() = width.toLong() * height
-
-    internal val aspectRatio: Double
-        get() = width.toDouble() / height
 }
 
 /** camera metadata */
@@ -40,5 +39,11 @@ data class CameraDeviceInfo(
 data class CameraConfiguration(
     val cameraId: String,
     val lensFacing: LensFacing,
-    val previewSize: PreviewSize,
-)
+    val previewResolution: PreviewResolution,
+) {
+    val previewSize: PreviewSize
+        get() = PreviewSize(
+            width = previewResolution.width,
+            height = previewResolution.height,
+        )
+}
