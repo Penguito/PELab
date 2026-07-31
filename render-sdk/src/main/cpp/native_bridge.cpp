@@ -29,7 +29,9 @@ extern "C" JNIEXPORT jlong JNICALL
 Java_com_penguito_effectlab_render_sdk_RenderEngine_nativeInitRenderer(
         JNIEnv* env,
         jclass,
-        jobject output_surface) {
+        jobject output_surface,
+        jint normalized_width,
+        jint normalized_height) {
     if (output_surface == nullptr) {
         return 0;
     }
@@ -37,7 +39,10 @@ Java_com_penguito_effectlab_render_sdk_RenderEngine_nativeInitRenderer(
     ANativeWindow* output_window =
             ANativeWindow_fromSurface(env, output_surface);
     auto renderer = std::make_unique<pelab::NativeRenderer>();
-    if (!renderer->Init(output_window)) {
+    if (!renderer->Init(
+                output_window,
+                normalized_width,
+                normalized_height)) {
         return 0;
     }
     return reinterpret_cast<jlong>(renderer.release());

@@ -44,6 +44,10 @@ PELab, short for Penguito Effect Lab, aims to build a complete Android applicati
 
 - Fixed the selectable preview resolutions to 1280×720 and 1920×1080.
 
+#### 0.2.8
+
+- Added RGBA textures and framebuffers for the fixed portrait specifications in `render-sdk`.
+
 ### 0.1
 
 - Establish the project's foundational architecture and module structure.

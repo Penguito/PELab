@@ -89,7 +89,10 @@ NativeRenderer::~NativeRenderer() {
     Release();
 }
 
-bool NativeRenderer::Init(ANativeWindow* output_window) {
+bool NativeRenderer::Init(
+        ANativeWindow* output_window,
+        int normalized_width,
+        int normalized_height) {
 
     // create native window
     output_window_ = output_window;
@@ -170,7 +173,20 @@ bool NativeRenderer::Init(ANativeWindow* output_window) {
         return false;
     }
 
-    if (!CreateInputTexture() || !CreatePreviewProgram()) {
+    normalized_width_ = normalized_width;
+    normalized_height_ = normalized_height;
+
+    // 1. create input texture
+    if (!CreateInputTexture()) {
+        return false;
+    }
+    // 2. create render buffer
+    if (!CreateNormalizedTarget()) {
+        return false;
+    }
+
+    // 3. create gl program
+    if (!CreatePreviewProgram()) {
         return false;
     }
 
@@ -193,9 +209,11 @@ bool NativeRenderer::Init(ANativeWindow* output_window) {
     __android_log_print(
             ANDROID_LOG_INFO,
             kLogTag,
-            "EGL environment ready: surface=%dx%d, GL=%s",
+            "EGL environment ready: surface=%dx%d, normalized=%dx%d, GL=%s",
             output_width_,
             output_height_,
+            normalized_width_,
+            normalized_height_,
             gl_version == nullptr ? "unknown" : gl_version);
     return true;
 }
@@ -250,6 +268,54 @@ bool NativeRenderer::CreateInputTexture() {
             GL_CLAMP_TO_EDGE);
     glBindTexture(GL_TEXTURE_EXTERNAL_OES, 0);
     return input_texture_ != 0;
+}
+
+bool NativeRenderer::CreateNormalizedTarget() {
+
+    // create RGBA texture
+    glGenTextures(1, &normalized_texture_);
+    glBindTexture(GL_TEXTURE_2D, normalized_texture_);
+
+    // allocate texture storage
+    glTexImage2D(
+            GL_TEXTURE_2D,
+            0,
+            GL_RGBA8,
+            normalized_width_,
+            normalized_height_,
+            0,
+            GL_RGBA,
+            GL_UNSIGNED_BYTE,
+            nullptr);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+
+    // create framebuffer and attach texture
+    glGenFramebuffers(1, &normalized_framebuffer_);
+    glBindFramebuffer(GL_FRAMEBUFFER, normalized_framebuffer_);
+    glFramebufferTexture2D(
+            GL_FRAMEBUFFER,
+            GL_COLOR_ATTACHMENT0,
+            GL_TEXTURE_2D,
+            normalized_texture_,
+            0);
+
+    // verify framebuffer
+    const GLenum framebuffer_status =
+            glCheckFramebufferStatus(GL_FRAMEBUFFER);
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    glBindTexture(GL_TEXTURE_2D, 0);
+    if (framebuffer_status != GL_FRAMEBUFFER_COMPLETE) {
+        __android_log_print(
+                ANDROID_LOG_ERROR,
+                kLogTag,
+                "Framebuffer creation failed: 0x%x",
+                framebuffer_status);
+        return false;
+    }
+    return true;
 }
 
 bool NativeRenderer::CreatePreviewProgram() {
@@ -329,6 +395,12 @@ bool NativeRenderer::CreatePreviewProgram() {
 }
 
 void NativeRenderer::Release() {
+    if (normalized_framebuffer_ != 0) {
+        glDeleteFramebuffers(1, &normalized_framebuffer_);
+    }
+    if (normalized_texture_ != 0) {
+        glDeleteTextures(1, &normalized_texture_);
+    }
     if (vertex_buffer_ != 0) {
         glDeleteBuffers(1, &vertex_buffer_);
     }
@@ -379,6 +451,8 @@ void NativeRenderer::Release() {
     context_ = EGL_NO_CONTEXT;
     surface_ = EGL_NO_SURFACE;
     input_texture_ = 0;
+    normalized_texture_ = 0;
+    normalized_framebuffer_ = 0;
     preview_program_ = 0;
     vertex_array_ = 0;
     vertex_buffer_ = 0;
@@ -386,6 +460,8 @@ void NativeRenderer::Release() {
     input_texture_location_ = -1;
     output_width_ = 0;
     output_height_ = 0;
+    normalized_width_ = 0;
+    normalized_height_ = 0;
 }
 
 }  // namespace pelab

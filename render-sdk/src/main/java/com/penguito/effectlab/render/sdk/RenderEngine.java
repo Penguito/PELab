@@ -52,7 +52,10 @@ public final class RenderEngine implements Closeable {
         renderHandler.post(() -> {
             releaseOnRenderThread();
             this.listener = listener;
-            long handle = nativeInitRenderer(outputSurface);
+            long handle = nativeInitRenderer(
+                    outputSurface,
+                    previewResolution.getHeight(),
+                    previewResolution.getWidth());
             nativeHandle = handle;
             if (handle != 0L) {
                 int textureId = nativeGetInputTexture(handle);
@@ -154,7 +157,7 @@ public final class RenderEngine implements Closeable {
 
     private static native String nativeGetBridgeInfo();
 
-    private static native long nativeInitRenderer(Surface outputSurface);
+    private static native long nativeInitRenderer(Surface outputSurface, int normalizedWidth, int normalizedHeight);
 
     private static native int nativeGetInputTexture(long nativeHandle);
 
