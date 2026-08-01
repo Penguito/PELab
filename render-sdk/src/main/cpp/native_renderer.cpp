@@ -10,38 +10,65 @@ namespace {
 
 constexpr char kLogTag[] = "PELabEGL";
 
-constexpr char kVertexShaderSource[] = R"(#version 300 es
+constexpr char kNormalizeVertexShaderSource[] = R"(#version 300 es
 
 layout(location = 0) in vec2 position;
 layout(location = 1) in vec2 textureCoordinate;
 
 uniform mat4 textureMatrix;
 
-out vec2 previewTextureCoordinate;
+out vec2 normalizedTextureCoordinate;
 
 void main() {
     gl_Position = vec4(position, 0.0, 1.0);
-    previewTextureCoordinate =
+    normalizedTextureCoordinate =
             (textureMatrix * vec4(textureCoordinate, 0.0, 1.0)).xy;
 }
 )";
 
-constexpr char kFragmentShaderSource[] = R"(#version 300 es
+constexpr char kNormalizeFragmentShaderSource[] = R"(#version 300 es
 #extension GL_OES_EGL_image_external_essl3 : require
 
 precision mediump float;
 
 uniform samplerExternalOES inputTexture;
 
+in vec2 normalizedTextureCoordinate;
+out vec4 outputColor;
+
+void main() {
+    outputColor = texture(inputTexture, normalizedTextureCoordinate);
+}
+)";
+
+constexpr char kPreviewVertexShaderSource[] = R"(#version 300 es
+
+layout(location = 0) in vec2 position;
+layout(location = 1) in vec2 textureCoordinate;
+
+out vec2 previewTextureCoordinate;
+
+void main() {
+    gl_Position = vec4(position, 0.0, 1.0);
+    previewTextureCoordinate = textureCoordinate;
+}
+)";
+
+constexpr char kPreviewFragmentShaderSource[] = R"(#version 300 es
+
+precision mediump float;
+
+uniform sampler2D normalizedTexture;
+
 in vec2 previewTextureCoordinate;
 out vec4 outputColor;
 
 void main() {
-    outputColor = texture(inputTexture, previewTextureCoordinate);
+    outputColor = texture(normalizedTexture, previewTextureCoordinate);
 }
 )";
 
-constexpr GLfloat kPreviewVertices[] = {
+constexpr GLfloat kRenderVertices[] = {
         -1.0F, -1.0F, 0.0F, 0.0F,
         1.0F, -1.0F, 1.0F, 0.0F,
         -1.0F, 1.0F, 0.0F, 1.0F,
@@ -80,6 +107,51 @@ GLuint CompileShader(GLenum type, const char* source) {
             "Shader compilation failed: %s",
             error_message);
     glDeleteShader(shader);
+    return 0;
+}
+
+GLuint CreateProgram(
+        const char* vertex_shader_source,
+        const char* fragment_shader_source) {
+
+    const GLuint vertex_shader =
+            CompileShader(GL_VERTEX_SHADER, vertex_shader_source);
+    if (vertex_shader == 0) {
+        return 0;
+    }
+
+    const GLuint fragment_shader =
+            CompileShader(GL_FRAGMENT_SHADER, fragment_shader_source);
+    if (fragment_shader == 0) {
+        glDeleteShader(vertex_shader);
+        return 0;
+    }
+
+    const GLuint program = glCreateProgram();
+    glAttachShader(program, vertex_shader);
+    glAttachShader(program, fragment_shader);
+    glLinkProgram(program);
+    glDeleteShader(vertex_shader);
+    glDeleteShader(fragment_shader);
+
+    GLint link_status = GL_FALSE;
+    glGetProgramiv(program, GL_LINK_STATUS, &link_status);
+    if (link_status == GL_TRUE) {
+        return program;
+    }
+
+    char error_message[512] = {};
+    glGetProgramInfoLog(
+            program,
+            sizeof(error_message),
+            nullptr,
+            error_message);
+    __android_log_print(
+            ANDROID_LOG_ERROR,
+            kLogTag,
+            "Program link failed: %s",
+            error_message);
+    glDeleteProgram(program);
     return 0;
 }
 
@@ -185,8 +257,18 @@ bool NativeRenderer::Init(
         return false;
     }
 
-    // 3. create gl program
+    // 3. create normalize program
+    if (!CreateNormalizeProgram()) {
+        return false;
+    }
+
+    // 4. create preview program
     if (!CreatePreviewProgram()) {
+        return false;
+    }
+
+    // 5. create vertex buffer
+    if (!CreateVertexBuffer()) {
         return false;
     }
 
@@ -223,28 +305,68 @@ GLuint NativeRenderer::GetInputTexture() const {
 }
 
 void NativeRenderer::RenderFrame(const float* texture_matrix) {
-    glViewport(0, 0, output_width_, output_height_);
-    glUseProgram(preview_program_);
+
+    // Pass 1: OES -> RGBA buffer
+    RenderToNormalizedTarget(texture_matrix);
+
+    // Pass 2: RGBA buffer -> surfaceView
+    RenderToOutput();
+
+    if (eglSwapBuffers(display_, surface_) != EGL_TRUE) {
+        LogEglError("eglSwapBuffers");
+    }
+}
+
+void NativeRenderer::RenderToNormalizedTarget(
+        const float* texture_matrix) {
+
+    // bind framebuffer
+    glBindFramebuffer(GL_FRAMEBUFFER, normalized_framebuffer_);
+    glViewport(0, 0, normalized_width_, normalized_height_);
+
+    // use program
+    glUseProgram(normalize_program_);
     glBindVertexArray(vertex_array_);
 
+    // bind OES texture and apply texture matrix
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_EXTERNAL_OES, input_texture_);
-    glUniform1i(input_texture_location_, 0);
+    glUniform1i(normalize_input_texture_location_, 0);
     glUniformMatrix4fv(
-            texture_matrix_location_,
+            normalize_texture_matrix_location_,
             1,
             GL_FALSE,
             texture_matrix);
 
+    // render OES to RGBA buffer
     glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 
     glBindTexture(GL_TEXTURE_EXTERNAL_OES, 0);
     glBindVertexArray(0);
     glUseProgram(0);
+}
 
-    if (eglSwapBuffers(display_, surface_) != EGL_TRUE) {
-        LogEglError("eglSwapBuffers");
-    }
+void NativeRenderer::RenderToOutput() {
+
+    // bind framebuffer
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    glViewport(0, 0, output_width_, output_height_);
+
+    // use program
+    glUseProgram(preview_program_);
+    glBindVertexArray(vertex_array_);
+
+    // bind RGBA buffer
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, normalized_texture_);
+    glUniform1i(preview_texture_location_, 0);
+
+    // render RGBA buffer to surfaceView
+    glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+
+    glBindTexture(GL_TEXTURE_2D, 0);
+    glBindVertexArray(0);
+    glUseProgram(0);
 }
 
 bool NativeRenderer::CreateInputTexture() {
@@ -318,49 +440,35 @@ bool NativeRenderer::CreateNormalizedTarget() {
     return true;
 }
 
+bool NativeRenderer::CreateNormalizeProgram() {
+    normalize_program_ = CreateProgram(
+            kNormalizeVertexShaderSource,
+            kNormalizeFragmentShaderSource);
+    if (normalize_program_ == 0) {
+        return false;
+    }
+
+    normalize_texture_matrix_location_ =
+            glGetUniformLocation(normalize_program_, "textureMatrix");
+    normalize_input_texture_location_ =
+            glGetUniformLocation(normalize_program_, "inputTexture");
+    return true;
+}
+
 bool NativeRenderer::CreatePreviewProgram() {
-    const GLuint vertex_shader =
-            CompileShader(GL_VERTEX_SHADER, kVertexShaderSource);
-    if (vertex_shader == 0) {
+    preview_program_ = CreateProgram(
+            kPreviewVertexShaderSource,
+            kPreviewFragmentShaderSource);
+    if (preview_program_ == 0) {
         return false;
     }
 
-    const GLuint fragment_shader =
-            CompileShader(GL_FRAGMENT_SHADER, kFragmentShaderSource);
-    if (fragment_shader == 0) {
-        glDeleteShader(vertex_shader);
-        return false;
-    }
+    preview_texture_location_ =
+            glGetUniformLocation(preview_program_, "normalizedTexture");
+    return true;
+}
 
-    preview_program_ = glCreateProgram();
-    glAttachShader(preview_program_, vertex_shader);
-    glAttachShader(preview_program_, fragment_shader);
-    glLinkProgram(preview_program_);
-    glDeleteShader(vertex_shader);
-    glDeleteShader(fragment_shader);
-
-    GLint link_status = GL_FALSE;
-    glGetProgramiv(preview_program_, GL_LINK_STATUS, &link_status);
-    if (link_status != GL_TRUE) {
-        char error_message[512] = {};
-        glGetProgramInfoLog(
-                preview_program_,
-                sizeof(error_message),
-                nullptr,
-                error_message);
-        __android_log_print(
-                ANDROID_LOG_ERROR,
-                kLogTag,
-                "Program link failed: %s",
-                error_message);
-        return false;
-    }
-
-    texture_matrix_location_ =
-            glGetUniformLocation(preview_program_, "textureMatrix");
-    input_texture_location_ =
-            glGetUniformLocation(preview_program_, "inputTexture");
-
+bool NativeRenderer::CreateVertexBuffer() {
     glGenVertexArrays(1, &vertex_array_);
     glBindVertexArray(vertex_array_);
 
@@ -368,8 +476,8 @@ bool NativeRenderer::CreatePreviewProgram() {
     glBindBuffer(GL_ARRAY_BUFFER, vertex_buffer_);
     glBufferData(
             GL_ARRAY_BUFFER,
-            sizeof(kPreviewVertices),
-            kPreviewVertices,
+            sizeof(kRenderVertices),
+            kRenderVertices,
             GL_STATIC_DRAW);
 
     glEnableVertexAttribArray(0);
@@ -406,6 +514,9 @@ void NativeRenderer::Release() {
     }
     if (vertex_array_ != 0) {
         glDeleteVertexArrays(1, &vertex_array_);
+    }
+    if (normalize_program_ != 0) {
+        glDeleteProgram(normalize_program_);
     }
     if (preview_program_ != 0) {
         glDeleteProgram(preview_program_);
@@ -453,11 +564,13 @@ void NativeRenderer::Release() {
     input_texture_ = 0;
     normalized_texture_ = 0;
     normalized_framebuffer_ = 0;
+    normalize_program_ = 0;
     preview_program_ = 0;
     vertex_array_ = 0;
     vertex_buffer_ = 0;
-    texture_matrix_location_ = -1;
-    input_texture_location_ = -1;
+    normalize_texture_matrix_location_ = -1;
+    normalize_input_texture_location_ = -1;
+    preview_texture_location_ = -1;
     output_width_ = 0;
     output_height_ = 0;
     normalized_width_ = 0;

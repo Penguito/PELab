@@ -48,6 +48,10 @@ PELab, short for Penguito Effect Lab, aims to build a complete Android applicati
 
 - Added RGBA textures and framebuffers for the fixed portrait specifications in `render-sdk`.
 
+#### 0.2.9
+
+- Completed the OES -> RGBA framebuffer -> `SurfaceView` two-pass rendering path in `render-sdk`.
+
 ### 0.1
 
 - Establish the project's foundational architecture and module structure.

@@ -48,6 +48,10 @@ PELab, abréviation de Penguito Effect Lab, a pour objectif de construire de zé
 
 - Ajout dans `render-sdk` des textures RGBA et des framebuffers correspondant aux formats portrait fixes.
 
+#### 0.2.9
+
+- Finalisation dans `render-sdk` de la chaîne de rendu en deux passes : OES -> framebuffer RGBA -> `SurfaceView`.
+
 ### 0.1
 
 - Mettre en place l'architecture de base du projet et son découpage en modules.

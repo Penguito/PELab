@@ -48,6 +48,10 @@ PELab 全称为 Penguito Effect Lab，旨在从零开始构建一个完整的、
 
 - 在 `render-sdk` 中新增固定竖屏规格对应的 RGBA 纹理与帧缓冲。
 
+#### 0.2.9
+
+- 在 `render-sdk` 中完成 OES -> RGBA 帧缓冲 -> `SurfaceView` 的 2 Pass 渲染链路。
+
 ### 0.1
 
 - 完成项目基础架构的搭建和模块划分。
