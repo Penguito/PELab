@@ -10,6 +10,14 @@ PELab 全称为 Penguito Effect Lab，旨在从零开始构建一个完整的、
 
 ## 当前开发进度
 
+### 0.3
+
+- 增加基础图片参数调节功能，并实现 3-Pass 渲染链路。
+
+#### 0.3.1
+
+- 在 `render-sdk` 中新增 `ImageAdjustmentParameters`。
+
 ### 0.2
 
 - 跑通基础相机渲染链路。
