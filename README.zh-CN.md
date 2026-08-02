@@ -10,6 +10,48 @@ PELab 全称为 Penguito Effect Lab，旨在从零开始构建一个完整的、
 
 ## 当前开发进度
 
+### 0.2
+
+- 跑通基础相机渲染链路。
+
+#### 0.2.1
+
+- 在 `render-core-permission` 中集中实现相机权限检查、请求和结果解析；
+- 新增 `CaptureActivity`，验证相机权限门禁和基础页面生命周期。
+
+#### 0.2.2
+
+- 在 `render-core-camera` 中新增 Camera2 创建之前设备的检测；
+- ~~新增 `CameraErrorListener`，将相机访问、权限、设备检测及配置错误回调给业务层。~~
+
+#### 0.2.3
+
+- 在 `render-core-camera` 中新增 `Camera2Manager`，创建并维护 `CameraDevice` 和 `CaptureSession`的生命周期；
+
+#### 0.2.4
+
+- 在 `render-sdk` 中新增 `RenderEngine` 的初始化方法，实现GL环境的创建和释放。
+
+#### 0.2.5
+
+- 在 `render-sdk` 中新增 GL 渲染实现，完成 `Camera2` 到 `SurfaceView` 的预览链路。
+
+#### 0.2.6
+
+- 在 Capture 页面支持前后摄切换，并显示每帧耗时和当前帧率。
+
+#### 0.2.7
+
+- 固定预览分辨率为 1280×720 和 1920×1080 可选。
+
+#### 0.2.8
+
+- 在 `render-sdk` 中新增固定竖屏规格对应的 RGBA 纹理与帧缓冲。
+
+#### 0.2.9
+
+- 在 `render-sdk` 中完成 OES -> RGBA 帧缓冲 -> `SurfaceView` 的 2 Pass 渲染链路。
+
 ### 0.1
 
 - 完成项目基础架构的搭建和模块划分。

@@ -3,4 +3,6 @@
     <string name="app_name">PELab</string>
     <string name="native_bridge_checking">Checking Native bridge…</string>
     <string name="native_bridge_ready">Java → JNI → C++:\n%1$s</string>
+    <string name="capture_test">Capture Test</string>
+    <string name="camera_permission_denied">Camera permission is required.</string>
 </resources>

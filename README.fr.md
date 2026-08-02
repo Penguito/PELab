@@ -10,6 +10,48 @@ PELab, abréviation de Penguito Effect Lab, a pour objectif de construire de zé
 
 ## Avancement actuel du développement
 
+### 0.2
+
+- Établir la chaîne de rendu caméra de base.
+
+#### 0.2.1
+
+- Centralisation de la vérification, de la demande et du traitement du résultat de l'autorisation caméra dans `render-core-permission` ;
+- Ajout de `CaptureActivity` pour vérifier la barrière d'autorisation caméra et le cycle de vie élémentaire de la page.
+
+#### 0.2.2
+
+- Ajout dans `render-core-camera` de la détection des appareils Camera2 avant la création de la caméra ;
+- ~~Ajout de `CameraErrorListener` pour transmettre à la couche métier les erreurs d'accès à la caméra, d'autorisation, de détection des appareils et de configuration.~~
+
+#### 0.2.3
+
+- Ajout de `Camera2Manager` dans `render-core-camera` pour créer et gérer le cycle de vie de `CameraDevice` et de `CaptureSession`.
+
+#### 0.2.4
+
+- Ajout d'une méthode d'initialisation à `RenderEngine` dans `render-sdk` pour créer et libérer l'environnement GL.
+
+#### 0.2.5
+
+- Ajout du rendu GL dans `render-sdk` pour compléter la chaîne d'aperçu de `Camera2` à `SurfaceView`.
+
+#### 0.2.6
+
+- Ajout sur la page Capture du basculement entre les caméras avant et arrière, avec affichage du temps par image et des FPS actuels.
+
+#### 0.2.7
+
+- Limitation des résolutions d’aperçu sélectionnables à 1280×720 et 1920×1080.
+
+#### 0.2.8
+
+- Ajout dans `render-sdk` des textures RGBA et des framebuffers correspondant aux formats portrait fixes.
+
+#### 0.2.9
+
+- Finalisation dans `render-sdk` de la chaîne de rendu en deux passes : OES -> framebuffer RGBA -> `SurfaceView`.
+
 ### 0.1
 
 - Mettre en place l'architecture de base du projet et son découpage en modules.

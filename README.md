@@ -10,6 +10,48 @@ PELab, short for Penguito Effect Lab, aims to build a complete Android applicati
 
 ## Current Development Progress
 
+### 0.2
+
+- Establish the basic camera rendering path.
+
+#### 0.2.1
+
+- Centralized camera permission checks, requests, and result parsing in `render-core-permission`;
+- Added `CaptureActivity` to verify the camera permission gate and basic page lifecycle.
+
+#### 0.2.2
+
+- Added Camera2 device detection before camera creation in `render-core-camera`;
+- ~~Added `CameraErrorListener` to report camera access, permission, device detection, and configuration errors to the business layer.~~
+
+#### 0.2.3
+
+- Added `Camera2Manager` to `render-core-camera` to create and manage the lifecycle of `CameraDevice` and `CaptureSession`.
+
+#### 0.2.4
+
+- Added an initialization method to `RenderEngine` in `render-sdk` to create and release the GL environment.
+
+#### 0.2.5
+
+- Added GL rendering in `render-sdk` to complete the preview path from `Camera2` to `SurfaceView`.
+
+#### 0.2.6
+
+- Added front and rear camera switching with frame-time and current FPS display to the Capture page.
+
+#### 0.2.7
+
+- Fixed the selectable preview resolutions to 1280×720 and 1920×1080.
+
+#### 0.2.8
+
+- Added RGBA textures and framebuffers for the fixed portrait specifications in `render-sdk`.
+
+#### 0.2.9
+
+- Completed the OES -> RGBA framebuffer -> `SurfaceView` two-pass rendering path in `render-sdk`.
+
 ### 0.1
 
 - Establish the project's foundational architecture and module structure.
