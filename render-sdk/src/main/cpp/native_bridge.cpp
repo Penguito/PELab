@@ -68,6 +68,16 @@ Java_com_penguito_effectlab_render_sdk_RenderEngine_nativeRenderFrame(
 }
 
 extern "C" JNIEXPORT void JNICALL
+Java_com_penguito_effectlab_render_sdk_RenderEngine_nativeSetImageParams(
+        JNIEnv*,
+        jclass,
+        jlong handle,
+        jfloat brightness,
+        jfloat warmth) {
+    FromHandle(handle)->SetImageParams(brightness, warmth);
+}
+
+extern "C" JNIEXPORT void JNICALL
 Java_com_penguito_effectlab_render_sdk_RenderEngine_nativeDestroyRenderer(
         JNIEnv*,
         jclass,

@@ -1,7 +1,7 @@
 package com.penguito.effectlab.render.sdk;
 
 /** image adjustment parameters */
-public final class ImageAdjustmentParameters extends RenderParameters {
+public final class ImageParams extends RenderBaseParams {
 
     private static final float MIN_VALUE = -1.0F;
     private static final float MAX_VALUE = 1.0F;
@@ -9,12 +9,12 @@ public final class ImageAdjustmentParameters extends RenderParameters {
     private final float brightness;
     private final float warmth;
 
-    private ImageAdjustmentParameters(Builder builder) {
+    private ImageParams(Builder builder) {
         brightness = clamp(builder.brightness);
         warmth = clamp(builder.warmth);
     }
 
-    public static ImageAdjustmentParameters defaults() {
+    public static ImageParams defaults() {
         return builder().build();
     }
 
@@ -22,7 +22,7 @@ public final class ImageAdjustmentParameters extends RenderParameters {
         return new Builder();
     }
 
-    public static Builder builder(ImageAdjustmentParameters source) {
+    public static Builder builder(ImageParams source) {
         if (source == null) {
             throw new IllegalArgumentException("source must not be null");
         }
@@ -47,9 +47,10 @@ public final class ImageAdjustmentParameters extends RenderParameters {
         private float warmth = 0.0F;
 
         private Builder() {
+
         }
 
-        private Builder(ImageAdjustmentParameters source) {
+        private Builder(ImageParams source) {
             brightness = source.brightness;
             warmth = source.warmth;
         }
@@ -64,8 +65,8 @@ public final class ImageAdjustmentParameters extends RenderParameters {
             return this;
         }
 
-        public ImageAdjustmentParameters build() {
-            return new ImageAdjustmentParameters(this);
+        public ImageParams build() {
+            return new ImageParams(this);
         }
     }
 }

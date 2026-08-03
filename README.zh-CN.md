@@ -16,7 +16,11 @@ PELab 全称为 Penguito Effect Lab，旨在从零开始构建一个完整的、
 
 #### 0.3.1
 
-- 在 `render-sdk` 中新增 `ImageAdjustmentParameters`。
+- 在 `render-sdk` 中新增 `ImageParams`。
+
+#### 0.3.2
+
+- 在 `render-sdk` 中打通图片参数从业务层配置和更新的链路。
 
 ### 0.2
 

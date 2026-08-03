@@ -16,7 +16,11 @@ PELab, abréviation de Penguito Effect Lab, a pour objectif de construire de zé
 
 #### 0.3.1
 
-- Ajout de `ImageAdjustmentParameters` dans `render-sdk`.
+- Ajout de `ImageParams` dans `render-sdk`.
+
+#### 0.3.2
+
+- Mise en place dans `render-sdk` de la chaîne permettant à la couche métier de configurer et de mettre à jour les paramètres d’image.
 
 ### 0.2
 

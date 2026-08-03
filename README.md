@@ -16,7 +16,11 @@ PELab, short for Penguito Effect Lab, aims to build a complete Android applicati
 
 #### 0.3.1
 
-- Added `ImageAdjustmentParameters` to `render-sdk`.
+- Added `ImageParams` to `render-sdk`.
+
+#### 0.3.2
+
+- Enabled the business layer to configure and update image params through `render-sdk`.
 
 ### 0.2
 

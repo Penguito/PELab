@@ -16,6 +16,7 @@ public:
 
     bool Init(ANativeWindow* output_window, int normalized_width, int normalized_height);
     GLuint GetInputTexture() const;
+    void SetImageParams(float brightness, float warmth);
     void RenderFrame(const float* texture_matrix);
 
 private:
@@ -43,6 +44,8 @@ private:
     GLint normalize_texture_matrix_location_ = -1;
     GLint normalize_input_texture_location_ = -1;
     GLint preview_texture_location_ = -1;
+    float brightness_ = 0.0F;
+    float warmth_ = 0.0F;
     int output_width_ = 0;
     int output_height_ = 0;
     int normalized_width_ = 0;

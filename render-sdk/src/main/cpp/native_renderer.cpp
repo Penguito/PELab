@@ -304,6 +304,11 @@ GLuint NativeRenderer::GetInputTexture() const {
     return input_texture_;
 }
 
+void NativeRenderer::SetImageParams(float brightness, float warmth) {
+    brightness_ = brightness;
+    warmth_ = warmth;
+}
+
 void NativeRenderer::RenderFrame(const float* texture_matrix) {
 
     // Pass 1: OES -> RGBA buffer
