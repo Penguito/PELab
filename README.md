@@ -22,6 +22,10 @@ PELab, short for Penguito Effect Lab, aims to build a complete Android applicati
 
 - Enabled the business layer to configure and update image params through `render-sdk`.
 
+#### 0.3.3
+
+- Completed the 3-pass rendering pipeline in `render-sdk`: OES -> normalized buffer -> image adjustment buffer -> `SurfaceView`.
+
 ### 0.2
 
 - Establish the basic camera rendering path.

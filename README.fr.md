@@ -22,6 +22,10 @@ PELab, abréviation de Penguito Effect Lab, a pour objectif de construire de zé
 
 - Mise en place dans `render-sdk` de la chaîne permettant à la couche métier de configurer et de mettre à jour les paramètres d’image.
 
+#### 0.3.3
+
+- Finalisation dans `render-sdk` de la chaîne de rendu en 3 passes : OES -> buffer normalisé -> buffer de réglage de l’image -> `SurfaceView`.
+
 ### 0.2
 
 - Établir la chaîne de rendu caméra de base.

@@ -22,11 +22,14 @@ public:
 private:
     bool CreateInputTexture();
     bool CreateNormalizedTarget();
+    bool CreateAdjustedTarget();
     bool CreateNormalizeProgram();
+    bool CreateAdjustmentProgram();
     bool CreatePreviewProgram();
     bool CreateVertexBuffer();
-    void RenderToNormalizedTarget(const float* texture_matrix);
-    void RenderToOutput();
+    void RenderToNormalizedTarget(const float* texture_matrix) const;
+    void RenderToAdjustedTarget() const;
+    void RenderToOutput() const;
     void Release();
 
     ANativeWindow* output_window_ = nullptr;
@@ -37,12 +40,16 @@ private:
     GLuint input_texture_ = 0;
     GLuint normalized_texture_ = 0;
     GLuint normalized_framebuffer_ = 0;
+    GLuint adjusted_texture_ = 0;
+    GLuint adjusted_framebuffer_ = 0;
     GLuint normalize_program_ = 0;
+    GLuint adjustment_program_ = 0;
     GLuint preview_program_ = 0;
     GLuint vertex_array_ = 0;
     GLuint vertex_buffer_ = 0;
     GLint normalize_texture_matrix_location_ = -1;
     GLint normalize_input_texture_location_ = -1;
+    GLint adjustment_texture_location_ = -1;
     GLint preview_texture_location_ = -1;
     float brightness_ = 0.0F;
     float warmth_ = 0.0F;
