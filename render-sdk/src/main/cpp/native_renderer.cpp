@@ -59,12 +59,15 @@ constexpr char kAdjustmentFragmentShaderSource[] = R"(#version 300 es
 precision mediump float;
 
 uniform sampler2D normalizedTexture;
+uniform float brightness;
 
 in vec2 imageTextureCoordinate;
 out vec4 outputColor;
 
 void main() {
-    outputColor = texture(normalizedTexture, imageTextureCoordinate);
+    vec4 color = texture(normalizedTexture, imageTextureCoordinate);
+    color.rgb = clamp(color.rgb + brightness, 0.0, 1.0);
+    outputColor = color;
 }
 )";
 
@@ -391,6 +394,7 @@ void NativeRenderer::RenderToAdjustedTarget() const {
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, normalized_texture_);
     glUniform1i(adjustment_texture_location_, 0);
+    glUniform1f(adjustment_brightness_location_, brightness_);
 
     // render normalized buffer to adjusted buffer
     glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
@@ -568,6 +572,8 @@ bool NativeRenderer::CreateAdjustmentProgram() {
 
     adjustment_texture_location_ =
             glGetUniformLocation(adjustment_program_, "normalizedTexture");
+    adjustment_brightness_location_ =
+            glGetUniformLocation(adjustment_program_, "brightness");
     return true;
 }
 
@@ -699,6 +705,7 @@ void NativeRenderer::Release() {
     normalize_texture_matrix_location_ = -1;
     normalize_input_texture_location_ = -1;
     adjustment_texture_location_ = -1;
+    adjustment_brightness_location_ = -1;
     preview_texture_location_ = -1;
     output_width_ = 0;
     output_height_ = 0;

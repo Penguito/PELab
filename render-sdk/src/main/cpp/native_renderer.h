@@ -50,6 +50,7 @@ private:
     GLint normalize_texture_matrix_location_ = -1;
     GLint normalize_input_texture_location_ = -1;
     GLint adjustment_texture_location_ = -1;
+    GLint adjustment_brightness_location_ = -1;
     GLint preview_texture_location_ = -1;
     float brightness_ = 0.0F;
     float warmth_ = 0.0F;
