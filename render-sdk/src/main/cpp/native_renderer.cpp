@@ -60,13 +60,17 @@ precision mediump float;
 
 uniform sampler2D normalizedTexture;
 uniform float brightness;
+uniform float warmth;
 
 in vec2 imageTextureCoordinate;
 out vec4 outputColor;
 
 void main() {
     vec4 color = texture(normalizedTexture, imageTextureCoordinate);
-    color.rgb = clamp(color.rgb + brightness, 0.0, 1.0);
+    color.rgb += brightness;
+    color.r += warmth * 0.15;
+    color.b -= warmth * 0.15;
+    color.rgb = clamp(color.rgb, 0.0, 1.0);
     outputColor = color;
 }
 )";
@@ -395,6 +399,7 @@ void NativeRenderer::RenderToAdjustedTarget() const {
     glBindTexture(GL_TEXTURE_2D, normalized_texture_);
     glUniform1i(adjustment_texture_location_, 0);
     glUniform1f(adjustment_brightness_location_, brightness_);
+    glUniform1f(adjustment_warmth_location_, warmth_);
 
     // render normalized buffer to adjusted buffer
     glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
@@ -574,6 +579,8 @@ bool NativeRenderer::CreateAdjustmentProgram() {
             glGetUniformLocation(adjustment_program_, "normalizedTexture");
     adjustment_brightness_location_ =
             glGetUniformLocation(adjustment_program_, "brightness");
+    adjustment_warmth_location_ =
+            glGetUniformLocation(adjustment_program_, "warmth");
     return true;
 }
 
@@ -706,6 +713,7 @@ void NativeRenderer::Release() {
     normalize_input_texture_location_ = -1;
     adjustment_texture_location_ = -1;
     adjustment_brightness_location_ = -1;
+    adjustment_warmth_location_ = -1;
     preview_texture_location_ = -1;
     output_width_ = 0;
     output_height_ = 0;

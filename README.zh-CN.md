@@ -30,6 +30,10 @@ PELab 全称为 Penguito Effect Lab，旨在从零开始构建一个完整的、
 
 - 在 `render-sdk` 的 Adjustment Shader 中实现亮度调节。
 
+#### 0.3.5
+
+- 在 `render-sdk` 的 Adjustment Shader 中实现基础色温调节。
+
 ### 0.2
 
 - 跑通基础相机渲染链路。
