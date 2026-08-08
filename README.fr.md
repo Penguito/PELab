@@ -10,6 +10,34 @@ PELab, abréviation de Penguito Effect Lab, a pour objectif de construire de zé
 
 ## Avancement actuel du développement
 
+### 0.3
+
+- Ajouter une fonction de réglage d’image de base et mettre en œuvre une chaîne de rendu en 3 passes.
+
+#### 0.3.1
+
+- Ajout de `ImageParams` dans `render-sdk`.
+
+#### 0.3.2
+
+- Mise en place dans `render-sdk` de la chaîne permettant à la couche métier de configurer et de mettre à jour les paramètres d’image.
+
+#### 0.3.3
+
+- Finalisation dans `render-sdk` de la chaîne de rendu en 3 passes : OES -> buffer normalisé -> buffer de réglage de l’image -> `SurfaceView`.
+
+#### 0.3.4
+
+- Implémentation du réglage de la luminosité dans l’Adjustment Shader de `render-sdk`.
+
+#### 0.3.5
+
+- Implémentation du réglage de base de la température de couleur dans l’Adjustment Shader de `render-sdk`.
+
+#### 0.3.6
+
+- Ajout sur la page Capture de commandes de réglage en temps réel de la luminosité et de la température de couleur.
+
 ### 0.2
 
 - Établir la chaîne de rendu caméra de base.

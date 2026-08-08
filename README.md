@@ -10,6 +10,34 @@ PELab, short for Penguito Effect Lab, aims to build a complete Android applicati
 
 ## Current Development Progress
 
+### 0.3
+
+- Add basic image adjustment support and implement a 3-pass rendering pipeline.
+
+#### 0.3.1
+
+- Added `ImageParams` to `render-sdk`.
+
+#### 0.3.2
+
+- Enabled the business layer to configure and update image params through `render-sdk`.
+
+#### 0.3.3
+
+- Completed the 3-pass rendering pipeline in `render-sdk`: OES -> normalized buffer -> image adjustment buffer -> `SurfaceView`.
+
+#### 0.3.4
+
+- Implemented brightness adjustment in the `render-sdk` Adjustment Shader.
+
+#### 0.3.5
+
+- Implemented basic warmth adjustment in the `render-sdk` Adjustment Shader.
+
+#### 0.3.6
+
+- Added live brightness and warmth adjustment controls to the Capture page.
+
 ### 0.2
 
 - Establish the basic camera rendering path.

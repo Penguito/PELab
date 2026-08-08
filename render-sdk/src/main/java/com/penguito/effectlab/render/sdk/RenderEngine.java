@@ -30,6 +30,7 @@ public final class RenderEngine implements Closeable {
     private SurfaceTexture inputSurfaceTexture;
     private Surface inputSurface;
     private Listener listener;
+    private ImageParams imageParams = ImageParams.defaults();
     private long nativeHandle;
     private long debugInfoStartNanos;
     private long renderDurationNanos;
@@ -58,6 +59,7 @@ public final class RenderEngine implements Closeable {
                     previewResolution.getWidth());
             nativeHandle = handle;
             if (handle != 0L) {
+                applyImageParams(imageParams);
                 int textureId = nativeGetInputTexture(handle);
 
                 // init surface texture
@@ -78,6 +80,15 @@ public final class RenderEngine implements Closeable {
         });
     }
 
+    public void setRenderParams(RenderBaseParams params) {
+        if (!(params instanceof ImageParams imageParams)) {
+            throw new IllegalArgumentException("params must be ImageParams");
+        }
+        if (isClosed) { return; }
+
+        renderHandler.post(() -> applyImageParams(imageParams));
+    }
+
     public void stop() {
         if (isClosed) {
             return;
@@ -95,6 +106,16 @@ public final class RenderEngine implements Closeable {
         surfaceTexture.getTransformMatrix(textureMatrix);
         nativeRenderFrame(nativeHandle, textureMatrix);
         updateDebugInfo(frameStartNanos, System.nanoTime());
+    }
+
+    private void applyImageParams(ImageParams params) {
+        imageParams = params;
+        if (nativeHandle == 0L) { return; }
+        nativeSetImageParams(
+                nativeHandle,
+                params.getBrightness(),
+                params.getWarmth()
+        );
     }
 
     private void updateDebugInfo(long frameStartNanos, long frameEndNanos) {
@@ -162,6 +183,8 @@ public final class RenderEngine implements Closeable {
     private static native int nativeGetInputTexture(long nativeHandle);
 
     private static native void nativeRenderFrame(long nativeHandle, float[] textureMatrix);
+
+    private static native void nativeSetImageParams(long nativeHandle, float brightness, float warmth);
 
     private static native void nativeDestroyRenderer(long nativeHandle);
 

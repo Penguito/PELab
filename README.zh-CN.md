@@ -10,6 +10,34 @@ PELab 全称为 Penguito Effect Lab，旨在从零开始构建一个完整的、
 
 ## 当前开发进度
 
+### 0.3
+
+- 增加基础图片参数调节功能，并实现 3-Pass 渲染链路。
+
+#### 0.3.1
+
+- 在 `render-sdk` 中新增 `ImageParams`。
+
+#### 0.3.2
+
+- 在 `render-sdk` 中打通图片参数从业务层配置和更新的链路。
+
+#### 0.3.3
+
+- 在 `render-sdk` 中完成 OES -> 归一化 buffer -> 图像调节 buffer -> `SurfaceView` 的 3-Pass 渲染链路。
+
+#### 0.3.4
+
+- 在 `render-sdk` 的 Adjustment Shader 中实现亮度调节。
+
+#### 0.3.5
+
+- 在 `render-sdk` 的 Adjustment Shader 中实现基础色温调节。
+
+#### 0.3.6
+
+- 在 Capture 页面新增亮度和色温的实时调节 UI。
+
 ### 0.2
 
 - 跑通基础相机渲染链路。

@@ -41,16 +41,37 @@ void main() {
 }
 )";
 
-constexpr char kPreviewVertexShaderSource[] = R"(#version 300 es
+constexpr char kImageVertexShaderSource[] = R"(#version 300 es
 
 layout(location = 0) in vec2 position;
 layout(location = 1) in vec2 textureCoordinate;
 
-out vec2 previewTextureCoordinate;
+out vec2 imageTextureCoordinate;
 
 void main() {
     gl_Position = vec4(position, 0.0, 1.0);
-    previewTextureCoordinate = textureCoordinate;
+    imageTextureCoordinate = textureCoordinate;
+}
+)";
+
+constexpr char kAdjustmentFragmentShaderSource[] = R"(#version 300 es
+
+precision mediump float;
+
+uniform sampler2D normalizedTexture;
+uniform float brightness;
+uniform float warmth;
+
+in vec2 imageTextureCoordinate;
+out vec4 outputColor;
+
+void main() {
+    vec4 color = texture(normalizedTexture, imageTextureCoordinate);
+    color.rgb += brightness;
+    color.r += warmth * 0.15;
+    color.b -= warmth * 0.15;
+    color.rgb = clamp(color.rgb, 0.0, 1.0);
+    outputColor = color;
 }
 )";
 
@@ -58,13 +79,13 @@ constexpr char kPreviewFragmentShaderSource[] = R"(#version 300 es
 
 precision mediump float;
 
-uniform sampler2D normalizedTexture;
+uniform sampler2D adjustedTexture;
 
-in vec2 previewTextureCoordinate;
+in vec2 imageTextureCoordinate;
 out vec4 outputColor;
 
 void main() {
-    outputColor = texture(normalizedTexture, previewTextureCoordinate);
+    outputColor = texture(adjustedTexture, imageTextureCoordinate);
 }
 )";
 
@@ -252,22 +273,32 @@ bool NativeRenderer::Init(
     if (!CreateInputTexture()) {
         return false;
     }
-    // 2. create render buffer
+    // 2. create normalized buffer
     if (!CreateNormalizedTarget()) {
         return false;
     }
 
-    // 3. create normalize program
+    // 3. create adjusted buffer
+    if (!CreateAdjustedTarget()) {
+        return false;
+    }
+
+    // 4. create normalize program
     if (!CreateNormalizeProgram()) {
         return false;
     }
 
-    // 4. create preview program
+    // 5. create adjustment program
+    if (!CreateAdjustmentProgram()) {
+        return false;
+    }
+
+    // 6. create preview program
     if (!CreatePreviewProgram()) {
         return false;
     }
 
-    // 5. create vertex buffer
+    // 7. create vertex buffer
     if (!CreateVertexBuffer()) {
         return false;
     }
@@ -304,12 +335,20 @@ GLuint NativeRenderer::GetInputTexture() const {
     return input_texture_;
 }
 
+void NativeRenderer::SetImageParams(float brightness, float warmth) {
+    brightness_ = brightness;
+    warmth_ = warmth;
+}
+
 void NativeRenderer::RenderFrame(const float* texture_matrix) {
 
-    // Pass 1: OES -> RGBA buffer
+    // Pass 1: OES -> normalized buffer
     RenderToNormalizedTarget(texture_matrix);
 
-    // Pass 2: RGBA buffer -> surfaceView
+    // Pass 2: normalized buffer -> adjusted buffer
+    RenderToAdjustedTarget();
+
+    // Pass 3: adjusted buffer -> surfaceView
     RenderToOutput();
 
     if (eglSwapBuffers(display_, surface_) != EGL_TRUE) {
@@ -317,8 +356,7 @@ void NativeRenderer::RenderFrame(const float* texture_matrix) {
     }
 }
 
-void NativeRenderer::RenderToNormalizedTarget(
-        const float* texture_matrix) {
+void NativeRenderer::RenderToNormalizedTarget(const float* texture_matrix) const {
 
     // bind framebuffer
     glBindFramebuffer(GL_FRAMEBUFFER, normalized_framebuffer_);
@@ -346,7 +384,32 @@ void NativeRenderer::RenderToNormalizedTarget(
     glUseProgram(0);
 }
 
-void NativeRenderer::RenderToOutput() {
+void NativeRenderer::RenderToAdjustedTarget() const {
+
+    // bind framebuffer
+    glBindFramebuffer(GL_FRAMEBUFFER, adjusted_framebuffer_);
+    glViewport(0, 0, normalized_width_, normalized_height_);
+
+    // use program
+    glUseProgram(adjustment_program_);
+    glBindVertexArray(vertex_array_);
+
+    // bind normalized buffer
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, normalized_texture_);
+    glUniform1i(adjustment_texture_location_, 0);
+    glUniform1f(adjustment_brightness_location_, brightness_);
+    glUniform1f(adjustment_warmth_location_, warmth_);
+
+    // render normalized buffer to adjusted buffer
+    glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+
+    glBindTexture(GL_TEXTURE_2D, 0);
+    glBindVertexArray(0);
+    glUseProgram(0);
+}
+
+void NativeRenderer::RenderToOutput() const {
 
     // bind framebuffer
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
@@ -356,12 +419,12 @@ void NativeRenderer::RenderToOutput() {
     glUseProgram(preview_program_);
     glBindVertexArray(vertex_array_);
 
-    // bind RGBA buffer
+    // bind adjusted buffer
     glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, normalized_texture_);
+    glBindTexture(GL_TEXTURE_2D, adjusted_texture_);
     glUniform1i(preview_texture_location_, 0);
 
-    // render RGBA buffer to surfaceView
+    // render adjusted buffer to surfaceView
     glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 
     glBindTexture(GL_TEXTURE_2D, 0);
@@ -425,6 +488,55 @@ bool NativeRenderer::CreateNormalizedTarget() {
             0);
 
     // verify framebuffer
+    const GLenum framebuffer_status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    glBindTexture(GL_TEXTURE_2D, 0);
+
+    if (framebuffer_status != GL_FRAMEBUFFER_COMPLETE) {
+        __android_log_print(
+                ANDROID_LOG_ERROR,
+                kLogTag,
+                "Framebuffer creation failed: 0x%x",
+                framebuffer_status);
+        return false;
+    }
+
+    return true;
+}
+
+bool NativeRenderer::CreateAdjustedTarget() {
+
+    // create RGBA texture
+    glGenTextures(1, &adjusted_texture_);
+    glBindTexture(GL_TEXTURE_2D, adjusted_texture_);
+
+    // allocate texture storage
+    glTexImage2D(
+            GL_TEXTURE_2D,
+            0,
+            GL_RGBA8,
+            normalized_width_,
+            normalized_height_,
+            0,
+            GL_RGBA,
+            GL_UNSIGNED_BYTE,
+            nullptr);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+
+    // create framebuffer and attach texture
+    glGenFramebuffers(1, &adjusted_framebuffer_);
+    glBindFramebuffer(GL_FRAMEBUFFER, adjusted_framebuffer_);
+    glFramebufferTexture2D(
+            GL_FRAMEBUFFER,
+            GL_COLOR_ATTACHMENT0,
+            GL_TEXTURE_2D,
+            adjusted_texture_,
+            0);
+
+    // verify framebuffer
     const GLenum framebuffer_status =
             glCheckFramebufferStatus(GL_FRAMEBUFFER);
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
@@ -455,16 +567,33 @@ bool NativeRenderer::CreateNormalizeProgram() {
     return true;
 }
 
+bool NativeRenderer::CreateAdjustmentProgram() {
+    adjustment_program_ = CreateProgram(
+            kImageVertexShaderSource,
+            kAdjustmentFragmentShaderSource);
+    if (adjustment_program_ == 0) {
+        return false;
+    }
+
+    adjustment_texture_location_ =
+            glGetUniformLocation(adjustment_program_, "normalizedTexture");
+    adjustment_brightness_location_ =
+            glGetUniformLocation(adjustment_program_, "brightness");
+    adjustment_warmth_location_ =
+            glGetUniformLocation(adjustment_program_, "warmth");
+    return true;
+}
+
 bool NativeRenderer::CreatePreviewProgram() {
     preview_program_ = CreateProgram(
-            kPreviewVertexShaderSource,
+            kImageVertexShaderSource,
             kPreviewFragmentShaderSource);
     if (preview_program_ == 0) {
         return false;
     }
 
     preview_texture_location_ =
-            glGetUniformLocation(preview_program_, "normalizedTexture");
+            glGetUniformLocation(preview_program_, "adjustedTexture");
     return true;
 }
 
@@ -503,6 +632,12 @@ bool NativeRenderer::CreateVertexBuffer() {
 }
 
 void NativeRenderer::Release() {
+    if (adjusted_framebuffer_ != 0) {
+        glDeleteFramebuffers(1, &adjusted_framebuffer_);
+    }
+    if (adjusted_texture_ != 0) {
+        glDeleteTextures(1, &adjusted_texture_);
+    }
     if (normalized_framebuffer_ != 0) {
         glDeleteFramebuffers(1, &normalized_framebuffer_);
     }
@@ -517,6 +652,9 @@ void NativeRenderer::Release() {
     }
     if (normalize_program_ != 0) {
         glDeleteProgram(normalize_program_);
+    }
+    if (adjustment_program_ != 0) {
+        glDeleteProgram(adjustment_program_);
     }
     if (preview_program_ != 0) {
         glDeleteProgram(preview_program_);
@@ -564,12 +702,18 @@ void NativeRenderer::Release() {
     input_texture_ = 0;
     normalized_texture_ = 0;
     normalized_framebuffer_ = 0;
+    adjusted_texture_ = 0;
+    adjusted_framebuffer_ = 0;
     normalize_program_ = 0;
+    adjustment_program_ = 0;
     preview_program_ = 0;
     vertex_array_ = 0;
     vertex_buffer_ = 0;
     normalize_texture_matrix_location_ = -1;
     normalize_input_texture_location_ = -1;
+    adjustment_texture_location_ = -1;
+    adjustment_brightness_location_ = -1;
+    adjustment_warmth_location_ = -1;
     preview_texture_location_ = -1;
     output_width_ = 0;
     output_height_ = 0;
