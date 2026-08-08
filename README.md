@@ -34,6 +34,10 @@ PELab, short for Penguito Effect Lab, aims to build a complete Android applicati
 
 - Implemented basic warmth adjustment in the `render-sdk` Adjustment Shader.
 
+#### 0.3.6
+
+- Added live brightness and warmth adjustment controls to the Capture page.
+
 ### 0.2
 
 - Establish the basic camera rendering path.

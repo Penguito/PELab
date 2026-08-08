@@ -9,6 +9,8 @@ import android.view.Surface
 import android.view.SurfaceHolder
 import android.view.SurfaceView
 import android.widget.Button
+import android.widget.RadioGroup
+import android.widget.SeekBar
 import android.widget.TextView
 import com.penguito.effectlab.render.core.camera.Camera2Listener
 import com.penguito.effectlab.render.core.camera.Camera2Manager
@@ -17,6 +19,7 @@ import com.penguito.effectlab.render.core.camera.CameraError
 import com.penguito.effectlab.render.core.camera.CameraErrorCode
 import com.penguito.effectlab.render.core.camera.LensFacing
 import com.penguito.effectlab.render.core.permission.CameraPermissionGate
+import com.penguito.effectlab.render.sdk.ImageParams
 import com.penguito.effectlab.render.sdk.PreviewResolution
 import com.penguito.effectlab.render.sdk.RenderEngine
 
@@ -29,8 +32,11 @@ class CaptureActivity : Activity(), SurfaceHolder.Callback, Camera2Listener, Ren
     private var lifecycleStatus: TextView? = null
     private var debugInfo: TextView? = null
     private var switchCameraButton: Button? = null
+    private var adjustmentSeekBar: SeekBar? = null
     private var outputSurface: Surface? = null
     private var cameraConfiguration: CameraConfiguration? = null
+    private var imageParams = ImageParams.defaults()
+    private var selectedAdjustment = Adjustment.BRIGHTNESS
     private var isCaptureResumed = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -48,6 +54,30 @@ class CaptureActivity : Activity(), SurfaceHolder.Callback, Camera2Listener, Ren
         debugInfo = findViewById(R.id.capture_debug_info)
         switchCameraButton = findViewById<Button>(R.id.capture_switch_camera).also {
             it.setOnClickListener { cameraManager.switchCamera() }
+        }
+        adjustmentSeekBar = findViewById<SeekBar>(R.id.capture_adjustment_seek_bar).also {
+            it.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
+                override fun onProgressChanged(
+                    seekBar: SeekBar,
+                    progress: Int,
+                    fromUser: Boolean,
+                ) {
+                    if (fromUser) {
+                        updateImageParams(progress.toAdjustmentValue())
+                    }
+                }
+
+                override fun onStartTrackingTouch(seekBar: SeekBar) = Unit
+
+                override fun onStopTrackingTouch(seekBar: SeekBar) = Unit
+            })
+        }
+        findViewById<RadioGroup>(R.id.capture_adjustment_group).setOnCheckedChangeListener { _, checkedId ->
+            selectedAdjustment = when (checkedId) {
+                R.id.capture_warmth -> Adjustment.WARMTH
+                else -> Adjustment.BRIGHTNESS
+            }
+            showSelectedAdjustment()
         }
     }
 
@@ -140,6 +170,33 @@ class CaptureActivity : Activity(), SurfaceHolder.Callback, Camera2Listener, Ren
         )
     }
 
+    private fun showSelectedAdjustment() {
+        val value = when (selectedAdjustment) {
+            Adjustment.BRIGHTNESS -> imageParams.brightness
+            Adjustment.WARMTH -> imageParams.warmth
+        }
+        adjustmentSeekBar?.progress = value.toAdjustmentProgress()
+    }
+
+    private fun updateImageParams(value: Float) {
+        imageParams = when (selectedAdjustment) {
+            Adjustment.BRIGHTNESS -> ImageParams.builder(imageParams)
+                .setBrightness(value)
+                .build()
+
+            Adjustment.WARMTH -> ImageParams.builder(imageParams)
+                .setWarmth(value)
+                .build()
+        }
+        renderEngine.setRenderParams(imageParams)
+    }
+
+    private fun Int.toAdjustmentValue(): Float =
+        (this - ADJUSTMENT_PROGRESS_CENTER) / ADJUSTMENT_PROGRESS_SCALE
+
+    private fun Float.toAdjustmentProgress(): Int =
+        (this * ADJUSTMENT_PROGRESS_SCALE + ADJUSTMENT_PROGRESS_CENTER).toInt()
+
     override fun onRenderReady(inputSurface: Surface) {
         val configuration = cameraConfiguration ?: return
         if (!isCaptureResumed || outputSurface == null) return
@@ -208,7 +265,14 @@ class CaptureActivity : Activity(), SurfaceHolder.Callback, Camera2Listener, Ren
 
     companion object {
         private const val LOG_TAG = "PELabCapture"
+        private const val ADJUSTMENT_PROGRESS_CENTER = 100
+        private const val ADJUSTMENT_PROGRESS_SCALE = 100.0F
 
         fun createIntent(context: Context): Intent = Intent(context, CaptureActivity::class.java)
+    }
+
+    private enum class Adjustment {
+        BRIGHTNESS,
+        WARMTH,
     }
 }

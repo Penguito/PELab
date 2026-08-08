@@ -2,4 +2,5 @@
 <resources>
     <color name="render_ui_background">#000000</color>
     <color name="render_ui_on_background">#FFFFFF</color>
+    <color name="render_ui_panel_background">#CC0D1F3C</color>
 </resources>
