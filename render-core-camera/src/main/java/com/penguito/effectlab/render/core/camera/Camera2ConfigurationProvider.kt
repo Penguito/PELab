@@ -14,8 +14,7 @@ class Camera2ConfigurationProvider(
     context: Context,
     private val onError: (CameraError) -> Unit,
 ) {
-    private val cameraManager = context.applicationContext
-        .getSystemService(CameraManager::class.java)
+    private val cameraManager = context.applicationContext.getSystemService(CameraManager::class.java)
 
     fun getAvailableCameras(): List<CameraDeviceInfo> {
         return detectCameras().cameras

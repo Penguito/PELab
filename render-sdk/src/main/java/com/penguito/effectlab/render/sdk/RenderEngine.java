@@ -46,10 +46,7 @@ public final class RenderEngine implements Closeable {
         return nativeGetBridgeInfo();
     }
 
-    public void init(
-            Surface outputSurface,
-            PreviewResolution previewResolution,
-            Listener listener) {
+    public void init(Surface outputSurface, PreviewResolution previewResolution, Listener listener) {
         renderHandler.post(() -> {
             releaseOnRenderThread();
             this.listener = listener;

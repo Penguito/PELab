@@ -10,6 +10,14 @@ PELab, short for Penguito Effect Lab, aims to build a complete Android applicati
 
 ## Current Development Progress
 
+### 0.4
+
+- Add support for setting LUT filters.
+
+#### 0.4.1
+
+- Added the filter material model and material loading and copying methods to `render-core-material`.
+
 ### 0.3
 
 - Add basic image adjustment support and implement a 3-pass rendering pipeline.
