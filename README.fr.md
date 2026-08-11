@@ -18,6 +18,10 @@ PELab, abréviation de Penguito Effect Lab, a pour objectif de construire de zé
 
 - Ajout dans `render-core-material` du modèle de ressource de filtre et des méthodes de chargement et de copie des ressources.
 
+#### 0.4.2
+
+- Ajout de la méthode `setFilter()` dans `render-sdk`.
+
 ### 0.3
 
 - Ajouter une fonction de réglage d’image de base et mettre en œuvre une chaîne de rendu en 3 passes.

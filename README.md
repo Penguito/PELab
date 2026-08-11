@@ -18,6 +18,10 @@ PELab, short for Penguito Effect Lab, aims to build a complete Android applicati
 
 - Added the filter material model and material loading and copying methods to `render-core-material`.
 
+#### 0.4.2
+
+- Added the `setFilter()` method to `render-sdk`.
+
 ### 0.3
 
 - Add basic image adjustment support and implement a 3-pass rendering pipeline.

@@ -18,6 +18,10 @@ PELab 全称为 Penguito Effect Lab，旨在从零开始构建一个完整的、
 
 - 在 `render-core-material` 中新增滤镜素材模型和模型加载拷贝的方法。
 
+#### 0.4.2
+
+- 在 `render-sdk` 中新增 `setFilter()`方法。
+
 ### 0.3
 
 - 增加基础图片参数调节功能，并实现 3-Pass 渲染链路。

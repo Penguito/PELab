@@ -7,6 +7,7 @@ import android.os.Looper;
 import android.view.Surface;
 
 import java.io.Closeable;
+import java.io.File;
 
 public final class RenderEngine implements Closeable {
 
@@ -31,6 +32,7 @@ public final class RenderEngine implements Closeable {
     private Surface inputSurface;
     private Listener listener;
     private ImageParams imageParams = ImageParams.defaults();
+    private String lutPath;
     private long nativeHandle;
     private long debugInfoStartNanos;
     private long renderDurationNanos;
@@ -86,6 +88,14 @@ public final class RenderEngine implements Closeable {
         renderHandler.post(() -> applyImageParams(imageParams));
     }
 
+    public void setFilter(String rootPath) {
+        if (isClosed) {
+            return;
+        }
+        String resolvedLutPath = resolveLutPath(rootPath);
+        renderHandler.post(() -> lutPath = resolvedLutPath);
+    }
+
     public void stop() {
         if (isClosed) {
             return;
@@ -113,6 +123,18 @@ public final class RenderEngine implements Closeable {
                 params.getBrightness(),
                 params.getWarmth()
         );
+    }
+
+    private String resolveLutPath(String rootPath) {
+        if (rootPath == null || rootPath.trim().isEmpty()) {
+            return null;
+        }
+
+        File lutFile = new File(rootPath, LUT_FILE_NAME);
+        if (!lutFile.isFile()) {
+            throw new IllegalArgumentException("lut.png not found in filter root: " + rootPath);
+        }
+        return lutFile.getAbsolutePath();
     }
 
     private void updateDebugInfo(long frameStartNanos, long frameEndNanos) {
@@ -187,4 +209,5 @@ public final class RenderEngine implements Closeable {
 
     private static final long DEBUG_INFO_INTERVAL_NANOS = 1_000_000_000L;
     private static final float NANOS_PER_MILLISECOND = 1_000_000F;
+    private static final String LUT_FILE_NAME = "lut.png";
 }
