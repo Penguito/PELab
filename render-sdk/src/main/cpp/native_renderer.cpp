@@ -340,6 +340,32 @@ void NativeRenderer::SetImageParams(float brightness, float warmth) {
     warmth_ = warmth;
 }
 
+bool NativeRenderer::SetLutTexture(const void* pixels, int width, int height, int row_stride) {
+
+    if (lut_texture_ != 0) {
+        glDeleteTextures(1, &lut_texture_);
+        lut_texture_ = 0;
+    }
+    if (pixels == nullptr) {
+        return true;
+    }
+    if (width <= 0 || height <= 0 || row_stride < width * 4) {
+        return false;
+    }
+
+    glGenTextures(1, &lut_texture_);
+    glBindTexture(GL_TEXTURE_2D, lut_texture_);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glPixelStorei(GL_UNPACK_ROW_LENGTH, row_stride / 4);
+    glTexImage2D(GL_TEXTURE_2D,0,GL_RGBA8, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
+    glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
+    glBindTexture(GL_TEXTURE_2D, 0);
+    return lut_texture_ != 0;
+}
+
 void NativeRenderer::RenderFrame(const float* texture_matrix) {
 
     // Pass 1: OES -> normalized buffer
@@ -435,22 +461,10 @@ void NativeRenderer::RenderToOutput() const {
 bool NativeRenderer::CreateInputTexture() {
     glGenTextures(1, &input_texture_);
     glBindTexture(GL_TEXTURE_EXTERNAL_OES, input_texture_);
-    glTexParameteri(
-            GL_TEXTURE_EXTERNAL_OES,
-            GL_TEXTURE_MIN_FILTER,
-            GL_LINEAR);
-    glTexParameteri(
-            GL_TEXTURE_EXTERNAL_OES,
-            GL_TEXTURE_MAG_FILTER,
-            GL_LINEAR);
-    glTexParameteri(
-            GL_TEXTURE_EXTERNAL_OES,
-            GL_TEXTURE_WRAP_S,
-            GL_CLAMP_TO_EDGE);
-    glTexParameteri(
-            GL_TEXTURE_EXTERNAL_OES,
-            GL_TEXTURE_WRAP_T,
-            GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_EXTERNAL_OES,GL_TEXTURE_MIN_FILTER,GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_EXTERNAL_OES,GL_TEXTURE_MAG_FILTER,GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_EXTERNAL_OES,GL_TEXTURE_WRAP_S,GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_EXTERNAL_OES,GL_TEXTURE_WRAP_T,GL_CLAMP_TO_EDGE);
     glBindTexture(GL_TEXTURE_EXTERNAL_OES, 0);
     return input_texture_ != 0;
 }
@@ -632,6 +646,9 @@ bool NativeRenderer::CreateVertexBuffer() {
 }
 
 void NativeRenderer::Release() {
+    if (lut_texture_ != 0) {
+        glDeleteTextures(1, &lut_texture_);
+    }
     if (adjusted_framebuffer_ != 0) {
         glDeleteFramebuffers(1, &adjusted_framebuffer_);
     }
@@ -704,6 +721,7 @@ void NativeRenderer::Release() {
     normalized_framebuffer_ = 0;
     adjusted_texture_ = 0;
     adjusted_framebuffer_ = 0;
+    lut_texture_ = 0;
     normalize_program_ = 0;
     adjustment_program_ = 0;
     preview_program_ = 0;

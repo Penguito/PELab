@@ -22,6 +22,10 @@ PELab, abréviation de Penguito Effect Lab, a pour objectif de construire de zé
 
 - Ajout de la méthode `setFilter()` dans `render-sdk`.
 
+#### 0.4.3
+
+- Finalisation dans `render-sdk` du décodage du Bitmap LUT et de son transfert vers une Texture GLES 2D.
+
 ### 0.3
 
 - Ajouter une fonction de réglage d’image de base et mettre en œuvre une chaîne de rendu en 3 passes.

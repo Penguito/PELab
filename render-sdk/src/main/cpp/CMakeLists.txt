@@ -28,5 +28,6 @@ target_link_libraries(
     android
     EGL
     GLESv3
+    jnigraphics  #bitmap
     log
 )

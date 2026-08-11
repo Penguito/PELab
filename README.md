@@ -22,6 +22,10 @@ PELab, short for Penguito Effect Lab, aims to build a complete Android applicati
 
 - Added the `setFilter()` method to `render-sdk`.
 
+#### 0.4.3
+
+- Completed LUT Bitmap decoding and GLES 2D Texture upload in `render-sdk`.
+
 ### 0.3
 
 - Add basic image adjustment support and implement a 3-pass rendering pipeline.
