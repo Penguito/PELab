@@ -75,17 +75,58 @@ void main() {
 }
 )";
 
-constexpr char kPreviewFragmentShaderSource[] = R"(#version 300 es
+constexpr char kFilterFragmentShaderSource[] = R"(#version 300 es
 
-precision mediump float;
+precision highp float;
 
-uniform sampler2D adjustedTexture;
+uniform sampler2D imageTexture;
+uniform sampler2D lutTexture;
+uniform vec2 lutTextureSize;
 
 in vec2 imageTextureCoordinate;
 out vec4 outputColor;
 
 void main() {
-    outputColor = texture(adjustedTexture, imageTextureCoordinate);
+    vec4 color = texture(imageTexture, imageTextureCoordinate);
+    float blueIndex = color.b * 63.0;
+    float lowerIndex = floor(blueIndex);
+    float upperIndex = ceil(blueIndex);
+
+    vec2 lowerTile = vec2(
+            mod(lowerIndex, 8.0),
+            floor(lowerIndex / 8.0));
+    vec2 upperTile = vec2(
+            mod(upperIndex, 8.0),
+            floor(upperIndex / 8.0));
+
+    vec2 texelSize = 1.0 / lutTextureSize;
+    vec2 tileSize = vec2(0.125);
+    vec2 tileRange = tileSize - texelSize;
+    vec2 texelOffset = texelSize * 0.5;
+    vec2 lowerCoordinate =
+            lowerTile * tileSize + texelOffset + color.rg * tileRange;
+    vec2 upperCoordinate =
+            upperTile * tileSize + texelOffset + color.rg * tileRange;
+
+    vec3 lowerColor = texture(lutTexture, lowerCoordinate).rgb;
+    vec3 upperColor = texture(lutTexture, upperCoordinate).rgb;
+    outputColor = vec4(
+            mix(lowerColor, upperColor, fract(blueIndex)),
+            color.a);
+}
+)";
+
+constexpr char kPreviewFragmentShaderSource[] = R"(#version 300 es
+
+precision mediump float;
+
+uniform sampler2D previewTexture;
+
+in vec2 imageTextureCoordinate;
+out vec4 outputColor;
+
+void main() {
+    outputColor = texture(previewTexture, imageTextureCoordinate);
 }
 )";
 
@@ -278,27 +319,37 @@ bool NativeRenderer::Init(
         return false;
     }
 
-    // 3. create adjusted buffer
-    if (!CreateAdjustedTarget()) {
+    // 3. create image buffer
+    if (!CreateImageTarget()) {
         return false;
     }
 
-    // 4. create normalize program
+    // 4. create filter buffer
+    if (!CreateFilterTarget()) {
+        return false;
+    }
+
+    // 5. create normalize program
     if (!CreateNormalizeProgram()) {
         return false;
     }
 
-    // 5. create adjustment program
+    // 6. create adjustment program
     if (!CreateAdjustmentProgram()) {
         return false;
     }
 
-    // 6. create preview program
+    // 7. create filter program
+    if (!CreateFilterProgram()) {
+        return false;
+    }
+
+    // 8. create preview program
     if (!CreatePreviewProgram()) {
         return false;
     }
 
-    // 7. create vertex buffer
+    // 9. create vertex buffer
     if (!CreateVertexBuffer()) {
         return false;
     }
@@ -346,6 +397,8 @@ bool NativeRenderer::SetLutTexture(const void* pixels, int width, int height, in
         glDeleteTextures(1, &lut_texture_);
         lut_texture_ = 0;
     }
+    lut_width_ = 0;
+    lut_height_ = 0;
     if (pixels == nullptr) {
         return true;
     }
@@ -363,7 +416,13 @@ bool NativeRenderer::SetLutTexture(const void* pixels, int width, int height, in
     glTexImage2D(GL_TEXTURE_2D,0,GL_RGBA8, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
     glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
     glBindTexture(GL_TEXTURE_2D, 0);
-    return lut_texture_ != 0;
+    if (lut_texture_ == 0) {
+        return false;
+    }
+
+    lut_width_ = width;
+    lut_height_ = height;
+    return true;
 }
 
 void NativeRenderer::RenderFrame(const float* texture_matrix) {
@@ -371,10 +430,15 @@ void NativeRenderer::RenderFrame(const float* texture_matrix) {
     // Pass 1: OES -> normalized buffer
     RenderToNormalizedTarget(texture_matrix);
 
-    // Pass 2: normalized buffer -> adjusted buffer
-    RenderToAdjustedTarget();
+    // Pass 2: normalized buffer -> image buffer
+    RenderToImageTarget();
 
-    // Pass 3: adjusted buffer -> surfaceView
+    // Pass Filter: image buffer -> filter buffer
+    if (lut_texture_ != 0) {
+        RenderToFilterTarget();
+    }
+
+    // Pass Final: last buffer -> surfaceView
     RenderToOutput();
 
     if (eglSwapBuffers(display_, surface_) != EGL_TRUE) {
@@ -410,10 +474,10 @@ void NativeRenderer::RenderToNormalizedTarget(const float* texture_matrix) const
     glUseProgram(0);
 }
 
-void NativeRenderer::RenderToAdjustedTarget() const {
+void NativeRenderer::RenderToImageTarget() const {
 
     // bind framebuffer
-    glBindFramebuffer(GL_FRAMEBUFFER, adjusted_framebuffer_);
+    glBindFramebuffer(GL_FRAMEBUFFER, image_framebuffer_);
     glViewport(0, 0, normalized_width_, normalized_height_);
 
     // use program
@@ -427,9 +491,38 @@ void NativeRenderer::RenderToAdjustedTarget() const {
     glUniform1f(adjustment_brightness_location_, brightness_);
     glUniform1f(adjustment_warmth_location_, warmth_);
 
-    // render normalized buffer to adjusted buffer
+    // render normalized buffer to image buffer
     glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 
+    glBindTexture(GL_TEXTURE_2D, 0);
+    glBindVertexArray(0);
+    glUseProgram(0);
+}
+
+void NativeRenderer::RenderToFilterTarget() const {
+
+    // bind framebuffer
+    glBindFramebuffer(GL_FRAMEBUFFER, filter_framebuffer_);
+    glViewport(0, 0, normalized_width_, normalized_height_);
+
+    // use program
+    glUseProgram(filter_program_);
+    glBindVertexArray(vertex_array_);
+
+    // bind image buffer and LUT texture
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, image_texture_);
+    glUniform1i(filter_input_texture_location_, 0);
+    glActiveTexture(GL_TEXTURE1);
+    glBindTexture(GL_TEXTURE_2D, lut_texture_);
+    glUniform1i(filter_lut_texture_location_, 1);
+    glUniform2f(filter_lut_size_location_, static_cast<GLfloat>(lut_width_), static_cast<GLfloat>(lut_height_));
+
+    // render image buffer to filter buffer
+    glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+
+    glBindTexture(GL_TEXTURE_2D, 0);
+    glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, 0);
     glBindVertexArray(0);
     glUseProgram(0);
@@ -445,12 +538,14 @@ void NativeRenderer::RenderToOutput() const {
     glUseProgram(preview_program_);
     glBindVertexArray(vertex_array_);
 
-    // bind adjusted buffer
+    // bind image or filter buffer
+    const GLuint preview_texture =
+            lut_texture_ == 0 ? image_texture_ : filter_texture_;
     glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, adjusted_texture_);
+    glBindTexture(GL_TEXTURE_2D, preview_texture);
     glUniform1i(preview_texture_location_, 0);
 
-    // render adjusted buffer to surfaceView
+    // render preview texture to surfaceView
     glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 
     glBindTexture(GL_TEXTURE_2D, 0);
@@ -518,11 +613,11 @@ bool NativeRenderer::CreateNormalizedTarget() {
     return true;
 }
 
-bool NativeRenderer::CreateAdjustedTarget() {
+bool NativeRenderer::CreateImageTarget() {
 
     // create RGBA texture
-    glGenTextures(1, &adjusted_texture_);
-    glBindTexture(GL_TEXTURE_2D, adjusted_texture_);
+    glGenTextures(1, &image_texture_);
+    glBindTexture(GL_TEXTURE_2D, image_texture_);
 
     // allocate texture storage
     glTexImage2D(
@@ -541,18 +636,64 @@ bool NativeRenderer::CreateAdjustedTarget() {
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 
     // create framebuffer and attach texture
-    glGenFramebuffers(1, &adjusted_framebuffer_);
-    glBindFramebuffer(GL_FRAMEBUFFER, adjusted_framebuffer_);
+    glGenFramebuffers(1, &image_framebuffer_);
+    glBindFramebuffer(GL_FRAMEBUFFER, image_framebuffer_);
     glFramebufferTexture2D(
             GL_FRAMEBUFFER,
             GL_COLOR_ATTACHMENT0,
             GL_TEXTURE_2D,
-            adjusted_texture_,
+            image_texture_,
             0);
 
     // verify framebuffer
-    const GLenum framebuffer_status =
-            glCheckFramebufferStatus(GL_FRAMEBUFFER);
+    const GLenum framebuffer_status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    glBindTexture(GL_TEXTURE_2D, 0);
+    if (framebuffer_status != GL_FRAMEBUFFER_COMPLETE) {
+        __android_log_print(
+                ANDROID_LOG_ERROR,
+                kLogTag,
+                "Framebuffer creation failed: 0x%x",
+                framebuffer_status);
+        return false;
+    }
+    return true;
+}
+
+bool NativeRenderer::CreateFilterTarget() {
+
+    // create RGBA texture
+    glGenTextures(1, &filter_texture_);
+    glBindTexture(GL_TEXTURE_2D, filter_texture_);
+
+    // allocate texture storage
+    glTexImage2D(
+            GL_TEXTURE_2D,
+            0,
+            GL_RGBA8,
+            normalized_width_,
+            normalized_height_,
+            0,
+            GL_RGBA,
+            GL_UNSIGNED_BYTE,
+            nullptr);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+
+    // create framebuffer and attach texture
+    glGenFramebuffers(1, &filter_framebuffer_);
+    glBindFramebuffer(GL_FRAMEBUFFER, filter_framebuffer_);
+    glFramebufferTexture2D(
+            GL_FRAMEBUFFER,
+            GL_COLOR_ATTACHMENT0,
+            GL_TEXTURE_2D,
+            filter_texture_,
+            0);
+
+    // verify framebuffer
+    const GLenum framebuffer_status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
     glBindTexture(GL_TEXTURE_2D, 0);
     if (framebuffer_status != GL_FRAMEBUFFER_COMPLETE) {
@@ -598,6 +739,23 @@ bool NativeRenderer::CreateAdjustmentProgram() {
     return true;
 }
 
+bool NativeRenderer::CreateFilterProgram() {
+    filter_program_ = CreateProgram(
+            kImageVertexShaderSource,
+            kFilterFragmentShaderSource);
+    if (filter_program_ == 0) {
+        return false;
+    }
+
+    filter_input_texture_location_ =
+            glGetUniformLocation(filter_program_, "imageTexture");
+    filter_lut_texture_location_ =
+            glGetUniformLocation(filter_program_, "lutTexture");
+    filter_lut_size_location_ =
+            glGetUniformLocation(filter_program_, "lutTextureSize");
+    return true;
+}
+
 bool NativeRenderer::CreatePreviewProgram() {
     preview_program_ = CreateProgram(
             kImageVertexShaderSource,
@@ -607,7 +765,7 @@ bool NativeRenderer::CreatePreviewProgram() {
     }
 
     preview_texture_location_ =
-            glGetUniformLocation(preview_program_, "adjustedTexture");
+            glGetUniformLocation(preview_program_, "previewTexture");
     return true;
 }
 
@@ -649,11 +807,17 @@ void NativeRenderer::Release() {
     if (lut_texture_ != 0) {
         glDeleteTextures(1, &lut_texture_);
     }
-    if (adjusted_framebuffer_ != 0) {
-        glDeleteFramebuffers(1, &adjusted_framebuffer_);
+    if (image_framebuffer_ != 0) {
+        glDeleteFramebuffers(1, &image_framebuffer_);
     }
-    if (adjusted_texture_ != 0) {
-        glDeleteTextures(1, &adjusted_texture_);
+    if (image_texture_ != 0) {
+        glDeleteTextures(1, &image_texture_);
+    }
+    if (filter_framebuffer_ != 0) {
+        glDeleteFramebuffers(1, &filter_framebuffer_);
+    }
+    if (filter_texture_ != 0) {
+        glDeleteTextures(1, &filter_texture_);
     }
     if (normalized_framebuffer_ != 0) {
         glDeleteFramebuffers(1, &normalized_framebuffer_);
@@ -672,6 +836,9 @@ void NativeRenderer::Release() {
     }
     if (adjustment_program_ != 0) {
         glDeleteProgram(adjustment_program_);
+    }
+    if (filter_program_ != 0) {
+        glDeleteProgram(filter_program_);
     }
     if (preview_program_ != 0) {
         glDeleteProgram(preview_program_);
@@ -719,11 +886,14 @@ void NativeRenderer::Release() {
     input_texture_ = 0;
     normalized_texture_ = 0;
     normalized_framebuffer_ = 0;
-    adjusted_texture_ = 0;
-    adjusted_framebuffer_ = 0;
+    image_texture_ = 0;
+    image_framebuffer_ = 0;
     lut_texture_ = 0;
+    filter_texture_ = 0;
+    filter_framebuffer_ = 0;
     normalize_program_ = 0;
     adjustment_program_ = 0;
+    filter_program_ = 0;
     preview_program_ = 0;
     vertex_array_ = 0;
     vertex_buffer_ = 0;
@@ -732,11 +902,16 @@ void NativeRenderer::Release() {
     adjustment_texture_location_ = -1;
     adjustment_brightness_location_ = -1;
     adjustment_warmth_location_ = -1;
+    filter_input_texture_location_ = -1;
+    filter_lut_texture_location_ = -1;
+    filter_lut_size_location_ = -1;
     preview_texture_location_ = -1;
     output_width_ = 0;
     output_height_ = 0;
     normalized_width_ = 0;
     normalized_height_ = 0;
+    lut_width_ = 0;
+    lut_height_ = 0;
 }
 
 }  // namespace pelab
