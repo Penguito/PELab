@@ -1,5 +1,6 @@
 #include "native_renderer.h"
 
+#include <android/bitmap.h>
 #include <android/log.h>
 #include <android/native_window_jni.h>
 #include <jni.h>
@@ -75,6 +76,34 @@ Java_com_penguito_effectlab_render_sdk_RenderEngine_nativeSetImageParams(
         jfloat brightness,
         jfloat warmth) {
     FromHandle(handle)->SetImageParams(brightness, warmth);
+}
+
+extern "C" JNIEXPORT jboolean JNICALL
+Java_com_penguito_effectlab_render_sdk_RenderEngine_nativeSetLutTexture(
+        JNIEnv* env,
+        jclass,
+        jlong handle,
+        jobject lut_bitmap) {
+
+    if (lut_bitmap == nullptr) {
+        return FromHandle(handle)->SetLutTexture(nullptr, 0, 0, 0) ? JNI_TRUE : JNI_FALSE;
+    }
+
+    AndroidBitmapInfo bitmap_info{};
+    if (AndroidBitmap_getInfo(env, lut_bitmap, &bitmap_info) != ANDROID_BITMAP_RESULT_SUCCESS) {
+        return JNI_FALSE;
+    }
+
+    void* pixels = nullptr;
+    if (AndroidBitmap_lockPixels(env, lut_bitmap, &pixels) != ANDROID_BITMAP_RESULT_SUCCESS || pixels == nullptr) {
+        return JNI_FALSE;
+    }
+    const bool uploaded = FromHandle(handle)->SetLutTexture(pixels,
+                                                            static_cast<int>(bitmap_info.width),
+                                                            static_cast<int>(bitmap_info.height),
+                                                            static_cast<int>(bitmap_info.stride));
+    AndroidBitmap_unlockPixels(env, lut_bitmap);
+    return uploaded ? JNI_TRUE : JNI_FALSE;
 }
 
 extern "C" JNIEXPORT void JNICALL

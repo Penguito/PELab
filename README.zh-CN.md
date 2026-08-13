@@ -10,6 +10,31 @@ PELab 全称为 Penguito Effect Lab，旨在从零开始构建一个完整的、
 
 ## 当前开发进度
 
+### 0.4
+
+- 增加设置 LUT 滤镜功能。
+
+#### 0.4.1
+
+- 在 `render-core-material` 中新增滤镜素材模型和模型加载拷贝的方法。
+
+#### 0.4.2
+
+- 在 `render-sdk` 中新增 `setFilter()`方法。
+
+#### 0.4.3
+
+- 在 `render-sdk` 中完成 LUT Bitmap 的解码和 GLES 2D Texture 上传。
+
+#### 0.4.4
+
+- 在 `render-sdk` 中实现 Filter Pass 的渲染链路。
+
+#### 0.4.5
+
+- 重构 Native Renderer，将图像调节和滤镜功能拆分为独立 Pass。
+- 在 recorder UI 中完成 LUT 滤镜功能链路的测试。
+
 ### 0.3
 
 - 增加基础图片参数调节功能，并实现 3-Pass 渲染链路。

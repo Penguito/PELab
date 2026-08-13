@@ -8,7 +8,9 @@ import android.util.Log
 import android.view.Surface
 import android.view.SurfaceHolder
 import android.view.SurfaceView
+import android.view.View
 import android.widget.Button
+import android.widget.RadioButton
 import android.widget.RadioGroup
 import android.widget.SeekBar
 import android.widget.TextView
@@ -18,6 +20,7 @@ import com.penguito.effectlab.render.core.camera.CameraConfiguration
 import com.penguito.effectlab.render.core.camera.CameraError
 import com.penguito.effectlab.render.core.camera.CameraErrorCode
 import com.penguito.effectlab.render.core.camera.LensFacing
+import com.penguito.effectlab.render.core.material.FilterMaterialManager
 import com.penguito.effectlab.render.core.permission.CameraPermissionGate
 import com.penguito.effectlab.render.sdk.ImageParams
 import com.penguito.effectlab.render.sdk.PreviewResolution
@@ -26,6 +29,7 @@ import com.penguito.effectlab.render.sdk.RenderEngine
 class CaptureActivity : Activity(), SurfaceHolder.Callback, Camera2Listener, RenderEngine.Listener {
     private val permissionGate by lazy { CameraPermissionGate(this) }
     private val cameraManager by lazy { Camera2Manager(this, this) }
+    private val filterMaterialManager by lazy { FilterMaterialManager(this) }
     private val renderEngine by lazy { RenderEngine() }
 
     private var previewView: SurfaceView? = null
@@ -79,6 +83,7 @@ class CaptureActivity : Activity(), SurfaceHolder.Callback, Camera2Listener, Ren
             }
             showSelectedAdjustment()
         }
+        setupFilterList()
     }
 
     override fun onResume() {
@@ -191,6 +196,28 @@ class CaptureActivity : Activity(), SurfaceHolder.Callback, Camera2Listener, Ren
         renderEngine.setRenderParams(imageParams)
     }
 
+    // test for filter
+    private fun setupFilterList() {
+        val filterGroup = findViewById<RadioGroup>(R.id.capture_filter_group)
+        val filterList = filterMaterialManager.initFilterList()
+            .sortedBy { if (it.id == CYBER_PUNK_FILTER_ID) 0 else 1 }
+        for (material in filterList) {
+            val filterButton = layoutInflater.inflate(
+                R.layout.item_capture_filter,
+                filterGroup,
+                false,
+            ) as RadioButton
+            filterButton.id = View.generateViewId()
+            filterButton.text = material.displayName
+            filterButton.tag = material.rootPath
+            filterGroup.addView(filterButton)
+        }
+        filterGroup.setOnCheckedChangeListener { group, checkedId ->
+            val filterButton = group.findViewById<RadioButton>(checkedId)
+            renderEngine.setFilter(filterButton?.tag as? String)
+        }
+    }
+
     private fun Int.toAdjustmentValue(): Float =
         (this - ADJUSTMENT_PROGRESS_CENTER) / ADJUSTMENT_PROGRESS_SCALE
 
@@ -267,6 +294,7 @@ class CaptureActivity : Activity(), SurfaceHolder.Callback, Camera2Listener, Ren
         private const val LOG_TAG = "PELabCapture"
         private const val ADJUSTMENT_PROGRESS_CENTER = 100
         private const val ADJUSTMENT_PROGRESS_SCALE = 100.0F
+        private const val CYBER_PUNK_FILTER_ID = "cyber_punk"
 
         fun createIntent(context: Context): Intent = Intent(context, CaptureActivity::class.java)
     }

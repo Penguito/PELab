@@ -10,6 +10,31 @@ PELab, abréviation de Penguito Effect Lab, a pour objectif de construire de zé
 
 ## Avancement actuel du développement
 
+### 0.4
+
+- Ajouter la prise en charge de la configuration des filtres LUT.
+
+#### 0.4.1
+
+- Ajout dans `render-core-material` du modèle de ressource de filtre et des méthodes de chargement et de copie des ressources.
+
+#### 0.4.2
+
+- Ajout de la méthode `setFilter()` dans `render-sdk`.
+
+#### 0.4.3
+
+- Finalisation dans `render-sdk` du décodage du Bitmap LUT et de son transfert vers une Texture GLES 2D.
+
+#### 0.4.4
+
+- Implémentation dans `render-sdk` de la chaîne de rendu du Filter Pass.
+
+#### 0.4.5
+
+- Refactorisation du Native Renderer en séparant les fonctions de réglage d’image et de filtre en passes indépendantes.
+- Finalisation des tests de la chaîne fonctionnelle des filtres LUT dans l’interface utilisateur du recorder.
+
 ### 0.3
 
 - Ajouter une fonction de réglage d’image de base et mettre en œuvre une chaîne de rendu en 3 passes.

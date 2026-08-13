@@ -1,5 +1,7 @@
 package com.penguito.effectlab.render.sdk;
 
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.SurfaceTexture;
 import android.os.Handler;
 import android.os.HandlerThread;
@@ -7,6 +9,7 @@ import android.os.Looper;
 import android.view.Surface;
 
 import java.io.Closeable;
+import java.io.File;
 
 public final class RenderEngine implements Closeable {
 
@@ -31,6 +34,7 @@ public final class RenderEngine implements Closeable {
     private Surface inputSurface;
     private Listener listener;
     private ImageParams imageParams = ImageParams.defaults();
+    private String lutPath;
     private long nativeHandle;
     private long debugInfoStartNanos;
     private long renderDurationNanos;
@@ -46,10 +50,7 @@ public final class RenderEngine implements Closeable {
         return nativeGetBridgeInfo();
     }
 
-    public void init(
-            Surface outputSurface,
-            PreviewResolution previewResolution,
-            Listener listener) {
+    public void init(Surface outputSurface, PreviewResolution previewResolution, Listener listener) {
         renderHandler.post(() -> {
             releaseOnRenderThread();
             this.listener = listener;
@@ -59,7 +60,8 @@ public final class RenderEngine implements Closeable {
                     previewResolution.getWidth());
             nativeHandle = handle;
             if (handle != 0L) {
-                applyImageParams(imageParams);
+                setImageParams(imageParams);
+                applyFilter(lutPath);
                 int textureId = nativeGetInputTexture(handle);
 
                 // init surface texture
@@ -86,7 +88,15 @@ public final class RenderEngine implements Closeable {
         }
         if (isClosed) { return; }
 
-        renderHandler.post(() -> applyImageParams(imageParams));
+        renderHandler.post(() -> setImageParams(imageParams));
+    }
+
+    public void setFilter(String rootPath) {
+        if (isClosed) {
+            return;
+        }
+        String resolvedLutPath = resolveLutPath(rootPath);
+        renderHandler.post(() -> applyFilter(resolvedLutPath));
     }
 
     public void stop() {
@@ -108,7 +118,7 @@ public final class RenderEngine implements Closeable {
         updateDebugInfo(frameStartNanos, System.nanoTime());
     }
 
-    private void applyImageParams(ImageParams params) {
+    private void setImageParams(ImageParams params) {
         imageParams = params;
         if (nativeHandle == 0L) { return; }
         nativeSetImageParams(
@@ -116,6 +126,43 @@ public final class RenderEngine implements Closeable {
                 params.getBrightness(),
                 params.getWarmth()
         );
+    }
+
+    private String resolveLutPath(String rootPath) {
+        if (rootPath == null || rootPath.trim().isEmpty()) {
+            return null;
+        }
+
+        File lutFile = new File(rootPath, LUT_FILE_NAME);
+        if (!lutFile.isFile()) {
+            throw new IllegalArgumentException("lut.png not found in filter root: " + rootPath);
+        }
+        return lutFile.getAbsolutePath();
+    }
+
+    private void applyFilter(String path) {
+        lutPath = path;
+        if (nativeHandle == 0L) {
+            return;
+        }
+        if (path == null) {
+            nativeSetLutTexture(nativeHandle, null);
+            return;
+        }
+
+        BitmapFactory.Options options = new BitmapFactory.Options();
+        options.inPreferredConfig = Bitmap.Config.ARGB_8888;
+        Bitmap lutBitmap = BitmapFactory.decodeFile(path, options);
+        if (lutBitmap == null) {
+            nativeSetLutTexture(nativeHandle, null);
+            return;
+        }
+
+        boolean uploaded = nativeSetLutTexture(nativeHandle, lutBitmap);
+        lutBitmap.recycle();
+        if (!uploaded) {
+            nativeSetLutTexture(nativeHandle, null);
+        }
     }
 
     private void updateDebugInfo(long frameStartNanos, long frameEndNanos) {
@@ -186,8 +233,11 @@ public final class RenderEngine implements Closeable {
 
     private static native void nativeSetImageParams(long nativeHandle, float brightness, float warmth);
 
+    private static native boolean nativeSetLutTexture(long nativeHandle, Bitmap lutBitmap);
+
     private static native void nativeDestroyRenderer(long nativeHandle);
 
     private static final long DEBUG_INFO_INTERVAL_NANOS = 1_000_000_000L;
     private static final float NANOS_PER_MILLISECOND = 1_000_000F;
+    private static final String LUT_FILE_NAME = "lut.png";
 }
