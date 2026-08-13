@@ -10,6 +10,8 @@
     <string name="capture_debug_info">Frame: %1$.2f ms · FPS: %2$.1f</string>
     <string name="capture_adjustment_brightness">Brightness</string>
     <string name="capture_adjustment_warmth">Warmth</string>
+    <string name="capture_filter">Filter</string>
+    <string name="capture_filter_none">None</string>
     <string name="capture_render_initialization_failed">Render initialization failed</string>
 
     <!--  camera detect errors  -->

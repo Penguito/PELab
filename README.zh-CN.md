@@ -33,6 +33,7 @@ PELab 全称为 Penguito Effect Lab，旨在从零开始构建一个完整的、
 #### 0.4.5
 
 - 重构 Native Renderer，将图像调节和滤镜功能拆分为独立 Pass。
+- 在 recorder UI 中完成 LUT 滤镜功能链路的测试。
 
 ### 0.3
 

@@ -33,6 +33,7 @@ PELab, abréviation de Penguito Effect Lab, a pour objectif de construire de zé
 #### 0.4.5
 
 - Refactorisation du Native Renderer en séparant les fonctions de réglage d’image et de filtre en passes indépendantes.
+- Finalisation des tests de la chaîne fonctionnelle des filtres LUT dans l’interface utilisateur du recorder.
 
 ### 0.3
 

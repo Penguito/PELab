@@ -23,10 +23,8 @@ class FilterMaterialManager(context: Context) {
         val lutFile = File(filterDirectory, LUT_FILE_NAME)
 
         filterDirectory.mkdirs()
-        if (!lutFile.exists() || lutFile.length() == 0L) {
-            applicationContext.assets.open(assetPath).use { input ->
-                lutFile.outputStream().use(input::copyTo)
-            }
+        applicationContext.assets.open(assetPath).use { input ->
+            lutFile.outputStream().use(input::copyTo)
         }
         return FilterMaterial(
             id = filterId,

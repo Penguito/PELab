@@ -33,6 +33,7 @@ PELab, short for Penguito Effect Lab, aims to build a complete Android applicati
 #### 0.4.5
 
 - Refactored the Native Renderer by splitting image adjustment and filter features into independent passes.
+- Completed testing of the LUT filter feature pipeline in the recorder UI.
 
 ### 0.3
 
