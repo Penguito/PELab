@@ -1,5 +1,7 @@
 #include "native_renderer.h"
 
+#include "gl_utils.h"
+
 #include <EGL/eglext.h>
 #include <GLES2/gl2ext.h>
 #include <GLES3/gl3.h>
@@ -54,68 +56,6 @@ void main() {
 }
 )";
 
-constexpr char kAdjustmentFragmentShaderSource[] = R"(#version 300 es
-
-precision mediump float;
-
-uniform sampler2D normalizedTexture;
-uniform float brightness;
-uniform float warmth;
-
-in vec2 imageTextureCoordinate;
-out vec4 outputColor;
-
-void main() {
-    vec4 color = texture(normalizedTexture, imageTextureCoordinate);
-    color.rgb += brightness;
-    color.r += warmth * 0.15;
-    color.b -= warmth * 0.15;
-    color.rgb = clamp(color.rgb, 0.0, 1.0);
-    outputColor = color;
-}
-)";
-
-constexpr char kFilterFragmentShaderSource[] = R"(#version 300 es
-
-precision highp float;
-
-uniform sampler2D imageTexture;
-uniform sampler2D lutTexture;
-uniform vec2 lutTextureSize;
-
-in vec2 imageTextureCoordinate;
-out vec4 outputColor;
-
-void main() {
-    vec4 color = texture(imageTexture, imageTextureCoordinate);
-    float blueIndex = color.b * 63.0;
-    float lowerIndex = floor(blueIndex);
-    float upperIndex = ceil(blueIndex);
-
-    vec2 lowerTile = vec2(
-            mod(lowerIndex, 8.0),
-            floor(lowerIndex / 8.0));
-    vec2 upperTile = vec2(
-            mod(upperIndex, 8.0),
-            floor(upperIndex / 8.0));
-
-    vec2 texelSize = 1.0 / lutTextureSize;
-    vec2 tileSize = vec2(0.125);
-    vec2 tileRange = tileSize - texelSize;
-    vec2 texelOffset = texelSize * 0.5;
-    vec2 lowerCoordinate =
-            lowerTile * tileSize + texelOffset + color.rg * tileRange;
-    vec2 upperCoordinate =
-            upperTile * tileSize + texelOffset + color.rg * tileRange;
-
-    vec3 lowerColor = texture(lutTexture, lowerCoordinate).rgb;
-    vec3 upperColor = texture(lutTexture, upperCoordinate).rgb;
-    outputColor = vec4(
-            mix(lowerColor, upperColor, fract(blueIndex)),
-            color.a);
-}
-)";
-
 constexpr char kPreviewFragmentShaderSource[] = R"(#version 300 es
 
 precision mediump float;
@@ -144,77 +84,6 @@ void LogEglError(const char* operation) {
             "%s failed with EGL error 0x%x",
             operation,
             eglGetError());
-}
-
-GLuint CompileShader(GLenum type, const char* source) {
-    const GLuint shader = glCreateShader(type);
-    glShaderSource(shader, 1, &source, nullptr);
-    glCompileShader(shader);
-
-    GLint compile_status = GL_FALSE;
-    glGetShaderiv(shader, GL_COMPILE_STATUS, &compile_status);
-    if (compile_status == GL_TRUE) {
-        return shader;
-    }
-
-    char error_message[512] = {};
-    glGetShaderInfoLog(
-            shader,
-            sizeof(error_message),
-            nullptr,
-            error_message);
-    __android_log_print(
-            ANDROID_LOG_ERROR,
-            kLogTag,
-            "Shader compilation failed: %s",
-            error_message);
-    glDeleteShader(shader);
-    return 0;
-}
-
-GLuint CreateProgram(
-        const char* vertex_shader_source,
-        const char* fragment_shader_source) {
-
-    const GLuint vertex_shader =
-            CompileShader(GL_VERTEX_SHADER, vertex_shader_source);
-    if (vertex_shader == 0) {
-        return 0;
-    }
-
-    const GLuint fragment_shader =
-            CompileShader(GL_FRAGMENT_SHADER, fragment_shader_source);
-    if (fragment_shader == 0) {
-        glDeleteShader(vertex_shader);
-        return 0;
-    }
-
-    const GLuint program = glCreateProgram();
-    glAttachShader(program, vertex_shader);
-    glAttachShader(program, fragment_shader);
-    glLinkProgram(program);
-    glDeleteShader(vertex_shader);
-    glDeleteShader(fragment_shader);
-
-    GLint link_status = GL_FALSE;
-    glGetProgramiv(program, GL_LINK_STATUS, &link_status);
-    if (link_status == GL_TRUE) {
-        return program;
-    }
-
-    char error_message[512] = {};
-    glGetProgramInfoLog(
-            program,
-            sizeof(error_message),
-            nullptr,
-            error_message);
-    __android_log_print(
-            ANDROID_LOG_ERROR,
-            kLogTag,
-            "Program link failed: %s",
-            error_message);
-    glDeleteProgram(program);
-    return 0;
 }
 
 }  // namespace
@@ -319,13 +188,13 @@ bool NativeRenderer::Init(
         return false;
     }
 
-    // 3. create image buffer
-    if (!CreateImageTarget()) {
+    // 3. init image pass
+    if (!image_pass_.Init(normalized_width_, normalized_height_)) {
         return false;
     }
 
-    // 4. create filter buffer
-    if (!CreateFilterTarget()) {
+    // 4. init filter pass
+    if (!filter_pass_.Init(normalized_width_, normalized_height_)) {
         return false;
     }
 
@@ -334,22 +203,12 @@ bool NativeRenderer::Init(
         return false;
     }
 
-    // 6. create adjustment program
-    if (!CreateAdjustmentProgram()) {
-        return false;
-    }
-
-    // 7. create filter program
-    if (!CreateFilterProgram()) {
-        return false;
-    }
-
-    // 8. create preview program
+    // 6. create preview program
     if (!CreatePreviewProgram()) {
         return false;
     }
 
-    // 9. create vertex buffer
+    // 7. create vertex buffer
     if (!CreateVertexBuffer()) {
         return false;
     }
@@ -387,59 +246,30 @@ GLuint NativeRenderer::GetInputTexture() const {
 }
 
 void NativeRenderer::SetImageParams(float brightness, float warmth) {
-    brightness_ = brightness;
-    warmth_ = warmth;
+    image_pass_.SetParams(brightness, warmth);
 }
 
 bool NativeRenderer::SetLutTexture(const void* pixels, int width, int height, int row_stride) {
-
-    if (lut_texture_ != 0) {
-        glDeleteTextures(1, &lut_texture_);
-        lut_texture_ = 0;
-    }
-    lut_width_ = 0;
-    lut_height_ = 0;
-    if (pixels == nullptr) {
-        return true;
-    }
-    if (width <= 0 || height <= 0 || row_stride < width * 4) {
-        return false;
-    }
-
-    glGenTextures(1, &lut_texture_);
-    glBindTexture(GL_TEXTURE_2D, lut_texture_);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    glPixelStorei(GL_UNPACK_ROW_LENGTH, row_stride / 4);
-    glTexImage2D(GL_TEXTURE_2D,0,GL_RGBA8, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
-    glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
-    glBindTexture(GL_TEXTURE_2D, 0);
-    if (lut_texture_ == 0) {
-        return false;
-    }
-
-    lut_width_ = width;
-    lut_height_ = height;
-    return true;
+    return filter_pass_.SetLutTexture(pixels, width, height, row_stride);
 }
 
 void NativeRenderer::RenderFrame(const float* texture_matrix) {
 
-    // Pass 1: OES -> normalized buffer
+    // Pass Normalize: OES -> normalized buffer
     RenderToNormalizedTarget(texture_matrix);
 
-    // Pass 2: normalized buffer -> image buffer
-    RenderToImageTarget();
+    // Pass Image: normalized buffer -> image buffer
+    image_pass_.Render(normalized_texture_, vertex_array_);
+    GLuint output_texture = image_pass_.GetOutputTexture();
 
     // Pass Filter: image buffer -> filter buffer
-    if (lut_texture_ != 0) {
-        RenderToFilterTarget();
+    if (filter_pass_.IsEnabled()) {
+        filter_pass_.Render(output_texture, vertex_array_);
+        output_texture = filter_pass_.GetOutputTexture();
     }
 
-    // Pass Final: last buffer -> surfaceView
-    RenderToOutput();
+    // Pass Output: last buffer -> surfaceView
+    RenderToOutput(output_texture);
 
     if (eglSwapBuffers(display_, surface_) != EGL_TRUE) {
         LogEglError("eglSwapBuffers");
@@ -474,61 +304,7 @@ void NativeRenderer::RenderToNormalizedTarget(const float* texture_matrix) const
     glUseProgram(0);
 }
 
-void NativeRenderer::RenderToImageTarget() const {
-
-    // bind framebuffer
-    glBindFramebuffer(GL_FRAMEBUFFER, image_framebuffer_);
-    glViewport(0, 0, normalized_width_, normalized_height_);
-
-    // use program
-    glUseProgram(adjustment_program_);
-    glBindVertexArray(vertex_array_);
-
-    // bind normalized buffer
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, normalized_texture_);
-    glUniform1i(adjustment_texture_location_, 0);
-    glUniform1f(adjustment_brightness_location_, brightness_);
-    glUniform1f(adjustment_warmth_location_, warmth_);
-
-    // render normalized buffer to image buffer
-    glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
-
-    glBindTexture(GL_TEXTURE_2D, 0);
-    glBindVertexArray(0);
-    glUseProgram(0);
-}
-
-void NativeRenderer::RenderToFilterTarget() const {
-
-    // bind framebuffer
-    glBindFramebuffer(GL_FRAMEBUFFER, filter_framebuffer_);
-    glViewport(0, 0, normalized_width_, normalized_height_);
-
-    // use program
-    glUseProgram(filter_program_);
-    glBindVertexArray(vertex_array_);
-
-    // bind image buffer and LUT texture
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, image_texture_);
-    glUniform1i(filter_input_texture_location_, 0);
-    glActiveTexture(GL_TEXTURE1);
-    glBindTexture(GL_TEXTURE_2D, lut_texture_);
-    glUniform1i(filter_lut_texture_location_, 1);
-    glUniform2f(filter_lut_size_location_, static_cast<GLfloat>(lut_width_), static_cast<GLfloat>(lut_height_));
-
-    // render image buffer to filter buffer
-    glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
-
-    glBindTexture(GL_TEXTURE_2D, 0);
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, 0);
-    glBindVertexArray(0);
-    glUseProgram(0);
-}
-
-void NativeRenderer::RenderToOutput() const {
+void NativeRenderer::RenderToOutput(GLuint preview_texture) const {
 
     // bind framebuffer
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
@@ -538,9 +314,7 @@ void NativeRenderer::RenderToOutput() const {
     glUseProgram(preview_program_);
     glBindVertexArray(vertex_array_);
 
-    // bind image or filter buffer
-    const GLuint preview_texture =
-            lut_texture_ == 0 ? image_texture_ : filter_texture_;
+    // bind final texture
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, preview_texture);
     glUniform1i(preview_texture_location_, 0);
@@ -613,104 +387,8 @@ bool NativeRenderer::CreateNormalizedTarget() {
     return true;
 }
 
-bool NativeRenderer::CreateImageTarget() {
-
-    // create RGBA texture
-    glGenTextures(1, &image_texture_);
-    glBindTexture(GL_TEXTURE_2D, image_texture_);
-
-    // allocate texture storage
-    glTexImage2D(
-            GL_TEXTURE_2D,
-            0,
-            GL_RGBA8,
-            normalized_width_,
-            normalized_height_,
-            0,
-            GL_RGBA,
-            GL_UNSIGNED_BYTE,
-            nullptr);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-
-    // create framebuffer and attach texture
-    glGenFramebuffers(1, &image_framebuffer_);
-    glBindFramebuffer(GL_FRAMEBUFFER, image_framebuffer_);
-    glFramebufferTexture2D(
-            GL_FRAMEBUFFER,
-            GL_COLOR_ATTACHMENT0,
-            GL_TEXTURE_2D,
-            image_texture_,
-            0);
-
-    // verify framebuffer
-    const GLenum framebuffer_status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
-    glBindTexture(GL_TEXTURE_2D, 0);
-    if (framebuffer_status != GL_FRAMEBUFFER_COMPLETE) {
-        __android_log_print(
-                ANDROID_LOG_ERROR,
-                kLogTag,
-                "Framebuffer creation failed: 0x%x",
-                framebuffer_status);
-        return false;
-    }
-    return true;
-}
-
-bool NativeRenderer::CreateFilterTarget() {
-
-    // create RGBA texture
-    glGenTextures(1, &filter_texture_);
-    glBindTexture(GL_TEXTURE_2D, filter_texture_);
-
-    // allocate texture storage
-    glTexImage2D(
-            GL_TEXTURE_2D,
-            0,
-            GL_RGBA8,
-            normalized_width_,
-            normalized_height_,
-            0,
-            GL_RGBA,
-            GL_UNSIGNED_BYTE,
-            nullptr);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-
-    // create framebuffer and attach texture
-    glGenFramebuffers(1, &filter_framebuffer_);
-    glBindFramebuffer(GL_FRAMEBUFFER, filter_framebuffer_);
-    glFramebufferTexture2D(
-            GL_FRAMEBUFFER,
-            GL_COLOR_ATTACHMENT0,
-            GL_TEXTURE_2D,
-            filter_texture_,
-            0);
-
-    // verify framebuffer
-    const GLenum framebuffer_status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
-    glBindTexture(GL_TEXTURE_2D, 0);
-    if (framebuffer_status != GL_FRAMEBUFFER_COMPLETE) {
-        __android_log_print(
-                ANDROID_LOG_ERROR,
-                kLogTag,
-                "Framebuffer creation failed: 0x%x",
-                framebuffer_status);
-        return false;
-    }
-    return true;
-}
-
 bool NativeRenderer::CreateNormalizeProgram() {
-    normalize_program_ = CreateProgram(
-            kNormalizeVertexShaderSource,
-            kNormalizeFragmentShaderSource);
+    normalize_program_ = CreateProgram(kNormalizeVertexShaderSource, kNormalizeFragmentShaderSource);
     if (normalize_program_ == 0) {
         return false;
     }
@@ -722,44 +400,8 @@ bool NativeRenderer::CreateNormalizeProgram() {
     return true;
 }
 
-bool NativeRenderer::CreateAdjustmentProgram() {
-    adjustment_program_ = CreateProgram(
-            kImageVertexShaderSource,
-            kAdjustmentFragmentShaderSource);
-    if (adjustment_program_ == 0) {
-        return false;
-    }
-
-    adjustment_texture_location_ =
-            glGetUniformLocation(adjustment_program_, "normalizedTexture");
-    adjustment_brightness_location_ =
-            glGetUniformLocation(adjustment_program_, "brightness");
-    adjustment_warmth_location_ =
-            glGetUniformLocation(adjustment_program_, "warmth");
-    return true;
-}
-
-bool NativeRenderer::CreateFilterProgram() {
-    filter_program_ = CreateProgram(
-            kImageVertexShaderSource,
-            kFilterFragmentShaderSource);
-    if (filter_program_ == 0) {
-        return false;
-    }
-
-    filter_input_texture_location_ =
-            glGetUniformLocation(filter_program_, "imageTexture");
-    filter_lut_texture_location_ =
-            glGetUniformLocation(filter_program_, "lutTexture");
-    filter_lut_size_location_ =
-            glGetUniformLocation(filter_program_, "lutTextureSize");
-    return true;
-}
-
 bool NativeRenderer::CreatePreviewProgram() {
-    preview_program_ = CreateProgram(
-            kImageVertexShaderSource,
-            kPreviewFragmentShaderSource);
+    preview_program_ = CreateProgram(kImageVertexShaderSource, kPreviewFragmentShaderSource);
     if (preview_program_ == 0) {
         return false;
     }
@@ -804,21 +446,8 @@ bool NativeRenderer::CreateVertexBuffer() {
 }
 
 void NativeRenderer::Release() {
-    if (lut_texture_ != 0) {
-        glDeleteTextures(1, &lut_texture_);
-    }
-    if (image_framebuffer_ != 0) {
-        glDeleteFramebuffers(1, &image_framebuffer_);
-    }
-    if (image_texture_ != 0) {
-        glDeleteTextures(1, &image_texture_);
-    }
-    if (filter_framebuffer_ != 0) {
-        glDeleteFramebuffers(1, &filter_framebuffer_);
-    }
-    if (filter_texture_ != 0) {
-        glDeleteTextures(1, &filter_texture_);
-    }
+    filter_pass_.Release();
+    image_pass_.Release();
     if (normalized_framebuffer_ != 0) {
         glDeleteFramebuffers(1, &normalized_framebuffer_);
     }
@@ -833,12 +462,6 @@ void NativeRenderer::Release() {
     }
     if (normalize_program_ != 0) {
         glDeleteProgram(normalize_program_);
-    }
-    if (adjustment_program_ != 0) {
-        glDeleteProgram(adjustment_program_);
-    }
-    if (filter_program_ != 0) {
-        glDeleteProgram(filter_program_);
     }
     if (preview_program_ != 0) {
         glDeleteProgram(preview_program_);
@@ -886,32 +509,17 @@ void NativeRenderer::Release() {
     input_texture_ = 0;
     normalized_texture_ = 0;
     normalized_framebuffer_ = 0;
-    image_texture_ = 0;
-    image_framebuffer_ = 0;
-    lut_texture_ = 0;
-    filter_texture_ = 0;
-    filter_framebuffer_ = 0;
     normalize_program_ = 0;
-    adjustment_program_ = 0;
-    filter_program_ = 0;
     preview_program_ = 0;
     vertex_array_ = 0;
     vertex_buffer_ = 0;
     normalize_texture_matrix_location_ = -1;
     normalize_input_texture_location_ = -1;
-    adjustment_texture_location_ = -1;
-    adjustment_brightness_location_ = -1;
-    adjustment_warmth_location_ = -1;
-    filter_input_texture_location_ = -1;
-    filter_lut_texture_location_ = -1;
-    filter_lut_size_location_ = -1;
     preview_texture_location_ = -1;
     output_width_ = 0;
     output_height_ = 0;
     normalized_width_ = 0;
     normalized_height_ = 0;
-    lut_width_ = 0;
-    lut_height_ = 0;
 }
 
 }  // namespace pelab

@@ -30,6 +30,10 @@ PELab, abréviation de Penguito Effect Lab, a pour objectif de construire de zé
 
 - Implémentation dans `render-sdk` de la chaîne de rendu du Filter Pass.
 
+#### 0.4.5
+
+- Refactorisation du Native Renderer en séparant les fonctions de réglage d’image et de filtre en passes indépendantes.
+
 ### 0.3
 
 - Ajouter une fonction de réglage d’image de base et mettre en œuvre une chaîne de rendu en 3 passes.

@@ -30,6 +30,10 @@ PELab 全称为 Penguito Effect Lab，旨在从零开始构建一个完整的、
 
 - 在 `render-sdk` 中实现 Filter Pass 的渲染链路。
 
+#### 0.4.5
+
+- 重构 Native Renderer，将图像调节和滤镜功能拆分为独立 Pass。
+
 ### 0.3
 
 - 增加基础图片参数调节功能，并实现 3-Pass 渲染链路。

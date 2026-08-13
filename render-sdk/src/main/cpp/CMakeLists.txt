@@ -5,6 +5,9 @@ project(pelab_sdk LANGUAGES CXX)
 add_library(
     pelab_sdk
     SHARED
+    filter_pass.cpp
+    gl_utils.cpp
+    image_pass.cpp
     native_bridge.cpp
     native_renderer.cpp
 )

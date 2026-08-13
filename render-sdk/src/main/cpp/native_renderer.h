@@ -4,6 +4,9 @@
 #include <GLES3/gl3.h>
 #include <android/native_window.h>
 
+#include "filter_pass.h"
+#include "image_pass.h"
+
 namespace pelab {
 
 class NativeRenderer final {
@@ -23,17 +26,11 @@ public:
 private:
     bool CreateInputTexture();
     bool CreateNormalizedTarget();
-    bool CreateImageTarget();
-    bool CreateFilterTarget();
     bool CreateNormalizeProgram();
-    bool CreateAdjustmentProgram();
-    bool CreateFilterProgram();
     bool CreatePreviewProgram();
     bool CreateVertexBuffer();
     void RenderToNormalizedTarget(const float* texture_matrix) const;
-    void RenderToImageTarget() const;
-    void RenderToFilterTarget() const;
-    void RenderToOutput() const;
+    void RenderToOutput(GLuint preview_texture) const;
     void Release();
 
     ANativeWindow* output_window_ = nullptr;
@@ -44,34 +41,19 @@ private:
     GLuint input_texture_ = 0;
     GLuint normalized_texture_ = 0;
     GLuint normalized_framebuffer_ = 0;
-    GLuint image_texture_ = 0;
-    GLuint image_framebuffer_ = 0;
-    GLuint lut_texture_ = 0;
-    GLuint filter_texture_ = 0;
-    GLuint filter_framebuffer_ = 0;
     GLuint normalize_program_ = 0;
-    GLuint adjustment_program_ = 0;
-    GLuint filter_program_ = 0;
     GLuint preview_program_ = 0;
     GLuint vertex_array_ = 0;
     GLuint vertex_buffer_ = 0;
     GLint normalize_texture_matrix_location_ = -1;
     GLint normalize_input_texture_location_ = -1;
-    GLint adjustment_texture_location_ = -1;
-    GLint adjustment_brightness_location_ = -1;
-    GLint adjustment_warmth_location_ = -1;
-    GLint filter_input_texture_location_ = -1;
-    GLint filter_lut_texture_location_ = -1;
-    GLint filter_lut_size_location_ = -1;
     GLint preview_texture_location_ = -1;
-    float brightness_ = 0.0F;
-    float warmth_ = 0.0F;
+    ImagePass image_pass_;
+    FilterPass filter_pass_;
     int output_width_ = 0;
     int output_height_ = 0;
     int normalized_width_ = 0;
     int normalized_height_ = 0;
-    int lut_width_ = 0;
-    int lut_height_ = 0;
 };
 
 }  // namespace pelab
