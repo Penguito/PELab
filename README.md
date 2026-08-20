@@ -10,6 +10,14 @@ PELab, short for Penguito Effect Lab, aims to build a complete Android applicati
 
 ## Current Development Progress
 
+### 0.5
+
+- Add support for capturing, importing, and saving images to the gallery.
+
+#### 0.5.1
+
+- Added support for reading the current render result and encoding it as JPEG in `render-sdk`.
+
 ### 0.4
 
 - Add support for setting LUT filters.

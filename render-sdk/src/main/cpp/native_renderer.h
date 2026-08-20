@@ -22,6 +22,7 @@ public:
     void SetImageParams(float brightness, float warmth);
     bool SetLutTexture(const void* pixels, int width, int height, int row_stride);
     void RenderFrame(const float* texture_matrix);
+    bool CaptureFrame(void* pixels, int row_stride) const;
 
 private:
     bool CreateInputTexture();
@@ -41,6 +42,7 @@ private:
     GLuint input_texture_ = 0;
     GLuint normalized_texture_ = 0;
     GLuint normalized_framebuffer_ = 0;
+    GLuint final_texture_ = 0;
     GLuint normalize_program_ = 0;
     GLuint preview_program_ = 0;
     GLuint vertex_array_ = 0;

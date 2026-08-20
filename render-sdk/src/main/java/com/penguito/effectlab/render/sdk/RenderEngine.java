@@ -2,12 +2,14 @@ package com.penguito.effectlab.render.sdk;
 
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Matrix;
 import android.graphics.SurfaceTexture;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.Looper;
 import android.view.Surface;
 
+import java.io.ByteArrayOutputStream;
 import java.io.Closeable;
 import java.io.File;
 
@@ -19,6 +21,12 @@ public final class RenderEngine implements Closeable {
         void onDebugInfo(float frameDurationMillis, float framesPerSecond);
 
         void onRenderError();
+    }
+
+    public interface CaptureCallback {
+        void onCaptureCompleted(byte[] jpegData);
+
+        void onCaptureError();
     }
 
     static {
@@ -39,6 +47,8 @@ public final class RenderEngine implements Closeable {
     private long debugInfoStartNanos;
     private long renderDurationNanos;
     private int renderedFrameCount;
+    private int captureWidth;
+    private int captureHeight;
     private boolean isClosed;
 
     public RenderEngine() {
@@ -60,6 +70,8 @@ public final class RenderEngine implements Closeable {
                     previewResolution.getWidth());
             nativeHandle = handle;
             if (handle != 0L) {
+                captureWidth = previewResolution.getHeight();
+                captureHeight = previewResolution.getWidth();
                 setImageParams(imageParams);
                 applyFilter(lutPath);
                 int textureId = nativeGetInputTexture(handle);
@@ -97,6 +109,18 @@ public final class RenderEngine implements Closeable {
         }
         String resolvedLutPath = resolveLutPath(rootPath);
         renderHandler.post(() -> applyFilter(resolvedLutPath));
+    }
+
+    public void captureFrame(CaptureCallback callback) {
+        if (callback == null) {
+            throw new IllegalArgumentException("callback must not be null");
+        }
+        if (isClosed) {
+            mainHandler.post(callback::onCaptureError);
+            return;
+        }
+
+        renderHandler.post(() -> captureFrameOnRenderThread(callback));
     }
 
     public void stop() {
@@ -165,6 +189,40 @@ public final class RenderEngine implements Closeable {
         }
     }
 
+    private void captureFrameOnRenderThread(CaptureCallback callback) {
+        if (nativeHandle == 0L) {
+            mainHandler.post(callback::onCaptureError);
+            return;
+        }
+
+        Bitmap bitmap = Bitmap.createBitmap(
+                captureWidth,
+                captureHeight,
+                Bitmap.Config.ARGB_8888);
+
+        // native capture failed
+        if (!nativeCaptureFrame(nativeHandle, bitmap)) {
+            bitmap.recycle();
+            mainHandler.post(callback::onCaptureError);
+            return;
+        }
+
+        Matrix flipMatrix = new Matrix();
+        flipMatrix.setScale(1.0F, -1.0F);
+        Bitmap outputBitmap = Bitmap.createBitmap(bitmap, 0, 0, captureWidth, captureHeight, flipMatrix, false);
+        bitmap.recycle();
+
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+        outputBitmap.compress(
+                Bitmap.CompressFormat.JPEG,
+                95,
+                outputStream);
+        outputBitmap.recycle();
+
+        byte[] jpegData = outputStream.toByteArray();
+        mainHandler.post(() -> callback.onCaptureCompleted(jpegData));
+    }
+
     private void updateDebugInfo(long frameStartNanos, long frameEndNanos) {
         if (debugInfoStartNanos == 0L) {
             debugInfoStartNanos = frameStartNanos;
@@ -208,6 +266,8 @@ public final class RenderEngine implements Closeable {
         debugInfoStartNanos = 0L;
         renderDurationNanos = 0L;
         renderedFrameCount = 0;
+        captureWidth = 0;
+        captureHeight = 0;
     }
 
     @Override
@@ -234,6 +294,8 @@ public final class RenderEngine implements Closeable {
     private static native void nativeSetImageParams(long nativeHandle, float brightness, float warmth);
 
     private static native boolean nativeSetLutTexture(long nativeHandle, Bitmap lutBitmap);
+
+    private static native boolean nativeCaptureFrame(long nativeHandle, Bitmap bitmap);
 
     private static native void nativeDestroyRenderer(long nativeHandle);
 

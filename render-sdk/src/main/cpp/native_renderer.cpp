@@ -267,13 +267,41 @@ void NativeRenderer::RenderFrame(const float* texture_matrix) {
         filter_pass_.Render(output_texture, vertex_array_);
         output_texture = filter_pass_.GetOutputTexture();
     }
+    final_texture_ = output_texture;
 
     // Pass Output: last buffer -> surfaceView
-    RenderToOutput(output_texture);
+    RenderToOutput(final_texture_);
 
     if (eglSwapBuffers(display_, surface_) != EGL_TRUE) {
         LogEglError("eglSwapBuffers");
     }
+}
+
+bool NativeRenderer::CaptureFrame(void* pixels, int row_stride) const {
+
+    if (final_texture_ == 0) {
+        return false;
+    }
+
+    // attach the final texture for reading
+    GLuint capture_framebuffer = 0;
+    glGenFramebuffers(1, &capture_framebuffer);
+    glBindFramebuffer(GL_FRAMEBUFFER, capture_framebuffer);
+    glFramebufferTexture2D(
+            GL_FRAMEBUFFER,
+            GL_COLOR_ATTACHMENT0,
+            GL_TEXTURE_2D,
+            final_texture_,
+            0);
+
+    // read the processed RGBA pixels
+    glPixelStorei(GL_PACK_ROW_LENGTH, row_stride / 4);
+    glReadPixels(0, 0, normalized_width_, normalized_height_, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
+    glPixelStorei(GL_PACK_ROW_LENGTH, 0);
+
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    glDeleteFramebuffers(1, &capture_framebuffer);
+    return true;
 }
 
 void NativeRenderer::RenderToNormalizedTarget(const float* texture_matrix) const {
@@ -509,6 +537,7 @@ void NativeRenderer::Release() {
     input_texture_ = 0;
     normalized_texture_ = 0;
     normalized_framebuffer_ = 0;
+    final_texture_ = 0;
     normalize_program_ = 0;
     preview_program_ = 0;
     vertex_array_ = 0;

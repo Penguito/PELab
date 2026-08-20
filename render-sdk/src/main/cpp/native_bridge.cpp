@@ -106,6 +106,30 @@ Java_com_penguito_effectlab_render_sdk_RenderEngine_nativeSetLutTexture(
     return uploaded ? JNI_TRUE : JNI_FALSE;
 }
 
+extern "C" JNIEXPORT jboolean JNICALL
+Java_com_penguito_effectlab_render_sdk_RenderEngine_nativeCaptureFrame(
+        JNIEnv* env,
+        jclass,
+        jlong handle,
+        jobject bitmap) {
+
+    AndroidBitmapInfo bitmap_info{};
+    if (AndroidBitmap_getInfo(env, bitmap, &bitmap_info) != ANDROID_BITMAP_RESULT_SUCCESS) {
+        return JNI_FALSE;
+    }
+
+    void* pixels = nullptr;
+    if (AndroidBitmap_lockPixels(env, bitmap, &pixels) != ANDROID_BITMAP_RESULT_SUCCESS) {
+        return JNI_FALSE;
+    }
+
+    const bool captured = FromHandle(handle)->CaptureFrame(
+            pixels,
+            static_cast<int>(bitmap_info.stride));
+    AndroidBitmap_unlockPixels(env, bitmap);
+    return captured ? JNI_TRUE : JNI_FALSE;
+}
+
 extern "C" JNIEXPORT void JNICALL
 Java_com_penguito_effectlab_render_sdk_RenderEngine_nativeDestroyRenderer(
         JNIEnv*,

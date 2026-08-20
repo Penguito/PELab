@@ -10,6 +10,14 @@ PELab, abréviation de Penguito Effect Lab, a pour objectif de construire de zé
 
 ## Avancement actuel du développement
 
+### 0.5
+
+- Ajouter la prise en charge de la capture, de l’importation et de l’enregistrement d’images dans la galerie.
+
+#### 0.5.1
+
+- Ajout dans `render-sdk` de la lecture du résultat de rendu actuel et de son encodage en JPEG.
+
 ### 0.4
 
 - Ajouter la prise en charge de la configuration des filtres LUT.
