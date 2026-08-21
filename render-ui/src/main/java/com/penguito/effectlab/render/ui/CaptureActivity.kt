@@ -25,6 +25,8 @@ import com.penguito.effectlab.render.core.permission.CameraPermissionGate
 import com.penguito.effectlab.render.sdk.ImageParams
 import com.penguito.effectlab.render.sdk.PreviewResolution
 import com.penguito.effectlab.render.sdk.RenderEngine
+import java.io.File
+import java.io.IOException
 
 class CaptureActivity : Activity(), SurfaceHolder.Callback, Camera2Listener, RenderEngine.Listener {
     private val permissionGate by lazy { CameraPermissionGate(this) }
@@ -36,6 +38,7 @@ class CaptureActivity : Activity(), SurfaceHolder.Callback, Camera2Listener, Ren
     private var lifecycleStatus: TextView? = null
     private var debugInfo: TextView? = null
     private var switchCameraButton: Button? = null
+    private var captureButton: Button? = null
     private var adjustmentSeekBar: SeekBar? = null
     private var outputSurface: Surface? = null
     private var cameraConfiguration: CameraConfiguration? = null
@@ -58,6 +61,9 @@ class CaptureActivity : Activity(), SurfaceHolder.Callback, Camera2Listener, Ren
         debugInfo = findViewById(R.id.capture_debug_info)
         switchCameraButton = findViewById<Button>(R.id.capture_switch_camera).also {
             it.setOnClickListener { cameraManager.switchCamera() }
+        }
+        captureButton = findViewById<Button>(R.id.capture_photo).also {
+            it.setOnClickListener { captureImage() }
         }
         adjustmentSeekBar = findViewById<SeekBar>(R.id.capture_adjustment_seek_bar).also {
             it.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
@@ -156,6 +162,7 @@ class CaptureActivity : Activity(), SurfaceHolder.Callback, Camera2Listener, Ren
         renderEngine.stop()
         // adjust buttons
         switchCameraButton?.isEnabled = false
+        captureButton?.isEnabled = false
         // adjust textViews
         debugInfo?.setText(R.string.capture_debug_info_empty)
         lifecycleStatus?.setText(R.string.capture_paused)
@@ -194,6 +201,48 @@ class CaptureActivity : Activity(), SurfaceHolder.Callback, Camera2Listener, Ren
                 .build()
         }
         renderEngine.setRenderParams(imageParams)
+    }
+
+    private fun captureImage() {
+        captureButton?.isEnabled = false
+        renderEngine.captureFrame(object : RenderEngine.CaptureCallback {
+            override fun onCaptureCompleted(jpegData: ByteArray) {
+                val imageFile = saveCapturedImage(jpegData)
+                if (imageFile == null) {
+                    showCaptureError()
+                    return
+                }
+
+                // jump to editor activity
+                startActivity(
+                    EditorActivity.createIntent(
+                        context = this@CaptureActivity,
+                        imageSource = ImageSource.CAPTURE,
+                        imagePath = imageFile.absolutePath,
+                    ),
+                )
+            }
+
+            override fun onCaptureError() {
+                showCaptureError()
+            }
+        })
+    }
+
+    private fun saveCapturedImage(jpegData: ByteArray): File? {
+        val imageFile = File(cacheDir, CAPTURE_FILE_NAME)
+        return try {
+            imageFile.writeBytes(jpegData)
+            imageFile
+        } catch (error: IOException) {
+            Log.e(LOG_TAG, "Capture file creation failed", error)
+            null
+        }
+    }
+
+    private fun showCaptureError() {
+        captureButton?.isEnabled = true
+        lifecycleStatus?.setText(R.string.capture_image_failed)
     }
 
     // test for filter
@@ -263,6 +312,7 @@ class CaptureActivity : Activity(), SurfaceHolder.Callback, Camera2Listener, Ren
             },
         )
         switchCameraButton?.isEnabled = true
+        captureButton?.isEnabled = true
         showCameraConfiguration(configuration)
     }
 
@@ -295,6 +345,7 @@ class CaptureActivity : Activity(), SurfaceHolder.Callback, Camera2Listener, Ren
         private const val ADJUSTMENT_PROGRESS_CENTER = 100
         private const val ADJUSTMENT_PROGRESS_SCALE = 100.0F
         private const val CYBER_PUNK_FILTER_ID = "cyber_punk"
+        private const val CAPTURE_FILE_NAME = "captured_image.jpg"
 
         fun createIntent(context: Context): Intent = Intent(context, CaptureActivity::class.java)
     }

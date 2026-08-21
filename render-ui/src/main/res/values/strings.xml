@@ -12,7 +12,16 @@
     <string name="capture_adjustment_warmth">Warmth</string>
     <string name="capture_filter">Filter</string>
     <string name="capture_filter_none">None</string>
+    <string name="capture_photo">Capture Photo</string>
+    <string name="capture_image_failed">Image capture failed</string>
     <string name="capture_render_initialization_failed">Render initialization failed</string>
+
+    <string name="editor_title">Editor</string>
+    <string name="editor_back">Back</string>
+    <string name="editor_image_preview">Captured image preview</string>
+    <string name="editor_source_capture">Capture</string>
+    <string name="editor_source_album">Album</string>
+    <string name="editor_image_info">%1$s\n%2$s</string>
 
     <!--  camera detect errors  -->
     <string name="capture_camera_access_failed">Camera configuration unavailable</string>

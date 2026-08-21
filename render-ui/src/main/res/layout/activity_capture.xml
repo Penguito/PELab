@@ -135,6 +135,15 @@
 
         </HorizontalScrollView>
 
+        <Button
+            android:id="@+id/capture_photo"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginTop="8dp"
+            android:enabled="false"
+            android:text="@string/capture_photo" />
+
     </LinearLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>
