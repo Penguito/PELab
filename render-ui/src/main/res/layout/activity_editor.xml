@@ -46,7 +46,7 @@
         android:layout_margin="16dp"
         android:ellipsize="middle"
         android:gravity="center"
-        android:maxLines="2"
+        android:maxLines="3"
         android:textColor="@color/render_ui_on_background"
         android:textSize="14sp"
         app:layout_constraintBottom_toBottomOf="parent"

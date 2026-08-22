@@ -22,6 +22,10 @@ PELab, abréviation de Penguito Effect Lab, a pour objectif de construire de zé
 
 - Ajout de la fonctionnalité de capture photo dans `render-ui` et de la prévisualisation par navigation vers la page d’édition.
 
+#### 0.5.3
+
+- Ajout dans `render-ui` de la sélection d’une image unique via le sélecteur système.
+
 ### 0.4
 
 - Ajouter la prise en charge de la configuration des filtres LUT.

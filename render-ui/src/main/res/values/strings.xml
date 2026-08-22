@@ -18,7 +18,7 @@
 
     <string name="editor_title">Editor</string>
     <string name="editor_back">Back</string>
-    <string name="editor_image_preview">Captured image preview</string>
+    <string name="editor_image_preview">Image preview</string>
     <string name="editor_source_capture">Capture</string>
     <string name="editor_source_album">Album</string>
     <string name="editor_image_info">%1$s\n%2$s</string>

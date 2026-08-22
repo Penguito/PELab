@@ -24,13 +24,15 @@ class EditorActivity : Activity() {
 
         setContentView(R.layout.activity_editor)
         val imageSource = ImageSource.valueOf(sourceValue)
+        val imageUri = when (imageSource) {
+            ImageSource.CAPTURE -> Uri.fromFile(File(imagePath))
+            ImageSource.ALBUM -> Uri.parse(imagePath)
+        }
         val sourceName = when (imageSource) {
             ImageSource.CAPTURE -> getString(R.string.editor_source_capture)
             ImageSource.ALBUM -> getString(R.string.editor_source_album)
         }
-        findViewById<ImageView>(R.id.editor_image).setImageURI(
-            Uri.fromFile(File(imagePath)),
-        )
+        findViewById<ImageView>(R.id.editor_image).setImageURI(imageUri)
         findViewById<TextView>(R.id.editor_image_info).text = getString(
             R.string.editor_image_info,
             sourceName,

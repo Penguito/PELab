@@ -22,6 +22,10 @@ PELab, short for Penguito Effect Lab, aims to build a complete Android applicati
 
 - Added photo capture support in `render-ui` and enabled preview by navigating to the editor page.
 
+#### 0.5.3
+
+- Added system single-image selection support in `render-ui`.
+
 ### 0.4
 
 - Add support for setting LUT filters.
