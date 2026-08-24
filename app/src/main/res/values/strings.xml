@@ -5,5 +5,6 @@
     <string name="native_bridge_ready">Java → JNI → C++:\n%1$s</string>
     <string name="capture_test">Capture Test</string>
     <string name="select_photo">Select Photo</string>
+    <string name="image_import_failed">Image import failed.</string>
     <string name="camera_permission_denied">Camera permission is required.</string>
 </resources>

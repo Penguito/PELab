@@ -26,6 +26,10 @@ PELab, abréviation de Penguito Effect Lab, a pour objectif de construire de zé
 
 - Ajout dans `render-ui` de la sélection d’une image unique via le sélecteur système.
 
+#### 0.5.4
+
+- Ajout dans `render-core-material` de l’importation d’images locales avec traitement de leur orientation et de leurs dimensions.
+
 ### 0.4
 
 - Ajouter la prise en charge de la configuration des filtres LUT.
@@ -158,7 +162,7 @@ app
 | `render-ui` | Gestion de l'interface et du cycle de vie des pages |
 | `render-core-camera` | Module caméra — gestion de l'entrée caméra et de son cycle de vie |
 | `render-core-permission` | Module d'autorisations — gestion des demandes d'autorisations et de leurs résultats |
-| `render-core-material` | Module de gestion des ressources — stockage et chargement des ressources d'effets |
+| `render-core-material` | Module de gestion des ressources et fichiers image — stockage et chargement des ressources d’effets, ainsi qu’importation d’images locales |
 | `render-sdk` | Module SDK de rendu — fournit les interfaces Java et contient l'implémentation du rendu natif |
 
 ## Chaîne d'outils fixée

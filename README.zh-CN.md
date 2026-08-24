@@ -26,6 +26,10 @@ PELab 全称为 Penguito Effect Lab，旨在从零开始构建一个完整的、
 
 - 在 `render-ui` 中新增系统单图片选择功能。
 
+#### 0.5.4
+
+- 在 `render-core-material` 中完成本地图片导入，并处理图片方向和尺寸。
+
 ### 0.4
 
 - 增加设置 LUT 滤镜功能。
@@ -158,7 +162,7 @@ app
 | `render-ui` | 负责 UI 与页面生命周期的管理 |
 | `render-core-camera` | 相机功能模块 —— 管理相机输入及其生命周期 |
 | `render-core-permission` | 权限申请功能模块 —— 负责权限申请与结果处理 |
-| `render-core-material` | 素材管理功能模块 —— 负责特效素材的存储与加载 |
+| `render-core-material` | 素材与图片文件管理功能模块 —— 负责特效素材的存储、加载及本地图片导入 |
 | `render-sdk` | 渲染 SDK 模块 —— 提供 Java 接口并承载 Native 渲染实现 |
 
 ## 固定工具链

@@ -2,14 +2,16 @@ package com.penguito.effectlab.render.ui
 
 import android.app.Activity
 import android.content.Intent
-import android.net.Uri
 import android.os.Build
 import android.provider.MediaStore
+import com.penguito.effectlab.render.core.material.ImageImportManager
 
 class PhotoPickerLauncher(
     private val activity: Activity,
-    private val onImageSelected: (Uri) -> Unit,
+    private val onImageImported: (String) -> Unit,
+    private val onImageImportFailed: () -> Unit,
 ) {
+    private val imageImportManager = ImageImportManager(activity)
 
     fun launch() {
         activity.startActivityForResult(createPickerIntent(), REQUEST_CODE)
@@ -23,7 +25,15 @@ class PhotoPickerLauncher(
         if (requestCode != REQUEST_CODE) return false
 
         if (resultCode == Activity.RESULT_OK) {
-            data?.data?.let(onImageSelected)
+            data?.data?.let { imageUri ->
+                imageImportManager.importImage(imageUri) { imagePath ->
+                    if (imagePath == null) {
+                        onImageImportFailed()
+                    } else {
+                        onImageImported(imagePath)
+                    }
+                }
+            }
         }
         return true
     }

@@ -28,14 +28,17 @@ class MainActivity : Activity() {
         )
         photoPickerLauncher = PhotoPickerLauncher(
             activity = this,
-            onImageSelected = { imageUri ->
+            onImageImported = { imagePath ->
                 startActivity(
                     EditorActivity.createIntent(
                         context = this,
                         imageSource = ImageSource.ALBUM,
-                        imagePath = imageUri.toString(),
+                        imagePath = imagePath,
                     ),
                 )
+            },
+            onImageImportFailed = {
+                Toast.makeText(this, R.string.image_import_failed, Toast.LENGTH_LONG).show()
             },
         )
         findViewById<TextView>(R.id.native_bridge_test).text = getString(

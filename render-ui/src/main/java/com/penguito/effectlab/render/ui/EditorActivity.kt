@@ -24,10 +24,7 @@ class EditorActivity : Activity() {
 
         setContentView(R.layout.activity_editor)
         val imageSource = ImageSource.valueOf(sourceValue)
-        val imageUri = when (imageSource) {
-            ImageSource.CAPTURE -> Uri.fromFile(File(imagePath))
-            ImageSource.ALBUM -> Uri.parse(imagePath)
-        }
+        val imageUri = Uri.fromFile(File(imagePath))
         val sourceName = when (imageSource) {
             ImageSource.CAPTURE -> getString(R.string.editor_source_capture)
             ImageSource.ALBUM -> getString(R.string.editor_source_album)
