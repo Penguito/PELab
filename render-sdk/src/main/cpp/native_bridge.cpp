@@ -50,22 +50,56 @@ Java_com_penguito_effectlab_render_sdk_RenderEngine_nativeInitRenderer(
 }
 
 extern "C" JNIEXPORT jint JNICALL
-Java_com_penguito_effectlab_render_sdk_RenderEngine_nativeGetInputTexture(
+Java_com_penguito_effectlab_render_sdk_RenderEngine_nativeGetCameraInputTexture(
         JNIEnv*,
         jclass,
         jlong handle) {
-    return static_cast<jint>(FromHandle(handle)->GetInputTexture());
+    return static_cast<jint>(FromHandle(handle)->GetCameraInputTexture());
+}
+
+extern "C" JNIEXPORT jboolean JNICALL
+Java_com_penguito_effectlab_render_sdk_RenderEngine_nativeSetBitmap(
+        JNIEnv* env,
+        jclass,
+        jlong handle,
+        jobject bitmap) {
+
+    AndroidBitmapInfo bitmap_info{};
+    if (AndroidBitmap_getInfo(env, bitmap, &bitmap_info) != ANDROID_BITMAP_RESULT_SUCCESS) {
+        return JNI_FALSE;
+    }
+
+    void* pixels = nullptr;
+    if (AndroidBitmap_lockPixels(env, bitmap, &pixels) != ANDROID_BITMAP_RESULT_SUCCESS) {
+        return JNI_FALSE;
+    }
+
+    const bool uploaded = FromHandle(handle)->SetBitmap(
+            pixels,
+            static_cast<int>(bitmap_info.width),
+            static_cast<int>(bitmap_info.height),
+            static_cast<int>(bitmap_info.stride));
+    AndroidBitmap_unlockPixels(env, bitmap);
+    return uploaded ? JNI_TRUE : JNI_FALSE;
 }
 
 extern "C" JNIEXPORT void JNICALL
-Java_com_penguito_effectlab_render_sdk_RenderEngine_nativeRenderFrame(
+Java_com_penguito_effectlab_render_sdk_RenderEngine_nativeRenderCameraFrame(
         JNIEnv* env,
         jclass,
         jlong handle,
         jfloatArray texture_matrix) {
     jfloat matrix[16];
     env->GetFloatArrayRegion(texture_matrix, 0, 16, matrix);
-    FromHandle(handle)->RenderFrame(matrix);
+    FromHandle(handle)->RenderCameraFrame(matrix);
+}
+
+extern "C" JNIEXPORT void JNICALL
+Java_com_penguito_effectlab_render_sdk_RenderEngine_nativeRenderBitmap(
+        JNIEnv*,
+        jclass,
+        jlong handle) {
+    FromHandle(handle)->RenderBitmap();
 }
 
 extern "C" JNIEXPORT void JNICALL

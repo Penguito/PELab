@@ -22,6 +22,7 @@
     <string name="editor_source_capture">Capture</string>
     <string name="editor_source_album">Album</string>
     <string name="editor_image_info">%1$s\n%2$s</string>
+    <string name="editor_render_failed">Image render failed</string>
 
     <!--  camera detect errors  -->
     <string name="capture_camera_access_failed">Camera configuration unavailable</string>

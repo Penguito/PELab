@@ -40,3 +40,7 @@ java {
         languageVersion.set(JavaLanguageVersion.of(17))
     }
 }
+
+dependencies {
+    compileOnly("androidx.annotation:annotation:1.8.1")
+}

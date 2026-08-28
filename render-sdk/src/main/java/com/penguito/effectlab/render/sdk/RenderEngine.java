@@ -3,11 +3,13 @@ package com.penguito.effectlab.render.sdk;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Matrix;
-import android.graphics.SurfaceTexture;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.Looper;
+import android.util.Log;
 import android.view.Surface;
+
+import androidx.annotation.Nullable;
 
 import java.io.ByteArrayOutputStream;
 import java.io.Closeable;
@@ -15,12 +17,14 @@ import java.io.File;
 
 public final class RenderEngine implements Closeable {
 
-    public interface Listener {
-        void onRenderReady(Surface inputSurface);
-
-        void onDebugInfo(float frameDurationMillis, float framesPerSecond);
+    public interface InitListener {
+        void onRenderReady(@Nullable Surface cameraSurface);
 
         void onRenderError();
+    }
+
+    public interface DebugInfoListener {
+        void onDebugInfo(float frameDurationMillis, float framesPerSecond);
     }
 
     public interface CaptureCallback {
@@ -36,17 +40,13 @@ public final class RenderEngine implements Closeable {
     private final Handler mainHandler = new Handler(Looper.getMainLooper());
     private final HandlerThread renderThread = new HandlerThread("PELab-Render");
     private final Handler renderHandler;
-    private final float[] textureMatrix = new float[16];
+    private final RenderDebugTracker debugTracker;
 
-    private SurfaceTexture inputSurfaceTexture;
-    private Surface inputSurface;
-    private Listener listener;
+    private RenderInput renderInput;
+    private DebugInfoListener debugInfoListener;
     private ImageParams imageParams = ImageParams.defaults();
     private String lutPath;
     private long nativeHandle;
-    private long debugInfoStartNanos;
-    private long renderDurationNanos;
-    private int renderedFrameCount;
     private int captureWidth;
     private int captureHeight;
     private boolean isClosed;
@@ -54,44 +54,85 @@ public final class RenderEngine implements Closeable {
     public RenderEngine() {
         renderThread.start();
         renderHandler = new Handler(renderThread.getLooper());
+        debugTracker = new RenderDebugTracker((frameDurationMillis, framesPerSecond) ->
+            mainHandler.post(() -> {
+                if (debugInfoListener != null) {
+                    debugInfoListener.onDebugInfo(frameDurationMillis, framesPerSecond);
+                }
+            })
+        );
     }
 
     public static String getNativeBridgeInfo() {
         return nativeGetBridgeInfo();
     }
 
-    public void init(Surface outputSurface, PreviewResolution previewResolution, Listener listener) {
-        renderHandler.post(() -> {
-            releaseOnRenderThread();
-            this.listener = listener;
-            long handle = nativeInitRenderer(
-                    outputSurface,
-                    previewResolution.getHeight(),
-                    previewResolution.getWidth());
-            nativeHandle = handle;
-            if (handle != 0L) {
-                captureWidth = previewResolution.getHeight();
-                captureHeight = previewResolution.getWidth();
-                setImageParams(imageParams);
-                applyFilter(lutPath);
-                int textureId = nativeGetInputTexture(handle);
+    public void init(Surface outputSurface, PreviewResolution previewResolution, RenderMode inputMode, InitListener listener) {
+        init(outputSurface, previewResolution, inputMode, null, listener);
+    }
 
-                // init surface texture
-                inputSurfaceTexture = new SurfaceTexture(textureId);
-                inputSurfaceTexture.setDefaultBufferSize(previewResolution.getWidth(), previewResolution.getHeight());
-                inputSurfaceTexture.setOnFrameAvailableListener(this::renderFrameOnRenderThread, renderHandler);
-                inputSurface = new Surface(inputSurfaceTexture);
+    public void init(Surface outputSurface, PreviewResolution previewResolution, RenderMode inputMode, String imagePath, InitListener listener) {
+        if (isClosed) {
+            Log.e(LOG_TAG, "RenderEngine is closed");
+            mainHandler.post(listener::onRenderError);
+            return;
+        }
+        renderHandler.post(() -> initOnRenderThread(
+            outputSurface,
+            previewResolution,
+            inputMode,
+            imagePath,
+            listener)
+        );
+    }
+
+    public void setDebugInfoListener(@Nullable DebugInfoListener listener) {
+        debugInfoListener = listener;
+    }
+
+    private void initOnRenderThread(
+            Surface outputSurface,
+            PreviewResolution previewResolution,
+            RenderMode inputMode,
+            String imagePath,
+            InitListener listener) {
+        releaseOnRenderThread();
+        if (inputMode == null) {
+            reportInitError("Render input mode is missing", listener);
+            return;
+        }
+        if (inputMode == RenderMode.IMAGE && (imagePath == null || imagePath.trim().isEmpty())) {
+            reportInitError("Image path is missing", listener);
+            return;
+        }
+        if (!initRendererOnRenderThread(outputSurface, previewResolution)) {
+            reportInitError("Native renderer initialization failed", listener);
+            return;
+        }
+
+        Surface cameraSurface = null;
+        if (inputMode == RenderMode.CAMERA) {
+            CameraRenderInput cameraInput = new CameraRenderInput(this, renderHandler, previewResolution);
+            renderInput = cameraInput;
+            cameraSurface = cameraInput.getInputSurface();
+        } else {
+            BitmapRenderInput bitmapInput = new BitmapRenderInput(this);
+            if (!bitmapInput.init(imagePath)) {
+                reportInitError("Bitmap input initialization failed: " + imagePath, listener);
+                return;
             }
+            renderInput = bitmapInput;
+            renderInput.requestRender();
+        }
 
-            Surface cameraInputSurface = inputSurface;
-            mainHandler.post(() -> {
-                if (cameraInputSurface != null) {
-                    listener.onRenderReady(cameraInputSurface);
-                } else {
-                    listener.onRenderError();
-                }
-            });
-        });
+        Surface readyCameraSurface = cameraSurface;
+        mainHandler.post(() -> listener.onRenderReady(readyCameraSurface));
+    }
+
+    private void reportInitError(String message, InitListener listener) {
+        Log.e(LOG_TAG, message);
+        releaseOnRenderThread();
+        mainHandler.post(listener::onRenderError);
     }
 
     public void setRenderParams(RenderBaseParams params) {
@@ -130,16 +171,17 @@ public final class RenderEngine implements Closeable {
         renderHandler.post(this::releaseOnRenderThread);
     }
 
-    private void renderFrameOnRenderThread(SurfaceTexture surfaceTexture) {
-        if (surfaceTexture != inputSurfaceTexture) {
-            return;
+    private boolean initRendererOnRenderThread(Surface outputSurface, PreviewResolution previewResolution) {
+        nativeHandle = nativeInitRenderer(outputSurface, previewResolution.getHeight(), previewResolution.getWidth());
+        if (nativeHandle == 0L) {
+            return false;
         }
 
-        long frameStartNanos = System.nanoTime();
-        surfaceTexture.updateTexImage();
-        surfaceTexture.getTransformMatrix(textureMatrix);
-        nativeRenderFrame(nativeHandle, textureMatrix);
-        updateDebugInfo(frameStartNanos, System.nanoTime());
+        captureWidth = previewResolution.getHeight();
+        captureHeight = previewResolution.getWidth();
+        setImageParams(imageParams);
+        applyFilter(lutPath);
+        return true;
     }
 
     private void setImageParams(ImageParams params) {
@@ -150,6 +192,7 @@ public final class RenderEngine implements Closeable {
                 params.getBrightness(),
                 params.getWarmth()
         );
+        requestRenderOnRenderThread();
     }
 
     private String resolveLutPath(String rootPath) {
@@ -171,6 +214,7 @@ public final class RenderEngine implements Closeable {
         }
         if (path == null) {
             nativeSetLutTexture(nativeHandle, null);
+            requestRenderOnRenderThread();
             return;
         }
 
@@ -179,6 +223,7 @@ public final class RenderEngine implements Closeable {
         Bitmap lutBitmap = BitmapFactory.decodeFile(path, options);
         if (lutBitmap == null) {
             nativeSetLutTexture(nativeHandle, null);
+            requestRenderOnRenderThread();
             return;
         }
 
@@ -186,6 +231,37 @@ public final class RenderEngine implements Closeable {
         lutBitmap.recycle();
         if (!uploaded) {
             nativeSetLutTexture(nativeHandle, null);
+        }
+        requestRenderOnRenderThread();
+    }
+
+    private void requestRenderOnRenderThread() {
+        if (renderInput != null) {
+            renderInput.requestRender();
+        }
+    }
+
+    int getCameraInputTexture() {
+        return nativeGetCameraInputTexture(nativeHandle);
+    }
+
+    void renderCameraFrame(float[] textureMatrix) {
+        if (nativeHandle != 0L) {
+            long frameStartNanos = System.nanoTime();
+            nativeRenderCameraFrame(nativeHandle, textureMatrix);
+            debugTracker.record(frameStartNanos, System.nanoTime());
+        }
+    }
+
+    boolean setBitmap(Bitmap bitmap) {
+        return nativeHandle != 0L && nativeSetBitmap(nativeHandle, bitmap);
+    }
+
+    void renderBitmap() {
+        if (nativeHandle != 0L) {
+            long frameStartNanos = System.nanoTime();
+            nativeRenderBitmap(nativeHandle);
+            debugTracker.record(frameStartNanos, System.nanoTime());
         }
     }
 
@@ -223,51 +299,18 @@ public final class RenderEngine implements Closeable {
         mainHandler.post(() -> callback.onCaptureCompleted(jpegData));
     }
 
-    private void updateDebugInfo(long frameStartNanos, long frameEndNanos) {
-        if (debugInfoStartNanos == 0L) {
-            debugInfoStartNanos = frameStartNanos;
-        }
-
-        renderedFrameCount++;
-        renderDurationNanos += frameEndNanos - frameStartNanos;
-        long debugInfoDurationNanos = frameEndNanos - debugInfoStartNanos;
-        if (debugInfoDurationNanos < DEBUG_INFO_INTERVAL_NANOS) {
-            return;
-        }
-
-        float framesPerSecond = renderedFrameCount * (float) DEBUG_INFO_INTERVAL_NANOS / debugInfoDurationNanos;
-        float frameDurationMillis = renderDurationNanos / (float) renderedFrameCount / NANOS_PER_MILLISECOND;
-        Listener callback = listener;
-        if (callback != null) {
-            mainHandler.post(() ->
-                callback.onDebugInfo(frameDurationMillis, framesPerSecond));
-        }
-
-        debugInfoStartNanos = frameEndNanos;
-        renderDurationNanos = 0L;
-        renderedFrameCount = 0;
-    }
-
     private void releaseOnRenderThread() {
-        if (inputSurface != null) {
-            inputSurface.release();
-            inputSurface = null;
-        }
-        if (inputSurfaceTexture != null) {
-            inputSurfaceTexture.setOnFrameAvailableListener(null);
-            inputSurfaceTexture.release();
-            inputSurfaceTexture = null;
+        if (renderInput != null) {
+            renderInput.release();
+            renderInput = null;
         }
         if (nativeHandle != 0L) {
             nativeDestroyRenderer(nativeHandle);
             nativeHandle = 0L;
         }
-        listener = null;
-        debugInfoStartNanos = 0L;
-        renderDurationNanos = 0L;
-        renderedFrameCount = 0;
         captureWidth = 0;
         captureHeight = 0;
+        debugTracker.reset();
     }
 
     @Override
@@ -287,9 +330,13 @@ public final class RenderEngine implements Closeable {
 
     private static native long nativeInitRenderer(Surface outputSurface, int normalizedWidth, int normalizedHeight);
 
-    private static native int nativeGetInputTexture(long nativeHandle);
+    private static native int nativeGetCameraInputTexture(long nativeHandle);
 
-    private static native void nativeRenderFrame(long nativeHandle, float[] textureMatrix);
+    private static native void nativeRenderCameraFrame(long nativeHandle, float[] textureMatrix);
+
+    private static native boolean nativeSetBitmap(long nativeHandle, Bitmap bitmap);
+
+    private static native void nativeRenderBitmap(long nativeHandle);
 
     private static native void nativeSetImageParams(long nativeHandle, float brightness, float warmth);
 
@@ -299,7 +346,6 @@ public final class RenderEngine implements Closeable {
 
     private static native void nativeDestroyRenderer(long nativeHandle);
 
-    private static final long DEBUG_INFO_INTERVAL_NANOS = 1_000_000_000L;
-    private static final float NANOS_PER_MILLISECOND = 1_000_000F;
     private static final String LUT_FILE_NAME = "lut.png";
+    private static final String LOG_TAG = "PELabRender";
 }

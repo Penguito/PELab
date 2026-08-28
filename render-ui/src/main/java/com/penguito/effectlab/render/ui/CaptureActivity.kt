@@ -25,10 +25,11 @@ import com.penguito.effectlab.render.core.permission.CameraPermissionGate
 import com.penguito.effectlab.render.sdk.ImageParams
 import com.penguito.effectlab.render.sdk.PreviewResolution
 import com.penguito.effectlab.render.sdk.RenderEngine
+import com.penguito.effectlab.render.sdk.RenderMode
 import java.io.File
 import java.io.IOException
 
-class CaptureActivity : Activity(), SurfaceHolder.Callback, Camera2Listener, RenderEngine.Listener {
+class CaptureActivity : Activity(), SurfaceHolder.Callback, Camera2Listener, RenderEngine.InitListener, RenderEngine.DebugInfoListener {
     private val permissionGate by lazy { CameraPermissionGate(this) }
     private val cameraManager by lazy { Camera2Manager(this, this) }
     private val filterMaterialManager by lazy { FilterMaterialManager(this) }
@@ -59,6 +60,7 @@ class CaptureActivity : Activity(), SurfaceHolder.Callback, Camera2Listener, Ren
             it.holder.addCallback(this)
         }
         debugInfo = findViewById(R.id.capture_debug_info)
+        renderEngine.setDebugInfoListener(this)
         switchCameraButton = findViewById<Button>(R.id.capture_switch_camera).also {
             it.setOnClickListener { cameraManager.switchCamera() }
         }
@@ -148,11 +150,7 @@ class CaptureActivity : Activity(), SurfaceHolder.Callback, Camera2Listener, Ren
             showCameraConfiguration(it)
 
             // init render  engine
-            renderEngine.init(
-                surface,
-                it.previewResolution,
-                this,
-            )
+            renderEngine.init(surface, it.previewResolution, RenderMode.CAMERA, this)
         }
     }
 
@@ -273,8 +271,9 @@ class CaptureActivity : Activity(), SurfaceHolder.Callback, Camera2Listener, Ren
     private fun Float.toAdjustmentProgress(): Int =
         (this * ADJUSTMENT_PROGRESS_SCALE + ADJUSTMENT_PROGRESS_CENTER).toInt()
 
-    override fun onRenderReady(inputSurface: Surface) {
+    override fun onRenderReady(cameraSurface: Surface?) {
         val configuration = cameraConfiguration ?: return
+        val inputSurface = cameraSurface ?: return
         if (!isCaptureResumed || outputSurface == null) return
 
         cameraManager.start(

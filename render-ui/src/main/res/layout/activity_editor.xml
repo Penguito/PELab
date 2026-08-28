@@ -27,14 +27,14 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="@id/editor_back" />
 
-    <ImageView
-        android:id="@+id/editor_image"
+    <SurfaceView
+        android:id="@+id/editor_preview"
         android:layout_width="0dp"
         android:layout_height="0dp"
         android:layout_margin="16dp"
         android:contentDescription="@string/editor_image_preview"
-        android:scaleType="fitCenter"
         app:layout_constraintBottom_toTopOf="@id/editor_image_info"
+        app:layout_constraintDimensionRatio="9:16"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/editor_back" />
