@@ -35,6 +35,10 @@ PELab 全称为 Penguito Effect Lab，旨在从零开始构建一个完整的、
 - 在 `render-sdk` 中完成图片输入纹理的渲染链路；
 - 在 `render-sdk` 中重构出相机和图片两种渲染模式，并统一共用的后处理链路。
 
+#### 0.5.6
+
+- 在 `render-core-material` 中新增保存图片的功能。
+
 ### 0.4
 
 - 增加设置 LUT 滤镜功能。

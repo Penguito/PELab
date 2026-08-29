@@ -35,6 +35,10 @@ PELab, short for Penguito Effect Lab, aims to build a complete Android applicati
 - Completed the rendering pipeline for image input textures in `render-sdk`.
 - Refactored `render-sdk` around camera and image rendering modes with a shared post-processing pipeline.
 
+#### 0.5.6
+
+- Added image saving support in `render-core-material`.
+
 ### 0.4
 
 - Add support for setting LUT filters.

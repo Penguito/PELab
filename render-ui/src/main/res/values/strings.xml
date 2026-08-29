@@ -18,11 +18,15 @@
 
     <string name="editor_title">Editor</string>
     <string name="editor_back">Back</string>
+    <string name="editor_save">Save to Album</string>
     <string name="editor_image_preview">Image preview</string>
     <string name="editor_source_capture">Capture</string>
     <string name="editor_source_album">Album</string>
     <string name="editor_image_info">%1$s\n%2$s</string>
     <string name="editor_render_failed">Image render failed</string>
+    <string name="editor_image_saved">Image saved to album</string>
+    <string name="editor_image_save_failed">Image save failed</string>
+    <string name="editor_album_permission_denied">Album write permission denied</string>
 
     <!--  camera detect errors  -->
     <string name="capture_camera_access_failed">Camera configuration unavailable</string>

@@ -2,7 +2,7 @@ package com.penguito.effectlab.render.ui
 
 import android.app.Activity
 import com.penguito.effectlab.render.core.permission.CameraPermissionGate
-import com.penguito.effectlab.render.core.permission.CameraPermissionResult
+import com.penguito.effectlab.render.core.permission.PermissionResult
 
 class CaptureLauncher(
     private val activity: Activity,
@@ -25,12 +25,12 @@ class CaptureLauncher(
     ): Boolean = when (
         permissionGate.resolveRequestResult(requestCode, permissions, grantResults)
     ) {
-        CameraPermissionResult.GRANTED -> {
+        PermissionResult.GRANTED -> {
             openCapture()
             true
         }
 
-        CameraPermissionResult.DENIED -> {
+        PermissionResult.DENIED -> {
             onPermissionDenied()
             true
         }
