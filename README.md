@@ -10,6 +10,35 @@ PELab, short for Penguito Effect Lab, aims to build a complete Android applicati
 
 ## Current Development Progress
 
+### 0.5
+
+- Add support for capturing, importing, and saving images to the gallery.
+
+#### 0.5.1
+
+- Added support for reading the current render result and encoding it as JPEG in `render-sdk`.
+
+#### 0.5.2
+
+- Added photo capture support in `render-ui` and enabled preview by navigating to the editor page.
+
+#### 0.5.3
+
+- Added system single-image selection support in `render-ui`.
+
+#### 0.5.4
+
+- Added local image importing with orientation and size processing in `render-core-material`.
+
+#### 0.5.5
+
+- Completed the rendering pipeline for image input textures in `render-sdk`.
+- Refactored `render-sdk` around camera and image rendering modes with a shared post-processing pipeline.
+
+#### 0.5.6
+
+- Added image saving support in `render-core-material`.
+
 ### 0.4
 
 - Add support for setting LUT filters.
@@ -142,7 +171,7 @@ app
 | `render-ui` | Manages the UI and page lifecycle |
 | `render-core-camera` | Camera module — manages camera input and its lifecycle |
 | `render-core-permission` | Permission module — handles permission requests and their results |
-| `render-core-material` | Material management module — handles the storage and loading of effect materials |
+| `render-core-material` | Material and image file management module — handles effect material storage, loading, and local image importing |
 | `render-sdk` | Rendering SDK module — provides Java APIs and contains the Native rendering implementation |
 
 ## Fixed Toolchain

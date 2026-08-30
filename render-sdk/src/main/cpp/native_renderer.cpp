@@ -3,7 +3,6 @@
 #include "gl_utils.h"
 
 #include <EGL/eglext.h>
-#include <GLES2/gl2ext.h>
 #include <GLES3/gl3.h>
 #include <android/log.h>
 
@@ -11,37 +10,6 @@ namespace pelab {
 namespace {
 
 constexpr char kLogTag[] = "PELabEGL";
-
-constexpr char kNormalizeVertexShaderSource[] = R"(#version 300 es
-
-layout(location = 0) in vec2 position;
-layout(location = 1) in vec2 textureCoordinate;
-
-uniform mat4 textureMatrix;
-
-out vec2 normalizedTextureCoordinate;
-
-void main() {
-    gl_Position = vec4(position, 0.0, 1.0);
-    normalizedTextureCoordinate =
-            (textureMatrix * vec4(textureCoordinate, 0.0, 1.0)).xy;
-}
-)";
-
-constexpr char kNormalizeFragmentShaderSource[] = R"(#version 300 es
-#extension GL_OES_EGL_image_external_essl3 : require
-
-precision mediump float;
-
-uniform samplerExternalOES inputTexture;
-
-in vec2 normalizedTextureCoordinate;
-out vec4 outputColor;
-
-void main() {
-    outputColor = texture(inputTexture, normalizedTextureCoordinate);
-}
-)";
 
 constexpr char kImageVertexShaderSource[] = R"(#version 300 es
 
@@ -179,27 +147,28 @@ bool NativeRenderer::Init(
     normalized_width_ = normalized_width;
     normalized_height_ = normalized_height;
 
-    // 1. create input texture
-    if (!CreateInputTexture()) {
-        return false;
-    }
-    // 2. create normalized buffer
+    // 1. create shared normalized target
     if (!CreateNormalizedTarget()) {
         return false;
     }
 
-    // 3. init image pass
+    // 2. init OES input pass
+    if (!oes_input_pass_.Init()) {
+        return false;
+    }
+
+    // 3. init bitmap input pass
+    if (!bitmap_input_pass_.Init()) {
+        return false;
+    }
+
+    // 4. init image pass
     if (!image_pass_.Init(normalized_width_, normalized_height_)) {
         return false;
     }
 
-    // 4. init filter pass
+    // 5. init filter pass
     if (!filter_pass_.Init(normalized_width_, normalized_height_)) {
-        return false;
-    }
-
-    // 5. create normalize program
-    if (!CreateNormalizeProgram()) {
         return false;
     }
 
@@ -241,8 +210,16 @@ bool NativeRenderer::Init(
     return true;
 }
 
-GLuint NativeRenderer::GetInputTexture() const {
-    return input_texture_;
+GLuint NativeRenderer::GetCameraInputTexture() const {
+    return oes_input_pass_.GetInputTexture();
+}
+
+bool NativeRenderer::SetBitmap(
+        const void* pixels,
+        int width,
+        int height,
+        int row_stride) {
+    return bitmap_input_pass_.SetBitmap(pixels, width, height, row_stride);
 }
 
 void NativeRenderer::SetImageParams(float brightness, float warmth) {
@@ -253,12 +230,32 @@ bool NativeRenderer::SetLutTexture(const void* pixels, int width, int height, in
     return filter_pass_.SetLutTexture(pixels, width, height, row_stride);
 }
 
-void NativeRenderer::RenderFrame(const float* texture_matrix) {
+void NativeRenderer::RenderCameraFrame(const float* texture_matrix) {
 
-    // Pass Normalize: OES -> normalized buffer
-    RenderToNormalizedTarget(texture_matrix);
+    // Pass OES Input: OES texture -> normalized target
+    oes_input_pass_.Render(
+            normalized_framebuffer_,
+            normalized_width_,
+            normalized_height_,
+            vertex_array_,
+            texture_matrix);
+    RenderPostProcessing();
+}
 
-    // Pass Image: normalized buffer -> image buffer
+void NativeRenderer::RenderBitmap() {
+
+    // Pass Bitmap Input: bitmap texture -> normalized target
+    bitmap_input_pass_.Render(
+            normalized_framebuffer_,
+            normalized_width_,
+            normalized_height_,
+            vertex_array_);
+    RenderPostProcessing();
+}
+
+void NativeRenderer::RenderPostProcessing() {
+
+    // Pass Image Adjustment: normalized buffer -> image buffer
     image_pass_.Render(normalized_texture_, vertex_array_);
     GLuint output_texture = image_pass_.GetOutputTexture();
 
@@ -267,41 +264,41 @@ void NativeRenderer::RenderFrame(const float* texture_matrix) {
         filter_pass_.Render(output_texture, vertex_array_);
         output_texture = filter_pass_.GetOutputTexture();
     }
+    final_texture_ = output_texture;
 
     // Pass Output: last buffer -> surfaceView
-    RenderToOutput(output_texture);
+    RenderToOutput(final_texture_);
 
     if (eglSwapBuffers(display_, surface_) != EGL_TRUE) {
         LogEglError("eglSwapBuffers");
     }
 }
 
-void NativeRenderer::RenderToNormalizedTarget(const float* texture_matrix) const {
+bool NativeRenderer::CaptureFrame(void* pixels, int row_stride) const {
 
-    // bind framebuffer
-    glBindFramebuffer(GL_FRAMEBUFFER, normalized_framebuffer_);
-    glViewport(0, 0, normalized_width_, normalized_height_);
+    if (final_texture_ == 0) {
+        return false;
+    }
 
-    // use program
-    glUseProgram(normalize_program_);
-    glBindVertexArray(vertex_array_);
+    // attach the final texture for reading
+    GLuint capture_framebuffer = 0;
+    glGenFramebuffers(1, &capture_framebuffer);
+    glBindFramebuffer(GL_FRAMEBUFFER, capture_framebuffer);
+    glFramebufferTexture2D(
+            GL_FRAMEBUFFER,
+            GL_COLOR_ATTACHMENT0,
+            GL_TEXTURE_2D,
+            final_texture_,
+            0);
 
-    // bind OES texture and apply texture matrix
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_EXTERNAL_OES, input_texture_);
-    glUniform1i(normalize_input_texture_location_, 0);
-    glUniformMatrix4fv(
-            normalize_texture_matrix_location_,
-            1,
-            GL_FALSE,
-            texture_matrix);
+    // read the processed RGBA pixels
+    glPixelStorei(GL_PACK_ROW_LENGTH, row_stride / 4);
+    glReadPixels(0, 0, normalized_width_, normalized_height_, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
+    glPixelStorei(GL_PACK_ROW_LENGTH, 0);
 
-    // render OES to RGBA buffer
-    glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
-
-    glBindTexture(GL_TEXTURE_EXTERNAL_OES, 0);
-    glBindVertexArray(0);
-    glUseProgram(0);
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    glDeleteFramebuffers(1, &capture_framebuffer);
+    return true;
 }
 
 void NativeRenderer::RenderToOutput(GLuint preview_texture) const {
@@ -325,17 +322,6 @@ void NativeRenderer::RenderToOutput(GLuint preview_texture) const {
     glBindTexture(GL_TEXTURE_2D, 0);
     glBindVertexArray(0);
     glUseProgram(0);
-}
-
-bool NativeRenderer::CreateInputTexture() {
-    glGenTextures(1, &input_texture_);
-    glBindTexture(GL_TEXTURE_EXTERNAL_OES, input_texture_);
-    glTexParameteri(GL_TEXTURE_EXTERNAL_OES,GL_TEXTURE_MIN_FILTER,GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_EXTERNAL_OES,GL_TEXTURE_MAG_FILTER,GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_EXTERNAL_OES,GL_TEXTURE_WRAP_S,GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_EXTERNAL_OES,GL_TEXTURE_WRAP_T,GL_CLAMP_TO_EDGE);
-    glBindTexture(GL_TEXTURE_EXTERNAL_OES, 0);
-    return input_texture_ != 0;
 }
 
 bool NativeRenderer::CreateNormalizedTarget() {
@@ -387,19 +373,6 @@ bool NativeRenderer::CreateNormalizedTarget() {
     return true;
 }
 
-bool NativeRenderer::CreateNormalizeProgram() {
-    normalize_program_ = CreateProgram(kNormalizeVertexShaderSource, kNormalizeFragmentShaderSource);
-    if (normalize_program_ == 0) {
-        return false;
-    }
-
-    normalize_texture_matrix_location_ =
-            glGetUniformLocation(normalize_program_, "textureMatrix");
-    normalize_input_texture_location_ =
-            glGetUniformLocation(normalize_program_, "inputTexture");
-    return true;
-}
-
 bool NativeRenderer::CreatePreviewProgram() {
     preview_program_ = CreateProgram(kImageVertexShaderSource, kPreviewFragmentShaderSource);
     if (preview_program_ == 0) {
@@ -448,6 +421,8 @@ bool NativeRenderer::CreateVertexBuffer() {
 void NativeRenderer::Release() {
     filter_pass_.Release();
     image_pass_.Release();
+    bitmap_input_pass_.Release();
+    oes_input_pass_.Release();
     if (normalized_framebuffer_ != 0) {
         glDeleteFramebuffers(1, &normalized_framebuffer_);
     }
@@ -460,14 +435,8 @@ void NativeRenderer::Release() {
     if (vertex_array_ != 0) {
         glDeleteVertexArrays(1, &vertex_array_);
     }
-    if (normalize_program_ != 0) {
-        glDeleteProgram(normalize_program_);
-    }
     if (preview_program_ != 0) {
         glDeleteProgram(preview_program_);
-    }
-    if (input_texture_ != 0) {
-        glDeleteTextures(1, &input_texture_);
     }
 
     if (display_ != EGL_NO_DISPLAY) {
@@ -506,15 +475,12 @@ void NativeRenderer::Release() {
     config_ = nullptr;
     context_ = EGL_NO_CONTEXT;
     surface_ = EGL_NO_SURFACE;
-    input_texture_ = 0;
     normalized_texture_ = 0;
     normalized_framebuffer_ = 0;
-    normalize_program_ = 0;
+    final_texture_ = 0;
     preview_program_ = 0;
     vertex_array_ = 0;
     vertex_buffer_ = 0;
-    normalize_texture_matrix_location_ = -1;
-    normalize_input_texture_location_ = -1;
     preview_texture_location_ = -1;
     output_width_ = 0;
     output_height_ = 0;
