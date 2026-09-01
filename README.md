@@ -10,6 +10,14 @@ PELab, short for Penguito Effect Lab, aims to build a complete Android applicati
 
 ## Current Development Progress
 
+### 0.6
+
+- Complete the basic UI for the home, capture, editor, and save preview pages.
+
+#### 0.6.1
+
+- Unified the image source and path data contract between pages in `render-ui`.
+
 ### 0.5
 
 - Add support for capturing, importing, and saving images to the gallery.

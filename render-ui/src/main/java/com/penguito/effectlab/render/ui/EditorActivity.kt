@@ -26,7 +26,7 @@ class EditorActivity : Activity(), SurfaceHolder.Callback, RenderEngine.InitList
     private lateinit var previewView: SurfaceView
     private lateinit var imageInfo: TextView
     private lateinit var saveButton: Button
-    private lateinit var imagePath: String
+    private lateinit var imageIntentData: ImageIntentData
     private var outputSurface: Surface? = null
     private var isEditorResumed = false
     private var isRenderReady = false
@@ -35,17 +35,15 @@ class EditorActivity : Activity(), SurfaceHolder.Callback, RenderEngine.InitList
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        val sourceValue = intent.getStringExtra(EXTRA_IMAGE_SOURCE)
-        val pathValue = intent.getStringExtra(EXTRA_IMAGE_PATH)
-        if (sourceValue == null || pathValue == null) {
+        val intentData = ImageIntentData.fromIntent(intent)
+        if (intentData == null) {
             finish()
             return
         }
 
         setContentView(R.layout.activity_editor)
-        imagePath = pathValue
-        val imageSource = ImageSource.valueOf(sourceValue)
-        val sourceName = when (imageSource) {
+        imageIntentData = intentData
+        val sourceName = when (intentData.imageSource) {
             ImageSource.CAPTURE -> getString(R.string.editor_source_capture)
             ImageSource.ALBUM -> getString(R.string.editor_source_album)
         }
@@ -54,7 +52,7 @@ class EditorActivity : Activity(), SurfaceHolder.Callback, RenderEngine.InitList
         imageInfo = findViewById(R.id.editor_image_info)
         saveButton = findViewById(R.id.editor_save)
         previewView.holder.addCallback(this)
-        imageInfo.text = getString(R.string.editor_image_info, sourceName, imagePath,)
+        imageInfo.text = getString(R.string.editor_image_info, sourceName, intentData.imagePath,)
         findViewById<Button>(R.id.editor_back).setOnClickListener {
             finish()
         }
@@ -141,7 +139,7 @@ class EditorActivity : Activity(), SurfaceHolder.Callback, RenderEngine.InitList
         val surface = outputSurface ?: return
         if (!isEditorResumed) return
 
-        renderEngine.init(surface, PreviewResolution.P720, RenderMode.IMAGE, imagePath, this)
+        renderEngine.init(surface, PreviewResolution.P720, RenderMode.IMAGE, imageIntentData.imagePath, this)
     }
 
     private fun saveImage() {
@@ -178,15 +176,11 @@ class EditorActivity : Activity(), SurfaceHolder.Callback, RenderEngine.InitList
     }
 
     companion object {
-        private const val EXTRA_IMAGE_SOURCE = "image_source"
-        private const val EXTRA_IMAGE_PATH = "image_path"
-
         fun createIntent(
             context: Context,
             imageSource: ImageSource,
             imagePath: String,
-        ): Intent = Intent(context, EditorActivity::class.java)
-            .putExtra(EXTRA_IMAGE_SOURCE, imageSource.name)
-            .putExtra(EXTRA_IMAGE_PATH, imagePath)
+        ): Intent = ImageIntentData(imageSource, imagePath)
+            .writeTo(Intent(context, EditorActivity::class.java))
     }
 }
