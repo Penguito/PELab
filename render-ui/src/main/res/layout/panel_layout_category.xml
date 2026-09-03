@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="wrap_content"
+    android:layout_height="match_parent"
+    android:clickable="true"
+    android:focusable="true"
+    android:gravity="center_horizontal"
+    android:orientation="vertical"
+    android:paddingHorizontal="16dp">
+
+    <TextView
+        android:id="@+id/selection_panel_category_name"
+        android:layout_width="wrap_content"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:duplicateParentState="true"
+        android:gravity="center"
+        android:textColor="@color/panel_item_text"
+        android:textSize="13sp" />
+
+    <View
+        android:layout_width="32dp"
+        android:layout_height="3dp"
+        android:background="@drawable/panel_indicator_category"
+        android:duplicateParentState="true" />
+
+</LinearLayout>

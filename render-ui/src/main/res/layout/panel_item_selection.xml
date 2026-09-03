@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="80dp"
+    android:layout_height="wrap_content"
+    android:layout_marginEnd="8dp"
+    android:clickable="true"
+    android:focusable="true"
+    android:gravity="center"
+    android:minHeight="84dp"
+    android:orientation="vertical"
+    android:paddingHorizontal="4dp">
+
+    <FrameLayout
+        android:layout_width="56dp"
+        android:layout_height="56dp"
+        android:background="@drawable/panel_background_icon"
+        android:duplicateParentState="true"
+        android:padding="3dp">
+
+        <ImageView
+            android:id="@+id/selection_panel_item_icon"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="@drawable/panel_surface_icon"
+            android:clipToOutline="true"
+            android:contentDescription="@null"
+            android:scaleType="centerCrop" />
+
+    </FrameLayout>
+
+    <TextView
+        android:id="@+id/selection_panel_item_name"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="4dp"
+        android:ellipsize="end"
+        android:duplicateParentState="true"
+        android:gravity="center"
+        android:maxLines="1"
+        android:textColor="@color/panel_item_text"
+        android:textSize="12sp" />
+
+</LinearLayout>

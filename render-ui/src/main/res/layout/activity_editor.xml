@@ -3,7 +3,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/render_ui_background">
+    android:background="@color/render_ui_background_black">
 
     <Button
         android:id="@+id/editor_back"
@@ -30,7 +30,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="@string/editor_title"
-        android:textColor="@color/render_ui_on_background"
+        android:textColor="@color/render_ui_background_white"
         android:textSize="22sp"
         app:layout_constraintBottom_toBottomOf="@id/editor_back"
         app:layout_constraintEnd_toEndOf="parent"
@@ -57,7 +57,7 @@
         android:ellipsize="middle"
         android:gravity="center"
         android:maxLines="3"
-        android:textColor="@color/render_ui_on_background"
+        android:textColor="@color/render_ui_background_white"
         android:textSize="14sp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"

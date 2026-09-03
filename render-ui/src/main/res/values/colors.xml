@@ -1,6 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="render_ui_background">#000000</color>
-    <color name="render_ui_on_background">#FFFFFF</color>
+    <color name="render_ui_background_black">#000000</color>
+    <color name="render_ui_background_white">#FFFFFF</color>
     <color name="render_ui_panel_background">#CC0D1F3C</color>
+    <color name="render_ui_panel_background_content">#D90D1F3C</color>
+    <color name="render_ui_panel_background_header">#F20D1F3C</color>
+    <color name="render_ui_panel_background_selected">#334F8FD8</color>
+    <color name="render_ui_panel_item_selected">#4F8FD8</color>
+    <color name="render_ui_panel_icon_surface">#334F6480</color>
+    <color name="render_ui_panel_divider">#66FFFFFF</color>
 </resources>

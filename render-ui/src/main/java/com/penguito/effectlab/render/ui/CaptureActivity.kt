@@ -1,6 +1,5 @@
 package com.penguito.effectlab.render.ui
 
-import android.app.Activity
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
@@ -8,12 +7,12 @@ import android.util.Log
 import android.view.Surface
 import android.view.SurfaceHolder
 import android.view.SurfaceView
-import android.view.View
 import android.widget.Button
-import android.widget.RadioButton
+import android.widget.ImageButton
 import android.widget.RadioGroup
 import android.widget.SeekBar
 import android.widget.TextView
+import androidx.fragment.app.FragmentActivity
 import com.penguito.effectlab.render.core.camera.Camera2Listener
 import com.penguito.effectlab.render.core.camera.Camera2Manager
 import com.penguito.effectlab.render.core.camera.CameraConfiguration
@@ -29,7 +28,7 @@ import com.penguito.effectlab.render.sdk.RenderMode
 import java.io.File
 import java.io.IOException
 
-class CaptureActivity : Activity(), SurfaceHolder.Callback, Camera2Listener, RenderEngine.InitListener, RenderEngine.DebugInfoListener {
+class CaptureActivity : FragmentActivity(), SurfaceHolder.Callback, Camera2Listener, RenderEngine.InitListener, RenderEngine.DebugInfoListener {
     private val permissionGate by lazy { CameraPermissionGate(this) }
     private val cameraManager by lazy { Camera2Manager(this, this) }
     private val filterMaterialManager by lazy { FilterMaterialManager(this) }
@@ -45,6 +44,7 @@ class CaptureActivity : Activity(), SurfaceHolder.Callback, Camera2Listener, Ren
     private var cameraConfiguration: CameraConfiguration? = null
     private var imageParams = ImageParams.defaults()
     private var selectedAdjustment = Adjustment.BRIGHTNESS
+    private var selectedFilterId: String? = null
     private var isCaptureResumed = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -245,23 +245,29 @@ class CaptureActivity : Activity(), SurfaceHolder.Callback, Camera2Listener, Ren
 
     // test for filter
     private fun setupFilterList() {
-        val filterGroup = findViewById<RadioGroup>(R.id.capture_filter_group)
         val filterList = filterMaterialManager.initFilterList()
             .sortedBy { if (it.id == CYBER_PUNK_FILTER_ID) 0 else 1 }
-        for (material in filterList) {
-            val filterButton = layoutInflater.inflate(
-                R.layout.item_capture_filter,
-                filterGroup,
-                false,
-            ) as RadioButton
-            filterButton.id = View.generateViewId()
-            filterButton.text = material.displayName
-            filterButton.tag = material.rootPath
-            filterGroup.addView(filterButton)
+        val filtersById = filterList.associateBy { it.id }
+        val filterItems = filterList.map {
+            SelectionPanelItem(
+                id = it.id,
+                name = it.displayName,
+                icon = SelectionPanelIcon.FilePath(it.iconPath),
+            )
         }
-        filterGroup.setOnCheckedChangeListener { group, checkedId ->
-            val filterButton = group.findViewById<RadioButton>(checkedId)
-            renderEngine.setFilter(filterButton?.tag as? String)
+        findViewById<ImageButton>(R.id.capture_filter_button).setOnClickListener {
+            SelectionPanelBottomSheet().apply {
+                setOnItemSelectedListener { item ->
+                    selectedFilterId = item?.id
+                    renderEngine.setFilter(item?.let { filtersById[it.id]?.rootPath })
+                }
+                setItems(
+                    items = filterItems,
+                    emptyText = this@CaptureActivity.getString(R.string.capture_filter_empty),
+                    showNoneButton = true,
+                    selectedItemId = selectedFilterId,
+                )
+            }.show(supportFragmentManager, FILTER_PANEL_TAG)
         }
     }
 
@@ -345,6 +351,7 @@ class CaptureActivity : Activity(), SurfaceHolder.Callback, Camera2Listener, Ren
         private const val ADJUSTMENT_PROGRESS_SCALE = 100.0F
         private const val CYBER_PUNK_FILTER_ID = "cyber_punk"
         private const val CAPTURE_FILE_NAME = "captured_image.jpg"
+        private const val FILTER_PANEL_TAG = "filter_panel"
 
         fun createIntent(context: Context): Intent = Intent(context, CaptureActivity::class.java)
     }
