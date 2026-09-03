@@ -294,14 +294,16 @@ class CaptureActivity : FragmentActivity(), SurfaceHolder.Callback, Camera2Liste
     }
 
     override fun onDebugInfo(
-        frameDurationMillis: Float,
+        sdkRenderMillis: Float,
+        cameraFrameMillis: Float,
         framesPerSecond: Float,
     ) {
         if (!isCaptureResumed) return
 
         debugInfo?.text = getString(
             R.string.capture_debug_info,
-            frameDurationMillis,
+            sdkRenderMillis,
+            cameraFrameMillis,
             framesPerSecond,
         )
     }

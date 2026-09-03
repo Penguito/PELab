@@ -6,8 +6,8 @@
     <string name="capture_camera_ready">Camera %1$s · %2$s · %3$d × %4$d</string>
     <string name="capture_lens_front">front</string>
     <string name="capture_lens_back">back</string>
-    <string name="capture_debug_info_empty">Frame: -- ms · FPS: --</string>
-    <string name="capture_debug_info">Frame: %1$.2f ms · FPS: %2$.1f</string>
+    <string name="capture_debug_info_empty">SDK Render: -- ms\nCamera Frame: -- ms\nFPS: --</string>
+    <string name="capture_debug_info">SDK Render: %1$.2f ms\nCamera Frame: %2$.2f ms\nFPS: %3$.1f</string>
     <string name="capture_adjustment_brightness">Brightness</string>
     <string name="capture_adjustment_warmth">Warmth</string>
     <string name="capture_filter">Filter</string>

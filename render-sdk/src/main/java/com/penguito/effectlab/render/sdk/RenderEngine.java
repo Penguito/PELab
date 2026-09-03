@@ -24,7 +24,7 @@ public final class RenderEngine implements Closeable {
     }
 
     public interface DebugInfoListener {
-        void onDebugInfo(float frameDurationMillis, float framesPerSecond);
+        void onDebugInfo(float sdkRenderMillis, float cameraFrameMillis, float framesPerSecond);
     }
 
     public interface CaptureCallback {
@@ -54,10 +54,10 @@ public final class RenderEngine implements Closeable {
     public RenderEngine() {
         renderThread.start();
         renderHandler = new Handler(renderThread.getLooper());
-        debugTracker = new RenderDebugTracker((frameDurationMillis, framesPerSecond) ->
+        debugTracker = new RenderDebugTracker((sdkRenderMillis, cameraFrameMillis, framesPerSecond) ->
             mainHandler.post(() -> {
                 if (debugInfoListener != null) {
-                    debugInfoListener.onDebugInfo(frameDurationMillis, framesPerSecond);
+                    debugInfoListener.onDebugInfo(sdkRenderMillis, cameraFrameMillis, framesPerSecond);
                 }
             })
         );
