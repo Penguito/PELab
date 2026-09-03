@@ -41,14 +41,14 @@ class MainActivity : Activity() {
                 Toast.makeText(this, R.string.image_import_failed, Toast.LENGTH_LONG).show()
             },
         )
-        findViewById<TextView>(R.id.native_bridge_test).text = getString(
+        findViewById<TextView>(R.id.main_sdk_info).text = getString(
             R.string.native_bridge_ready,
             RenderSdkStatus.getNativeBridgeInfo(),
         )
-        findViewById<Button>(R.id.capture_test).setOnClickListener {
+        findViewById<Button>(R.id.main_capture_mode).setOnClickListener {
             captureLauncher.launch()
         }
-        findViewById<Button>(R.id.select_photo).setOnClickListener {
+        findViewById<Button>(R.id.main_image_mode).setOnClickListener {
             photoPickerLauncher.launch()
         }
     }

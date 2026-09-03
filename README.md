@@ -22,6 +22,10 @@ PELab, short for Penguito Effect Lab, aims to build a complete Android applicati
 
 - Added a reusable panel UI to `render-ui` as a foundational panel component for the application.
 
+#### 0.6.3
+
+- Refactored the home page UI in `app`.
+
 ### 0.5
 
 - Add support for capturing, importing, and saving images to the gallery.

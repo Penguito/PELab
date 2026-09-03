@@ -1,35 +1,109 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:background="@color/background"
-    android:gravity="center"
-    android:orientation="vertical"
-    android:padding="24dp">
+    android:layout_height="match_parent">
 
-    <TextView
-        android:id="@+id/native_bridge_test"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:gravity="center"
-        android:text="@string/native_bridge_checking"
-        android:textColor="@color/on_background"
-        android:textSize="20sp" />
+    <ImageView
+        android:id="@+id/main_background"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:scaleType="centerCrop"
+        android:src="@drawable/background_main" />
 
-    <Button
-        android:id="@+id/capture_test"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="24dp"
-        android:text="@string/capture_test"
-        android:textAllCaps="false" />
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical">
 
-    <Button
-        android:id="@+id/select_photo"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="12dp"
-        android:text="@string/select_photo"
-        android:textAllCaps="false" />
+        <FrameLayout
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1">
 
-</LinearLayout>
+            <TextView
+                android:id="@+id/main_title"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal|bottom"
+                android:layout_marginBottom="40dp"
+                android:fontFamily="sans-serif-light"
+                android:letterSpacing="0.08"
+                android:text="@string/app_full_name"
+                android:textColor="@color/on_background"
+                android:textSize="32sp" />
+
+        </FrameLayout>
+
+        <FrameLayout
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1">
+
+            <LinearLayout
+                android:id="@+id/main_mode_entries"
+                android:layout_width="260dp"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
+                android:orientation="vertical">
+
+                <Button
+                    android:id="@+id/main_capture_mode"
+                    android:layout_width="match_parent"
+                    android:layout_height="58dp"
+                    android:background="@drawable/background_main_mode_button"
+                    android:backgroundTint="@null"
+                    android:drawableStart="@drawable/icon_main_camera"
+                    android:drawablePadding="30dp"
+                    android:layout_marginTop="25dp"
+                    android:gravity="center_vertical"
+                    android:paddingStart="30dp"
+                    android:paddingEnd="30dp"
+                    android:text="@string/main_capture_mode"
+                    android:textColor="@color/on_background"
+                    android:textSize="16sp" />
+
+                <Button
+                    android:id="@+id/main_image_mode"
+                    android:layout_width="match_parent"
+                    android:layout_height="58dp"
+                    android:layout_marginTop="40dp"
+                    android:background="@drawable/background_main_mode_button"
+                    android:drawableStart="@drawable/icon_main_album"
+                    android:drawablePadding="38dp"
+                    android:gravity="center_vertical"
+                    android:letterSpacing="0.04"
+                    android:paddingStart="30dp"
+                    android:paddingEnd="30dp"
+                    android:text="@string/main_image_mode"
+                    android:textColor="@color/on_background"
+                    android:textSize="16sp" />
+
+            </LinearLayout>
+
+        </FrameLayout>
+
+        <FrameLayout
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1">
+
+            <TextView
+                android:id="@+id/main_sdk_info"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_gravity="bottom"
+                android:layout_marginStart="24dp"
+                android:layout_marginEnd="24dp"
+                android:layout_marginBottom="16dp"
+                android:alpha="0.72"
+                android:fontFamily="sans-serif-light"
+                android:gravity="center"
+                android:text="@string/native_bridge_checking"
+                android:textColor="@color/on_background"
+                android:textSize="11sp" />
+
+        </FrameLayout>
+
+    </LinearLayout>
+
+</FrameLayout>

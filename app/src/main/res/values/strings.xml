@@ -1,10 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">PELab</string>
+    <string name="app_full_name">Penguito Effet Lab</string>
     <string name="native_bridge_checking">Checking Native bridge…</string>
-    <string name="native_bridge_ready">Java → JNI → C++:\n%1$s</string>
-    <string name="capture_test">Capture Test</string>
-    <string name="select_photo">Select Photo</string>
+    <string name="native_bridge_ready">Java → JNI → C++\n%1$s</string>
+    <string name="main_capture_mode">Capture Mode</string>
+    <string name="main_image_mode">Image Mode</string>
     <string name="image_import_failed">Image import failed.</string>
     <string name="camera_permission_denied">Camera permission is required.</string>
 </resources>
