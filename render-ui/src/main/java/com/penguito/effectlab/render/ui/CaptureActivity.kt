@@ -2,15 +2,13 @@ package com.penguito.effectlab.render.ui
 
 import android.content.Context
 import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
 import android.util.Log
 import android.view.Surface
 import android.view.SurfaceHolder
 import android.view.SurfaceView
-import android.widget.Button
 import android.widget.ImageButton
-import android.widget.RadioGroup
-import android.widget.SeekBar
 import android.widget.TextView
 import androidx.fragment.app.FragmentActivity
 import com.penguito.effectlab.render.core.camera.Camera2Listener
@@ -21,7 +19,6 @@ import com.penguito.effectlab.render.core.camera.CameraErrorCode
 import com.penguito.effectlab.render.core.camera.LensFacing
 import com.penguito.effectlab.render.core.material.FilterMaterialManager
 import com.penguito.effectlab.render.core.permission.CameraPermissionGate
-import com.penguito.effectlab.render.sdk.ImageParams
 import com.penguito.effectlab.render.sdk.PreviewResolution
 import com.penguito.effectlab.render.sdk.RenderEngine
 import com.penguito.effectlab.render.sdk.RenderMode
@@ -37,14 +34,13 @@ class CaptureActivity : FragmentActivity(), SurfaceHolder.Callback, Camera2Liste
     private var previewView: SurfaceView? = null
     private var lifecycleStatus: TextView? = null
     private var debugInfo: TextView? = null
-    private var switchCameraButton: Button? = null
-    private var captureButton: Button? = null
-    private var adjustmentSeekBar: SeekBar? = null
+    private var filterButton: ImageButton? = null
+    private var switchCameraButton: ImageButton? = null
+    private var captureButton: ImageButton? = null
     private var outputSurface: Surface? = null
     private var cameraConfiguration: CameraConfiguration? = null
-    private var imageParams = ImageParams.defaults()
-    private var selectedAdjustment = Adjustment.BRIGHTNESS
     private var selectedFilterId: String? = null
+    private var filterIconPadding = 0
     private var isCaptureResumed = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -61,37 +57,18 @@ class CaptureActivity : FragmentActivity(), SurfaceHolder.Callback, Camera2Liste
         }
         debugInfo = findViewById(R.id.capture_debug_info)
         renderEngine.setDebugInfoListener(this)
-        switchCameraButton = findViewById<Button>(R.id.capture_switch_camera).also {
+        filterButton = findViewById<ImageButton>(R.id.capture_filter_button).also {
+            filterIconPadding = it.paddingLeft
+        }
+        findViewById<ImageButton>(R.id.capture_back).setOnClickListener { finish() }
+        switchCameraButton = findViewById<ImageButton>(R.id.capture_switch_camera).also {
             it.setOnClickListener { cameraManager.switchCamera() }
         }
-        captureButton = findViewById<Button>(R.id.capture_photo).also {
+        captureButton = findViewById<ImageButton>(R.id.capture_photo).also {
             it.setOnClickListener { captureImage() }
         }
-        adjustmentSeekBar = findViewById<SeekBar>(R.id.capture_adjustment_seek_bar).also {
-            it.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
-                override fun onProgressChanged(
-                    seekBar: SeekBar,
-                    progress: Int,
-                    fromUser: Boolean,
-                ) {
-                    if (fromUser) {
-                        updateImageParams(progress.toAdjustmentValue())
-                    }
-                }
-
-                override fun onStartTrackingTouch(seekBar: SeekBar) = Unit
-
-                override fun onStopTrackingTouch(seekBar: SeekBar) = Unit
-            })
-        }
-        findViewById<RadioGroup>(R.id.capture_adjustment_group).setOnCheckedChangeListener { _, checkedId ->
-            selectedAdjustment = when (checkedId) {
-                R.id.capture_warmth -> Adjustment.WARMTH
-                else -> Adjustment.BRIGHTNESS
-            }
-            showSelectedAdjustment()
-        }
-        setupFilterList()
+        setupFilterPanel()
+        setupAlgorithmPanel()
     }
 
     override fun onResume() {
@@ -180,27 +157,6 @@ class CaptureActivity : FragmentActivity(), SurfaceHolder.Callback, Camera2Liste
         )
     }
 
-    private fun showSelectedAdjustment() {
-        val value = when (selectedAdjustment) {
-            Adjustment.BRIGHTNESS -> imageParams.brightness
-            Adjustment.WARMTH -> imageParams.warmth
-        }
-        adjustmentSeekBar?.progress = value.toAdjustmentProgress()
-    }
-
-    private fun updateImageParams(value: Float) {
-        imageParams = when (selectedAdjustment) {
-            Adjustment.BRIGHTNESS -> ImageParams.builder(imageParams)
-                .setBrightness(value)
-                .build()
-
-            Adjustment.WARMTH -> ImageParams.builder(imageParams)
-                .setWarmth(value)
-                .build()
-        }
-        renderEngine.setRenderParams(imageParams)
-    }
-
     private fun captureImage() {
         captureButton?.isEnabled = false
         renderEngine.captureFrame(object : RenderEngine.CaptureCallback {
@@ -243,8 +199,7 @@ class CaptureActivity : FragmentActivity(), SurfaceHolder.Callback, Camera2Liste
         lifecycleStatus?.setText(R.string.capture_image_failed)
     }
 
-    // test for filter
-    private fun setupFilterList() {
+    private fun setupFilterPanel() {
         val filterList = filterMaterialManager.initFilterList()
             .sortedBy { if (it.id == CYBER_PUNK_FILTER_ID) 0 else 1 }
         val filtersById = filterList.associateBy { it.id }
@@ -255,11 +210,13 @@ class CaptureActivity : FragmentActivity(), SurfaceHolder.Callback, Camera2Liste
                 icon = SelectionPanelIcon.FilePath(it.iconPath),
             )
         }
-        findViewById<ImageButton>(R.id.capture_filter_button).setOnClickListener {
+        filterButton?.setOnClickListener {
             SelectionPanelBottomSheet().apply {
                 setOnItemSelectedListener { item ->
                     selectedFilterId = item?.id
-                    renderEngine.setFilter(item?.let { filtersById[it.id]?.rootPath })
+                    val filter = item?.let { filtersById[it.id] }
+                    renderEngine.setFilter(filter?.rootPath)
+                    showFilterIcon(filter?.iconPath)
                 }
                 setItems(
                     items = filterItems,
@@ -271,11 +228,27 @@ class CaptureActivity : FragmentActivity(), SurfaceHolder.Callback, Camera2Liste
         }
     }
 
-    private fun Int.toAdjustmentValue(): Float =
-        (this - ADJUSTMENT_PROGRESS_CENTER) / ADJUSTMENT_PROGRESS_SCALE
+    private fun showFilterIcon(iconPath: String?) {
+        val button = filterButton ?: return
+        if (iconPath == null) {
+            button.setPadding(filterIconPadding, filterIconPadding, filterIconPadding, filterIconPadding)
+            button.setImageResource(R.drawable.icon_capture_filter)
+            return
+        }
+        button.setPadding(0, 0, 0, 0)
+        button.setImageURI(Uri.fromFile(File(iconPath)))
+    }
 
-    private fun Float.toAdjustmentProgress(): Int =
-        (this * ADJUSTMENT_PROGRESS_SCALE + ADJUSTMENT_PROGRESS_CENTER).toInt()
+    private fun setupAlgorithmPanel() {
+        findViewById<ImageButton>(R.id.capture_algorithm_button).setOnClickListener {
+            SelectionPanelBottomSheet().apply {
+                setItems(
+                    items = emptyList(),
+                    emptyText = this@CaptureActivity.getString(R.string.capture_algorithm_developing),
+                )
+            }.show(supportFragmentManager, ALGORITHM_PANEL_TAG)
+        }
+    }
 
     override fun onRenderReady(cameraSurface: Surface?) {
         val configuration = cameraConfiguration ?: return
@@ -312,12 +285,6 @@ class CaptureActivity : FragmentActivity(), SurfaceHolder.Callback, Camera2Liste
         if (!isCaptureResumed) return
 
         cameraConfiguration = configuration
-        switchCameraButton?.setText(
-            when (configuration.lensFacing) {
-                LensFacing.FRONT -> R.string.capture_lens_front
-                LensFacing.BACK -> R.string.capture_lens_back
-            },
-        )
         switchCameraButton?.isEnabled = true
         captureButton?.isEnabled = true
         showCameraConfiguration(configuration)
@@ -349,17 +316,11 @@ class CaptureActivity : FragmentActivity(), SurfaceHolder.Callback, Camera2Liste
 
     companion object {
         private const val LOG_TAG = "PELabCapture"
-        private const val ADJUSTMENT_PROGRESS_CENTER = 100
-        private const val ADJUSTMENT_PROGRESS_SCALE = 100.0F
         private const val CYBER_PUNK_FILTER_ID = "cyber_punk"
         private const val CAPTURE_FILE_NAME = "captured_image.jpg"
         private const val FILTER_PANEL_TAG = "filter_panel"
+        private const val ALGORITHM_PANEL_TAG = "algorithm_panel"
 
         fun createIntent(context: Context): Intent = Intent(context, CaptureActivity::class.java)
-    }
-
-    private enum class Adjustment {
-        BRIGHTNESS,
-        WARMTH,
     }
 }

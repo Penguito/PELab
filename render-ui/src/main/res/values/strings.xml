@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="capture_title">Capture</string>
+    <string name="capture_back">Back</string>
     <string name="capture_created">Capture: created</string>
     <string name="capture_paused">Capture: paused</string>
     <string name="capture_camera_ready">Camera %1$s · %2$s · %3$d × %4$d</string>
@@ -8,11 +8,11 @@
     <string name="capture_lens_back">back</string>
     <string name="capture_debug_info_empty">SDK Render: -- ms\nCamera Frame: -- ms\nFPS: --</string>
     <string name="capture_debug_info">SDK Render: %1$.2f ms\nCamera Frame: %2$.2f ms\nFPS: %3$.1f</string>
-    <string name="capture_adjustment_brightness">Brightness</string>
-    <string name="capture_adjustment_warmth">Warmth</string>
+    <string name="capture_switch_camera">Switch camera</string>
     <string name="capture_filter">Filter</string>
-    <string name="capture_filter_none">None</string>
     <string name="capture_filter_empty">No filters</string>
+    <string name="capture_algorithm">Algorithm</string>
+    <string name="capture_algorithm_developing">This feature is under development</string>
     <string name="capture_photo">Capture Photo</string>
     <string name="capture_image_failed">Image capture failed</string>
     <string name="capture_render_initialization_failed">Render initialization failed</string>

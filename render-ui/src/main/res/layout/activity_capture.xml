@@ -3,38 +3,63 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/render_ui_background_black">
+    android:background="@color/render_ui_background_blue">
 
     <SurfaceView
         android:id="@+id/capture_preview"
         android:layout_width="0dp"
         android:layout_height="0dp"
-        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintDimensionRatio="H,9:16"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="32dp"
-        android:text="@string/capture_title"
-        android:textColor="@color/render_ui_background_white"
-        android:textSize="22sp"
-        app:layout_constraintEnd_toEndOf="parent"
+    <ImageButton
+        android:id="@+id/capture_back"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:layout_marginStart="8dp"
+        android:layout_marginTop="52dp"
+        android:background="@android:color/transparent"
+        android:contentDescription="@string/capture_back"
+        android:padding="12dp"
+        android:src="@drawable/icon_capture_back"
+        android:tint="@color/render_ui_background_white"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
+
+    <LinearLayout
+        android:id="@+id/capture_camera_controls"
+        android:layout_width="48dp"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="8dp"
+        android:layout_marginTop="52dp"
+        android:orientation="vertical"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <ImageButton
+            android:id="@+id/capture_switch_camera"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:background="@android:color/transparent"
+            android:contentDescription="@string/capture_switch_camera"
+            android:enabled="false"
+            android:padding="11dp"
+            android:src="@drawable/icon_capture_switch_camera"
+            android:tint="@color/render_ui_background_white" />
+
+    </LinearLayout>
 
     <TextView
         android:id="@+id/capture_debug_info"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="16dp"
-        android:layout_marginTop="72dp"
+        android:layout_marginTop="108dp"
         android:text="@string/capture_debug_info_empty"
         android:textColor="@color/render_ui_background_white"
-        android:textSize="14sp"
+        android:textSize="12sp"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
@@ -45,71 +70,15 @@
         android:layout_marginTop="4dp"
         android:text="@string/capture_created"
         android:textColor="@color/render_ui_background_white"
-        android:textSize="14sp"
+        android:textSize="12sp"
         app:layout_constraintStart_toStartOf="@id/capture_debug_info"
         app:layout_constraintTop_toBottomOf="@id/capture_debug_info" />
-
-    <Button
-        android:id="@+id/capture_switch_camera"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginEnd="16dp"
-        android:layout_marginTop="64dp"
-        android:enabled="false"
-        android:text="@string/capture_lens_front"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
-
-    <LinearLayout
-        android:id="@+id/capture_adjustment_panel"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_margin="16dp"
-        android:background="@color/render_ui_panel_background"
-        android:orientation="vertical"
-        android:padding="12dp"
-        app:layout_constraintBottom_toTopOf="@id/capture_actions"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent">
-
-        <SeekBar
-            android:id="@+id/capture_adjustment_seek_bar"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:max="200"
-            android:progress="100" />
-
-        <RadioGroup
-            android:id="@+id/capture_adjustment_group"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:gravity="center"
-            android:orientation="horizontal">
-
-            <RadioButton
-                android:id="@+id/capture_brightness"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:checked="true"
-                android:text="@string/capture_adjustment_brightness"
-                android:textColor="@color/render_ui_background_white" />
-
-            <RadioButton
-                android:id="@+id/capture_warmth"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="24dp"
-                android:text="@string/capture_adjustment_warmth"
-                android:textColor="@color/render_ui_background_white" />
-
-        </RadioGroup>
-
-    </LinearLayout>
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/capture_actions"
         android:layout_width="0dp"
-        android:layout_height="72dp"
+        android:layout_height="112dp"
+        android:layout_marginBottom="30dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent">
@@ -118,26 +87,65 @@
             android:id="@+id/capture_filter_button"
             android:layout_width="52dp"
             android:layout_height="52dp"
-            android:layout_marginStart="24dp"
+            android:layout_marginStart="28dp"
+            android:layout_marginTop="16dp"
             android:background="@drawable/background_capture_button_action"
+            android:clipToOutline="true"
             android:contentDescription="@string/capture_filter"
-            android:padding="14dp"
+            android:padding="10dp"
+            android:scaleType="centerCrop"
             android:src="@drawable/icon_capture_filter"
-            android:tint="@color/render_ui_background_white"
-            app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
 
-        <Button
-            android:id="@+id/capture_photo"
+        <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:text="@string/capture_filter"
+            android:textColor="@color/render_ui_background_white"
+            android:textSize="12sp"
+            app:layout_constraintEnd_toEndOf="@id/capture_filter_button"
+            app:layout_constraintStart_toStartOf="@id/capture_filter_button"
+            app:layout_constraintTop_toBottomOf="@id/capture_filter_button" />
+
+        <ImageButton
+            android:id="@+id/capture_photo"
+            android:layout_width="78dp"
+            android:layout_height="78dp"
+            android:background="@drawable/background_capture_button_photo"
+            android:contentDescription="@string/capture_photo"
             android:enabled="false"
-            android:text="@string/capture_photo"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
+
+        <ImageButton
+            android:id="@+id/capture_algorithm_button"
+            android:layout_width="52dp"
+            android:layout_height="52dp"
+            android:layout_marginEnd="28dp"
+            android:layout_marginTop="16dp"
+            android:background="@drawable/background_capture_button_action"
+            android:clipToOutline="true"
+            android:contentDescription="@string/capture_algorithm"
+            android:padding="10dp"
+            android:scaleType="centerCrop"
+            android:src="@drawable/icon_capture_algorithm"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:text="@string/capture_algorithm"
+            android:textColor="@color/render_ui_background_white"
+            android:textSize="12sp"
+            app:layout_constraintEnd_toEndOf="@id/capture_algorithm_button"
+            app:layout_constraintStart_toStartOf="@id/capture_algorithm_button"
+            app:layout_constraintTop_toBottomOf="@id/capture_algorithm_button" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 

@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <color name="render_ui_background_black">#000000</color>
+    <color name="render_ui_background_blue">#14213A</color>
     <color name="render_ui_background_white">#FFFFFF</color>
     <color name="render_ui_panel_background">#CC0D1F3C</color>
     <color name="render_ui_panel_background_content">#D90D1F3C</color>
