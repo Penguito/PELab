@@ -4,6 +4,7 @@ import android.app.Dialog
 import android.graphics.Color
 import android.os.Bundle
 import android.view.View
+import android.view.WindowManager
 import android.widget.FrameLayout
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.bottomsheet.BottomSheetDialog
@@ -16,8 +17,16 @@ class SelectionPanelBottomSheet : BottomSheetDialogFragment(R.layout.panel_fragm
     private var showNoneButton = false
     private var selectedItemId: String? = null
     private var selectedCategoryId: String? = null
+    private var valueRange: IntRange? = null
+    private var initialValue = 0
+    private var headerVisible = true
+    private var compareVisible = false
+    private var panelName: CharSequence = ""
     private var itemSelectedListener: ((SelectionPanelItem?) -> Unit)? = null
     private var categorySelectedListener: ((SelectionPanelCategory) -> Unit)? = null
+    private var valueChangedListener: ((Int) -> Unit)? = null
+    private var compareStartedListener: (() -> Unit)? = null
+    private var compareStoppedListener: (() -> Unit)? = null
 
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog =
         BottomSheetDialog(requireContext(), theme).apply {
@@ -32,6 +41,14 @@ class SelectionPanelBottomSheet : BottomSheetDialogFragment(R.layout.panel_fragm
         view.findViewById<HorizontalSelectionPanel>(R.id.selection_panel).apply {
             setOnItemSelectedListener { itemSelectedListener?.invoke(it) }
             setOnCategorySelectedListener { categorySelectedListener?.invoke(it) }
+            setOnValueChangedListener { valueChangedListener?.invoke(it) }
+            setOnCompareListener(
+                onStarted = { compareStartedListener?.invoke() },
+                onStopped = { compareStoppedListener?.invoke() },
+            )
+            setHeaderVisible(headerVisible)
+            setCompareVisible(compareVisible)
+            setPanelName(panelName)
             setCategories(categories, selectedCategoryId)
             setItems(
                 items = items,
@@ -39,12 +56,16 @@ class SelectionPanelBottomSheet : BottomSheetDialogFragment(R.layout.panel_fragm
                 showNoneButton = showNoneButton,
                 selectedItemId = selectedItemId,
             )
+            valueRange?.let {
+                setValueRange(it.first, it.last, initialValue)
+            } ?: hideValueRange()
         }
     }
 
     override fun onStart() {
         super.onStart()
         val bottomSheetDialog = dialog as BottomSheetDialog
+        bottomSheetDialog.window?.clearFlags(WindowManager.LayoutParams.FLAG_DIM_BEHIND)
         bottomSheetDialog.findViewById<FrameLayout>(com.google.android.material.R.id.design_bottom_sheet)
             ?.setBackgroundColor(Color.TRANSPARENT)
         bottomSheetDialog.behavior.apply {
@@ -74,11 +95,46 @@ class SelectionPanelBottomSheet : BottomSheetDialogFragment(R.layout.panel_fragm
         this.selectedCategoryId = selectedCategoryId
     }
 
+    fun setValueRange(
+        minimum: Int,
+        maximum: Int,
+        initialValue: Int,
+    ) {
+        valueRange = minimum..maximum
+        this.initialValue = initialValue
+        view?.findViewById<HorizontalSelectionPanel>(R.id.selection_panel)
+            ?.setValueRange(minimum, maximum, initialValue)
+    }
+
+    fun setHeaderVisible(visible: Boolean) {
+        headerVisible = visible
+    }
+
+    fun setCompareVisible(visible: Boolean) {
+        compareVisible = visible
+    }
+
+    fun setPanelName(name: CharSequence) {
+        panelName = name
+    }
+
     fun setOnItemSelectedListener(listener: (SelectionPanelItem?) -> Unit) {
         itemSelectedListener = listener
     }
 
     fun setOnCategorySelectedListener(listener: (SelectionPanelCategory) -> Unit) {
         categorySelectedListener = listener
+    }
+
+    fun setOnValueChangedListener(listener: (Int) -> Unit) {
+        valueChangedListener = listener
+    }
+
+    fun setOnCompareListener(
+        onStarted: () -> Unit,
+        onStopped: () -> Unit,
+    ) {
+        compareStartedListener = onStarted
+        compareStoppedListener = onStopped
     }
 }

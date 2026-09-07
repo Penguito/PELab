@@ -17,7 +17,10 @@ import com.penguito.effectlab.render.core.camera.CameraConfiguration
 import com.penguito.effectlab.render.core.camera.CameraError
 import com.penguito.effectlab.render.core.camera.CameraErrorCode
 import com.penguito.effectlab.render.core.camera.LensFacing
-import com.penguito.effectlab.render.core.material.FilterMaterialManager
+import com.penguito.effectlab.render.core.material.FilterMaterial
+import com.penguito.effectlab.render.core.material.MaterialConfig
+import com.penguito.effectlab.render.core.material.MaterialManager
+import com.penguito.effectlab.render.core.material.MaterialType
 import com.penguito.effectlab.render.core.permission.CameraPermissionGate
 import com.penguito.effectlab.render.sdk.PreviewResolution
 import com.penguito.effectlab.render.sdk.RenderEngine
@@ -28,7 +31,7 @@ import java.io.IOException
 class CaptureActivity : FragmentActivity(), SurfaceHolder.Callback, Camera2Listener, RenderEngine.InitListener, RenderEngine.DebugInfoListener {
     private val permissionGate by lazy { CameraPermissionGate(this) }
     private val cameraManager by lazy { Camera2Manager(this, this) }
-    private val filterMaterialManager by lazy { FilterMaterialManager(this) }
+    private val materialManager by lazy { MaterialManager(this) }
     private val renderEngine by lazy { RenderEngine() }
 
     private var previewView: SurfaceView? = null
@@ -200,8 +203,8 @@ class CaptureActivity : FragmentActivity(), SurfaceHolder.Callback, Camera2Liste
     }
 
     private fun setupFilterPanel() {
-        val filterList = filterMaterialManager.initFilterList()
-            .sortedBy { if (it.id == CYBER_PUNK_FILTER_ID) 0 else 1 }
+        val filterList = materialManager.loadMaterialList(MaterialConfig.FILTER_LIST, MaterialType.FILTER)
+            .filterIsInstance<FilterMaterial>()
         val filtersById = filterList.associateBy { it.id }
         val filterItems = filterList.map {
             SelectionPanelItem(
@@ -212,6 +215,7 @@ class CaptureActivity : FragmentActivity(), SurfaceHolder.Callback, Camera2Liste
         }
         filterButton?.setOnClickListener {
             SelectionPanelBottomSheet().apply {
+                setPanelName(this@CaptureActivity.getString(R.string.capture_filter))
                 setOnItemSelectedListener { item ->
                     selectedFilterId = item?.id
                     val filter = item?.let { filtersById[it.id] }
@@ -224,7 +228,7 @@ class CaptureActivity : FragmentActivity(), SurfaceHolder.Callback, Camera2Liste
                     showNoneButton = true,
                     selectedItemId = selectedFilterId,
                 )
-            }.show(supportFragmentManager, FILTER_PANEL_TAG)
+            }.show(supportFragmentManager, SelectionPanelBottomSheet::class.java.simpleName)
         }
     }
 
@@ -242,11 +246,13 @@ class CaptureActivity : FragmentActivity(), SurfaceHolder.Callback, Camera2Liste
     private fun setupAlgorithmPanel() {
         findViewById<ImageButton>(R.id.capture_algorithm_button).setOnClickListener {
             SelectionPanelBottomSheet().apply {
+                setHeaderVisible(false)
+                setPanelName(this@CaptureActivity.getString(R.string.capture_algorithm))
                 setItems(
                     items = emptyList(),
                     emptyText = this@CaptureActivity.getString(R.string.capture_algorithm_developing),
                 )
-            }.show(supportFragmentManager, ALGORITHM_PANEL_TAG)
+            }.show(supportFragmentManager, SelectionPanelBottomSheet::class.java.simpleName)
         }
     }
 
@@ -316,10 +322,7 @@ class CaptureActivity : FragmentActivity(), SurfaceHolder.Callback, Camera2Liste
 
     companion object {
         private const val LOG_TAG = "PELabCapture"
-        private const val CYBER_PUNK_FILTER_ID = "cyber_punk"
         private const val CAPTURE_FILE_NAME = "captured_image.jpg"
-        private const val FILTER_PANEL_TAG = "filter_panel"
-        private const val ALGORITHM_PANEL_TAG = "algorithm_panel"
 
         fun createIntent(context: Context): Intent = Intent(context, CaptureActivity::class.java)
     }

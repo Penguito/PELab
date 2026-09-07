@@ -19,6 +19,8 @@
 
     <string name="editor_title">Editor</string>
     <string name="editor_back">Back</string>
+    <string name="editor_next">Next</string>
+    <string name="editor_compare_original">Hold to compare this panel with default settings</string>
     <string name="editor_save">Save to Album</string>
     <string name="editor_image_preview">Image preview</string>
     <string name="editor_source_capture">Capture</string>
@@ -28,6 +30,30 @@
     <string name="editor_image_saved">Image saved to album</string>
     <string name="editor_image_save_failed">Image save failed</string>
     <string name="editor_album_permission_denied">Album write permission denied</string>
+    <string name="editor_feature_developing">This feature is under development</string>
+    <string name="editor_crop">Crop</string>
+    <string name="editor_lighting">Lighting</string>
+    <string name="editor_color">Color</string>
+    <string name="editor_detail">Detail</string>
+    <string name="editor_filter">Filter</string>
+    <string name="editor_brightness">Brightness</string>
+    <string name="editor_contrast">Contrast</string>
+    <string name="editor_exposure">Exposure</string>
+    <string name="editor_highlights">Highlights</string>
+    <string name="editor_shadows">Shadows</string>
+    <string name="editor_temperature">Temperature</string>
+    <string name="editor_tint">Tint</string>
+    <string name="editor_saturation">Saturation</string>
+    <string name="editor_vibrance">Vibrance</string>
+    <string name="editor_grain">Grain</string>
+    <string name="editor_vignette">Vignette</string>
+    <string name="editor_preview_creation_failed">Preview creation failed</string>
+    <string name="save_preview_image">Save preview image</string>
+    <string name="save_preview_save">Save to Album</string>
+    <string name="save_preview_render_failed">Image render failed</string>
+    <string name="save_preview_image_saved">Image saved to album</string>
+    <string name="save_preview_image_save_failed">Image save failed</string>
+    <string name="save_preview_album_permission_denied">Album write permission denied</string>
 
     <string name="selection_panel_none">None</string>
 

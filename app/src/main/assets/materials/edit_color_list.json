@@ -1,0 +1,41 @@
+{
+  "categories": [
+    {
+      "id": "color",
+      "materials": [
+        {
+          "id": "temperature",
+          "nameResource": "editor_temperature",
+          "iconResource": "icon_editor_temperature",
+          "minimum": 0,
+          "maximum": 100,
+          "defaultValue": 0
+        },
+        {
+          "id": "tint",
+          "nameResource": "editor_tint",
+          "iconResource": "icon_editor_tint",
+          "minimum": 0,
+          "maximum": 100,
+          "defaultValue": 0
+        },
+        {
+          "id": "saturation",
+          "nameResource": "editor_saturation",
+          "iconResource": "icon_editor_saturation",
+          "minimum": 0,
+          "maximum": 100,
+          "defaultValue": 0
+        },
+        {
+          "id": "vibrance",
+          "nameResource": "editor_vibrance",
+          "iconResource": "icon_editor_vibrance",
+          "minimum": 0,
+          "maximum": 100,
+          "defaultValue": 0
+        }
+      ]
+    }
+  ]
+}

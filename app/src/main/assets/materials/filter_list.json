@@ -1,0 +1,34 @@
+{
+  "categories": [
+    {
+      "id": "filter",
+      "materials": [
+        {
+          "id": "cyber_punk",
+          "displayName": "Cyber Punk",
+          "assetRoot": "filters/cyber_punk"
+        },
+        {
+          "id": "bright_film",
+          "displayName": "Bright Film",
+          "assetRoot": "filters/bright_film"
+        },
+        {
+          "id": "fuji_classic",
+          "displayName": "Fuji Classic",
+          "assetRoot": "filters/fuji_classic"
+        },
+        {
+          "id": "monochrome",
+          "displayName": "Monochrome",
+          "assetRoot": "filters/monochrome"
+        },
+        {
+          "id": "vivid_food",
+          "displayName": "Vivid Food",
+          "assetRoot": "filters/vivid_food"
+        }
+      ]
+    }
+  ]
+}

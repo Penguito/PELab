@@ -10,6 +10,10 @@
             android:name="com.penguito.effectlab.render.ui.EditorActivity"
             android:exported="false"
             android:screenOrientation="portrait" />
+        <activity
+            android:name="com.penguito.effectlab.render.ui.SavePreviewActivity"
+            android:exported="false"
+            android:screenOrientation="portrait" />
     </application>
 
 </manifest>

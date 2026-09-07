@@ -3,64 +3,203 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/render_ui_background_black">
-
-    <Button
-        android:id="@+id/editor_back"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="16dp"
-        android:layout_marginTop="32dp"
-        android:text="@string/editor_back"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
-
-    <Button
-        android:id="@+id/editor_save"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginEnd="16dp"
-        android:enabled="false"
-        android:text="@string/editor_save"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="@id/editor_back" />
-
-    <TextView
-        android:id="@+id/editor_title"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="@string/editor_title"
-        android:textColor="@color/render_ui_background_white"
-        android:textSize="22sp"
-        app:layout_constraintBottom_toBottomOf="@id/editor_back"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="@id/editor_back" />
+    android:background="@color/render_ui_background_blue">
 
     <SurfaceView
         android:id="@+id/editor_preview"
         android:layout_width="0dp"
         android:layout_height="0dp"
-        android:layout_margin="16dp"
         android:contentDescription="@string/editor_image_preview"
-        app:layout_constraintBottom_toTopOf="@id/editor_image_info"
-        app:layout_constraintDimensionRatio="9:16"
+        app:layout_constraintBottom_toTopOf="@id/editor_actions"
+        app:layout_constraintDimensionRatio="W,9:16"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/editor_back" />
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <ImageButton
+        android:id="@+id/editor_back"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:layout_marginStart="8dp"
+        android:layout_marginTop="52dp"
+        android:background="@android:color/transparent"
+        android:contentDescription="@string/editor_back"
+        android:padding="12dp"
+        android:src="@drawable/icon_capture_back"
+        android:tint="@color/render_ui_background_white"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <Button
+        android:id="@+id/editor_next"
+        android:layout_width="72dp"
+        android:layout_height="48dp"
+        android:layout_marginEnd="8dp"
+        android:layout_marginTop="52dp"
+        android:background="@android:color/transparent"
+        android:enabled="false"
+        android:gravity="center"
+        android:minWidth="0dp"
+        android:minHeight="0dp"
+        android:text="@string/editor_next"
+        android:textAllCaps="false"
+        android:textColor="@color/render_ui_background_white"
+        android:textSize="15sp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
 
     <TextView
-        android:id="@+id/editor_image_info"
-        android:layout_width="0dp"
+        android:id="@+id/editor_status"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_margin="16dp"
-        android:ellipsize="middle"
-        android:gravity="center"
-        android:maxLines="3"
+        android:layout_marginTop="8dp"
         android:textColor="@color/render_ui_background_white"
-        android:textSize="14sp"
+        android:textSize="12sp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/editor_next" />
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/editor_actions"
+        android:layout_width="0dp"
+        android:layout_height="112dp"
+        android:layout_marginBottom="30dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent" />
+        app:layout_constraintStart_toStartOf="parent">
+
+        <ImageButton
+            android:id="@+id/editor_crop"
+            android:layout_width="52dp"
+            android:layout_height="52dp"
+            android:layout_marginTop="16dp"
+            android:background="@drawable/background_capture_button_action"
+            android:clipToOutline="true"
+            android:contentDescription="@string/editor_crop"
+            android:padding="10dp"
+            android:scaleType="centerCrop"
+            android:src="@drawable/icon_editor_crop"
+            app:layout_constraintEnd_toStartOf="@id/editor_lighting"
+            app:layout_constraintHorizontal_chainStyle="spread"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:text="@string/editor_crop"
+            android:textColor="@color/render_ui_background_white"
+            android:textSize="12sp"
+            app:layout_constraintEnd_toEndOf="@id/editor_crop"
+            app:layout_constraintStart_toStartOf="@id/editor_crop"
+            app:layout_constraintTop_toBottomOf="@id/editor_crop" />
+
+        <ImageButton
+            android:id="@+id/editor_lighting"
+            android:layout_width="52dp"
+            android:layout_height="52dp"
+            android:layout_marginTop="16dp"
+            android:background="@drawable/background_capture_button_action"
+            android:clipToOutline="true"
+            android:contentDescription="@string/editor_lighting"
+            android:padding="10dp"
+            android:scaleType="centerCrop"
+            android:src="@drawable/icon_editor_lighting"
+            app:layout_constraintEnd_toStartOf="@id/editor_color"
+            app:layout_constraintStart_toEndOf="@id/editor_crop"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:text="@string/editor_lighting"
+            android:textColor="@color/render_ui_background_white"
+            android:textSize="12sp"
+            app:layout_constraintEnd_toEndOf="@id/editor_lighting"
+            app:layout_constraintStart_toStartOf="@id/editor_lighting"
+            app:layout_constraintTop_toBottomOf="@id/editor_lighting" />
+
+        <ImageButton
+            android:id="@+id/editor_color"
+            android:layout_width="52dp"
+            android:layout_height="52dp"
+            android:layout_marginTop="16dp"
+            android:background="@drawable/background_capture_button_action"
+            android:clipToOutline="true"
+            android:contentDescription="@string/editor_color"
+            android:padding="10dp"
+            android:scaleType="centerCrop"
+            android:src="@drawable/icon_editor_color"
+            app:layout_constraintEnd_toStartOf="@id/editor_detail"
+            app:layout_constraintStart_toEndOf="@id/editor_lighting"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:text="@string/editor_color"
+            android:textColor="@color/render_ui_background_white"
+            android:textSize="12sp"
+            app:layout_constraintEnd_toEndOf="@id/editor_color"
+            app:layout_constraintStart_toStartOf="@id/editor_color"
+            app:layout_constraintTop_toBottomOf="@id/editor_color" />
+
+        <ImageButton
+            android:id="@+id/editor_detail"
+            android:layout_width="52dp"
+            android:layout_height="52dp"
+            android:layout_marginTop="16dp"
+            android:background="@drawable/background_capture_button_action"
+            android:clipToOutline="true"
+            android:contentDescription="@string/editor_detail"
+            android:padding="10dp"
+            android:scaleType="centerCrop"
+            android:src="@drawable/icon_editor_detail"
+            app:layout_constraintEnd_toStartOf="@id/editor_filter"
+            app:layout_constraintStart_toEndOf="@id/editor_color"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:text="@string/editor_detail"
+            android:textColor="@color/render_ui_background_white"
+            android:textSize="12sp"
+            app:layout_constraintEnd_toEndOf="@id/editor_detail"
+            app:layout_constraintStart_toStartOf="@id/editor_detail"
+            app:layout_constraintTop_toBottomOf="@id/editor_detail" />
+
+        <ImageButton
+            android:id="@+id/editor_filter"
+            android:layout_width="52dp"
+            android:layout_height="52dp"
+            android:layout_marginTop="16dp"
+            android:background="@drawable/background_capture_button_action"
+            android:clipToOutline="true"
+            android:contentDescription="@string/editor_filter"
+            android:padding="10dp"
+            android:scaleType="centerCrop"
+            android:src="@drawable/icon_capture_filter"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toEndOf="@id/editor_detail"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <TextView
+            android:id="@+id/editor_filter_name"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:text="@string/editor_filter"
+            android:textColor="@color/render_ui_background_white"
+            android:textSize="12sp"
+            app:layout_constraintEnd_toEndOf="@id/editor_filter"
+            app:layout_constraintStart_toStartOf="@id/editor_filter"
+            app:layout_constraintTop_toBottomOf="@id/editor_filter" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

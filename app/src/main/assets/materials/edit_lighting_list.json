@@ -1,0 +1,49 @@
+{
+  "categories": [
+    {
+      "id": "lighting",
+      "materials": [
+        {
+          "id": "brightness",
+          "nameResource": "editor_brightness",
+          "iconResource": "icon_editor_brightness",
+          "minimum": -100,
+          "maximum": 100,
+          "defaultValue": 0
+        },
+        {
+          "id": "contrast",
+          "nameResource": "editor_contrast",
+          "iconResource": "icon_editor_contrast",
+          "minimum": -100,
+          "maximum": 100,
+          "defaultValue": 0
+        },
+        {
+          "id": "exposure",
+          "nameResource": "editor_exposure",
+          "iconResource": "icon_editor_exposure",
+          "minimum": -100,
+          "maximum": 100,
+          "defaultValue": 0
+        },
+        {
+          "id": "highlights",
+          "nameResource": "editor_highlights",
+          "iconResource": "icon_editor_highlights",
+          "minimum": -100,
+          "maximum": 100,
+          "defaultValue": 0
+        },
+        {
+          "id": "shadows",
+          "nameResource": "editor_shadows",
+          "iconResource": "icon_editor_shadows",
+          "minimum": -100,
+          "maximum": 100,
+          "defaultValue": 0
+        }
+      ]
+    }
+  ]
+}
