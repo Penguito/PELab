@@ -5,6 +5,17 @@
     android:layout_height="match_parent"
     android:background="@color/render_ui_background_blue">
 
+    <SurfaceView
+        android:id="@+id/save_preview_surface"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:contentDescription="@string/save_preview_image"
+        app:layout_constraintBottom_toTopOf="@id/save_preview_actions"
+        app:layout_constraintDimensionRatio="W,9:16"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
     <ImageButton
         android:id="@+id/save_preview_back"
         android:layout_width="48dp"
@@ -13,21 +24,9 @@
         android:layout_marginTop="52dp"
         android:background="@android:color/transparent"
         android:contentDescription="@string/editor_back"
-        android:elevation="1dp"
         android:padding="12dp"
         android:src="@drawable/icon_capture_back"
         android:tint="@color/render_ui_background_white"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
-
-    <SurfaceView
-        android:id="@+id/save_preview_surface"
-        android:layout_width="0dp"
-        android:layout_height="0dp"
-        android:contentDescription="@string/save_preview_image"
-        app:layout_constraintBottom_toTopOf="@id/save_preview_save"
-        app:layout_constraintDimensionRatio="W,9:16"
-        app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
@@ -36,23 +35,39 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="8dp"
-        android:elevation="1dp"
         android:textColor="@color/render_ui_background_white"
         android:textSize="12sp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/save_preview_back" />
 
-    <Button
-        android:id="@+id/save_preview_save"
-        android:layout_width="wrap_content"
-        android:layout_height="48dp"
-        android:layout_marginBottom="42dp"
-        android:elevation="1dp"
-        android:enabled="false"
-        android:text="@string/save_preview_save"
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/save_preview_actions"
+        android:layout_width="0dp"
+        android:layout_height="112dp"
+        android:layout_marginBottom="30dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent" />
+        app:layout_constraintStart_toStartOf="parent">
+
+        <Button
+            android:id="@+id/save_preview_save"
+            android:layout_width="180dp"
+            android:layout_height="52dp"
+            android:background="@drawable/background_save_preview_button"
+            android:backgroundTint="@null"
+            android:enabled="false"
+            android:minWidth="0dp"
+            android:minHeight="0dp"
+            android:text="@string/save_preview_save"
+            android:textAllCaps="false"
+            android:textColor="@color/render_ui_background_white"
+            android:textSize="15sp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>
