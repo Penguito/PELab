@@ -5,7 +5,7 @@
       "materials": [
         {
           "id": "brightness",
-          "nameResource": "editor_brightness",
+          "displayName": "Brightness",
           "iconResource": "icon_editor_brightness",
           "minimum": -100,
           "maximum": 100,
@@ -13,7 +13,7 @@
         },
         {
           "id": "contrast",
-          "nameResource": "editor_contrast",
+          "displayName": "Contrast",
           "iconResource": "icon_editor_contrast",
           "minimum": -100,
           "maximum": 100,
@@ -21,7 +21,7 @@
         },
         {
           "id": "exposure",
-          "nameResource": "editor_exposure",
+          "displayName": "Exposure",
           "iconResource": "icon_editor_exposure",
           "minimum": -100,
           "maximum": 100,
@@ -29,7 +29,7 @@
         },
         {
           "id": "highlights",
-          "nameResource": "editor_highlights",
+          "displayName": "Highlights",
           "iconResource": "icon_editor_highlights",
           "minimum": -100,
           "maximum": 100,
@@ -37,7 +37,7 @@
         },
         {
           "id": "shadows",
-          "nameResource": "editor_shadows",
+          "displayName": "Shadows",
           "iconResource": "icon_editor_shadows",
           "minimum": -100,
           "maximum": 100,

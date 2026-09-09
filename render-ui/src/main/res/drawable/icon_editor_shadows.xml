@@ -7,7 +7,7 @@
 
     <path
         android:fillAlpha="0.28"
-        android:fillColor="#FFFFFFFF"
+        android:fillColor="@color/background_second"
         android:pathData="M7,12a5,5 0,0 0,10,0z" />
 
     <path

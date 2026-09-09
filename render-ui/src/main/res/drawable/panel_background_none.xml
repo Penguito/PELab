@@ -3,7 +3,7 @@
 
     <item android:state_selected="true">
         <shape android:shape="oval">
-            <solid android:color="@color/render_ui_panel_background_selected" />
+            <solid android:color="@color/background_fourth" />
         </shape>
     </item>
 

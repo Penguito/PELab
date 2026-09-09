@@ -6,7 +6,7 @@
             <solid android:color="@android:color/transparent" />
             <stroke
                 android:width="2dp"
-                android:color="@color/render_ui_background_white" />
+                android:color="@color/background_second" />
         </shape>
     </item>
 
@@ -16,7 +16,7 @@
         android:right="7dp"
         android:top="7dp">
         <shape android:shape="oval">
-            <solid android:color="@color/render_ui_background_white" />
+            <solid android:color="@color/background_second" />
         </shape>
     </item>
 

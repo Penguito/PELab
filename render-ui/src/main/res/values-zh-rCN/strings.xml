@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="capture_back">返回</string>
+    <string name="capture_created">拍摄页：已创建</string>
+    <string name="capture_paused">拍摄页：已暂停</string>
+    <string name="capture_camera_ready">相机 %1$s · %2$s · %3$d × %4$d</string>
+    <string name="capture_lens_front">前置</string>
+    <string name="capture_lens_back">后置</string>
+    <string name="capture_debug_info_empty">SDK 渲染：-- ms\n相机帧：-- ms\nFPS：--</string>
+    <string name="capture_debug_info">SDK 渲染：%1$.2f ms\n相机帧：%2$.2f ms\nFPS：%3$.1f</string>
+    <string name="capture_switch_camera">切换相机</string>
+    <string name="capture_filter">滤镜</string>
+    <string name="capture_filter_empty">暂无滤镜</string>
+    <string name="capture_algorithm">算法</string>
+    <string name="capture_algorithm_developing">当前该功能暂未开发</string>
+    <string name="capture_photo">拍照</string>
+    <string name="capture_image_failed">拍照失败</string>
+    <string name="capture_render_initialization_failed">渲染初始化失败</string>
+
+    <string name="editor_title">编辑</string>
+    <string name="editor_back">返回</string>
+    <string name="editor_next">下一步</string>
+    <string name="editor_compare_original">按住对比当前面板的默认效果</string>
+    <string name="editor_save">保存到相册</string>
+    <string name="editor_image_preview">图片预览</string>
+    <string name="editor_source_capture">拍摄</string>
+    <string name="editor_source_album">相册</string>
+    <string name="editor_image_info">%1$s\n%2$s</string>
+    <string name="editor_render_failed">图片渲染失败</string>
+    <string name="editor_image_saved">图片已保存到相册</string>
+    <string name="editor_image_save_failed">图片保存失败</string>
+    <string name="editor_album_permission_denied">相册写入权限被拒绝</string>
+    <string name="editor_feature_developing">当前该功能暂未开发</string>
+    <string name="editor_crop">裁剪</string>
+    <string name="editor_lighting">调光</string>
+    <string name="editor_color">调色</string>
+    <string name="editor_detail">细节</string>
+    <string name="editor_filter">滤镜</string>
+    <string name="editor_preview_creation_failed">预览图生成失败</string>
+    <string name="save_preview_image">保存预览图</string>
+    <string name="save_preview_save">保存到相册</string>
+    <string name="save_preview_render_failed">图片渲染失败</string>
+    <string name="save_preview_image_saved">图片已保存到相册</string>
+    <string name="save_preview_image_save_failed">图片保存失败</string>
+    <string name="save_preview_album_permission_denied">相册写入权限被拒绝</string>
+
+    <string name="selection_panel_none">无</string>
+
+    <string name="capture_camera_access_failed">无法获取相机配置</string>
+    <string name="capture_camera_permission_missing">没有可用的相机权限</string>
+    <string name="capture_camera_not_found">找不到指定相机</string>
+    <string name="capture_preview_configuration_missing">没有可用的相机预览配置</string>
+    <string name="capture_camera_disconnected">相机连接已断开</string>
+    <string name="capture_camera_device_failed">相机设备不可用</string>
+    <string name="capture_camera_session_failed">相机预览会话不可用</string>
+</resources>

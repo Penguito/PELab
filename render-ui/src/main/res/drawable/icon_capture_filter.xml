@@ -7,17 +7,17 @@
 
     <path
         android:fillAlpha="0.82"
-        android:fillColor="#FFFFFFFF"
+        android:fillColor="@color/background_second"
         android:pathData="M12,3.5a5,5 0,1 0,0 10a5,5 0,1 0,0 -10" />
 
     <path
         android:fillAlpha="0.82"
-        android:fillColor="#FFFFFFFF"
+        android:fillColor="@color/background_second"
         android:pathData="M8,8.5a5,5 0,1 0,0 10a5,5 0,1 0,0 -10" />
 
     <path
         android:fillAlpha="0.82"
-        android:fillColor="#FFFFFFFF"
+        android:fillColor="@color/background_second"
         android:pathData="M16,8.5a5,5 0,1 0,0 10a5,5 0,1 0,0 -10" />
 
 </vector>

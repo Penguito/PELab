@@ -36,17 +36,6 @@
     <string name="editor_color">Color</string>
     <string name="editor_detail">Detail</string>
     <string name="editor_filter">Filter</string>
-    <string name="editor_brightness">Brightness</string>
-    <string name="editor_contrast">Contrast</string>
-    <string name="editor_exposure">Exposure</string>
-    <string name="editor_highlights">Highlights</string>
-    <string name="editor_shadows">Shadows</string>
-    <string name="editor_temperature">Temperature</string>
-    <string name="editor_tint">Tint</string>
-    <string name="editor_saturation">Saturation</string>
-    <string name="editor_vibrance">Vibrance</string>
-    <string name="editor_grain">Grain</string>
-    <string name="editor_vignette">Vignette</string>
     <string name="editor_preview_creation_failed">Preview creation failed</string>
     <string name="save_preview_image">Save preview image</string>
     <string name="save_preview_save">Save to Album</string>

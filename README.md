@@ -40,6 +40,10 @@ PELab, short for Penguito Effect Lab, aims to build a complete Android applicati
 
 - Refactored the save preview page UI in `render-ui`.
 
+#### 0.6.7
+
+- Unified the deep blue theme colors across `app` and `render-ui`, and added English, Simplified Chinese, and French strings.
+
 ### 0.5
 
 - Add support for capturing, importing, and saving images to the gallery.

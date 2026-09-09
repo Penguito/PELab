@@ -3,7 +3,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/render_ui_background_blue">
+    android:background="@color/background_theme">
 
     <SurfaceView
         android:id="@+id/editor_preview"
@@ -26,7 +26,7 @@
         android:contentDescription="@string/editor_back"
         android:padding="12dp"
         android:src="@drawable/icon_capture_back"
-        android:tint="@color/render_ui_background_white"
+        android:tint="@color/background_second"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
@@ -43,7 +43,7 @@
         android:minHeight="0dp"
         android:text="@string/editor_next"
         android:textAllCaps="false"
-        android:textColor="@color/render_ui_background_white"
+        android:textColor="@color/background_second"
         android:textSize="15sp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
@@ -53,7 +53,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="8dp"
-        android:textColor="@color/render_ui_background_white"
+        android:textColor="@color/background_second"
         android:textSize="12sp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
@@ -89,7 +89,7 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="4dp"
             android:text="@string/editor_crop"
-            android:textColor="@color/render_ui_background_white"
+            android:textColor="@color/background_second"
             android:textSize="12sp"
             app:layout_constraintEnd_toEndOf="@id/editor_crop"
             app:layout_constraintStart_toStartOf="@id/editor_crop"
@@ -115,7 +115,7 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="4dp"
             android:text="@string/editor_lighting"
-            android:textColor="@color/render_ui_background_white"
+            android:textColor="@color/background_second"
             android:textSize="12sp"
             app:layout_constraintEnd_toEndOf="@id/editor_lighting"
             app:layout_constraintStart_toStartOf="@id/editor_lighting"
@@ -141,7 +141,7 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="4dp"
             android:text="@string/editor_color"
-            android:textColor="@color/render_ui_background_white"
+            android:textColor="@color/background_second"
             android:textSize="12sp"
             app:layout_constraintEnd_toEndOf="@id/editor_color"
             app:layout_constraintStart_toStartOf="@id/editor_color"
@@ -167,7 +167,7 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="4dp"
             android:text="@string/editor_detail"
-            android:textColor="@color/render_ui_background_white"
+            android:textColor="@color/background_second"
             android:textSize="12sp"
             app:layout_constraintEnd_toEndOf="@id/editor_detail"
             app:layout_constraintStart_toStartOf="@id/editor_detail"
@@ -194,7 +194,7 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="4dp"
             android:text="@string/editor_filter"
-            android:textColor="@color/render_ui_background_white"
+            android:textColor="@color/background_second"
             android:textSize="12sp"
             app:layout_constraintEnd_toEndOf="@id/editor_filter"
             app:layout_constraintStart_toStartOf="@id/editor_filter"

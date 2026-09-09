@@ -41,7 +41,7 @@ class MaterialManager(context: Context) {
     private fun JSONObject.toImageEditMaterial(): ImageEditMaterial {
         return ImageEditMaterial(
             id = getString(ID_KEY),
-            displayName = getStringResource(NAME_RESOURCE_KEY),
+            displayName = getString(DISPLAY_NAME_KEY),
             iconResourceId = getResourceId(ICON_RESOURCE_KEY, "drawable"),
             minimum = getInt(MINIMUM_KEY),
             maximum = getInt(MAXIMUM_KEY),
@@ -67,10 +67,6 @@ class MaterialManager(context: Context) {
         )
     }
 
-    private fun JSONObject.getStringResource(key: String): String {
-        return applicationContext.getString(getResourceId(key, "string"))
-    }
-
     private fun JSONObject.getResourceId(key: String, type: String): Int {
         return applicationContext.resources.getIdentifier(getString(key), type, applicationContext.packageName)
     }
@@ -82,7 +78,6 @@ class MaterialManager(context: Context) {
         const val MATERIALS_KEY = "materials"
         const val ID_KEY = "id"
         const val DISPLAY_NAME_KEY = "displayName"
-        const val NAME_RESOURCE_KEY = "nameResource"
         const val ICON_RESOURCE_KEY = "iconResource"
         const val ASSET_ROOT_KEY = "assetRoot"
         const val MINIMUM_KEY = "minimum"

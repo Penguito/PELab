@@ -22,7 +22,7 @@
         android:pathData="M2,12l5.2,-1.5L12,12l-4.8,1.5z" />
 
     <path
-        android:fillColor="#FFFFFFFF"
+        android:fillColor="@color/background_second"
         android:pathData="M12,8.5a3.5,3.5 0,1 0,0 7a3.5,3.5 0,1 0,0 -7" />
 
 </vector>

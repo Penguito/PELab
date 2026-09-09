@@ -5,7 +5,7 @@
       "materials": [
         {
           "id": "temperature",
-          "nameResource": "editor_temperature",
+          "displayName": "Temperature",
           "iconResource": "icon_editor_temperature",
           "minimum": 0,
           "maximum": 100,
@@ -13,7 +13,7 @@
         },
         {
           "id": "tint",
-          "nameResource": "editor_tint",
+          "displayName": "Tint",
           "iconResource": "icon_editor_tint",
           "minimum": 0,
           "maximum": 100,
@@ -21,7 +21,7 @@
         },
         {
           "id": "saturation",
-          "nameResource": "editor_saturation",
+          "displayName": "Saturation",
           "iconResource": "icon_editor_saturation",
           "minimum": 0,
           "maximum": 100,
@@ -29,7 +29,7 @@
         },
         {
           "id": "vibrance",
-          "nameResource": "editor_vibrance",
+          "displayName": "Vibrance",
           "iconResource": "icon_editor_vibrance",
           "minimum": 0,
           "maximum": 100,

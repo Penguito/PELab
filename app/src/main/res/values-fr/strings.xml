@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">PELab</string>
+    <string name="app_full_name">Penguito Effect Lab</string>
+    <string name="native_bridge_checking">Vérification du pont natif…</string>
+    <string name="native_bridge_ready">Java → JNI → C++\n%1$s</string>
+    <string name="main_capture_mode">Mode capture</string>
+    <string name="main_image_mode">Mode image</string>
+    <string name="image_import_failed">Échec de l’importation de l’image.</string>
+    <string name="camera_permission_denied">L’autorisation d’accès à la caméra est requise.</string>
+</resources>

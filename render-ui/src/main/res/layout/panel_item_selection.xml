@@ -32,7 +32,7 @@
             android:layout_height="match_parent"
             android:background="@drawable/panel_surface_value"
             android:gravity="center"
-            android:textColor="@color/render_ui_background_white"
+            android:textColor="@color/background_second"
             android:textSize="15sp"
             android:textStyle="bold"
             android:visibility="gone" />

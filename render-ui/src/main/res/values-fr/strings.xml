@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="capture_back">Retour</string>
+    <string name="capture_created">Capture : créée</string>
+    <string name="capture_paused">Capture : en pause</string>
+    <string name="capture_camera_ready">Caméra %1$s · %2$s · %3$d × %4$d</string>
+    <string name="capture_lens_front">avant</string>
+    <string name="capture_lens_back">arrière</string>
+    <string name="capture_debug_info_empty">Rendu SDK : -- ms\nImage caméra : -- ms\nFPS : --</string>
+    <string name="capture_debug_info">Rendu SDK : %1$.2f ms\nImage caméra : %2$.2f ms\nFPS : %3$.1f</string>
+    <string name="capture_switch_camera">Changer de caméra</string>
+    <string name="capture_filter">Filtre</string>
+    <string name="capture_filter_empty">Aucun filtre</string>
+    <string name="capture_algorithm">Algorithme</string>
+    <string name="capture_algorithm_developing">Cette fonctionnalité est en cours de développement</string>
+    <string name="capture_photo">Prendre une photo</string>
+    <string name="capture_image_failed">Échec de la capture</string>
+    <string name="capture_render_initialization_failed">Échec de l’initialisation du rendu</string>
+
+    <string name="editor_title">Édition</string>
+    <string name="editor_back">Retour</string>
+    <string name="editor_next">Suivant</string>
+    <string name="editor_compare_original">Maintenir pour comparer ce panneau avec ses réglages par défaut</string>
+    <string name="editor_save">Enregistrer dans l’album</string>
+    <string name="editor_image_preview">Aperçu de l’image</string>
+    <string name="editor_source_capture">Capture</string>
+    <string name="editor_source_album">Album</string>
+    <string name="editor_image_info">%1$s\n%2$s</string>
+    <string name="editor_render_failed">Échec du rendu de l’image</string>
+    <string name="editor_image_saved">Image enregistrée dans l’album</string>
+    <string name="editor_image_save_failed">Échec de l’enregistrement de l’image</string>
+    <string name="editor_album_permission_denied">Autorisation d’écriture dans l’album refusée</string>
+    <string name="editor_feature_developing">Cette fonctionnalité est en cours de développement</string>
+    <string name="editor_crop">Recadrage</string>
+    <string name="editor_lighting">Lumière</string>
+    <string name="editor_color">Couleur</string>
+    <string name="editor_detail">Détails</string>
+    <string name="editor_filter">Filtre</string>
+    <string name="editor_preview_creation_failed">Échec de la création de l’aperçu</string>
+    <string name="save_preview_image">Aperçu avant enregistrement</string>
+    <string name="save_preview_save">Enregistrer dans l’album</string>
+    <string name="save_preview_render_failed">Échec du rendu de l’image</string>
+    <string name="save_preview_image_saved">Image enregistrée dans l’album</string>
+    <string name="save_preview_image_save_failed">Échec de l’enregistrement de l’image</string>
+    <string name="save_preview_album_permission_denied">Autorisation d’écriture dans l’album refusée</string>
+
+    <string name="selection_panel_none">Aucun</string>
+
+    <string name="capture_camera_access_failed">Configuration de la caméra indisponible</string>
+    <string name="capture_camera_permission_missing">Autorisation d’accès à la caméra indisponible</string>
+    <string name="capture_camera_not_found">Caméra demandée indisponible</string>
+    <string name="capture_preview_configuration_missing">Configuration de l’aperçu caméra indisponible</string>
+    <string name="capture_camera_disconnected">Caméra déconnectée</string>
+    <string name="capture_camera_device_failed">Périphérique caméra indisponible</string>
+    <string name="capture_camera_session_failed">Session d’aperçu caméra indisponible</string>
+</resources>

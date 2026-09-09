@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">PELab</string>
+    <string name="app_full_name">Penguito Effect Lab</string>
+    <string name="native_bridge_checking">正在检查 Native Bridge…</string>
+    <string name="native_bridge_ready">Java → JNI → C++\n%1$s</string>
+    <string name="main_capture_mode">拍摄模式</string>
+    <string name="main_image_mode">图片模式</string>
+    <string name="image_import_failed">图片导入失败。</string>
+    <string name="camera_permission_denied">需要相机权限。</string>
+</resources>
