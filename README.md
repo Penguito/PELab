@@ -10,6 +10,40 @@ PELab, short for Penguito Effect Lab, aims to build a complete Android applicati
 
 ## Current Development Progress
 
+### 0.6
+
+- Complete the basic UI for the home, capture, editor, and save preview pages.
+
+#### 0.6.1
+
+- Unified the image source and path data contract between pages in `render-ui`.
+
+#### 0.6.2
+
+- Added a reusable panel UI to `render-ui` as a foundational panel component for the application.
+
+#### 0.6.3
+
+- Refactored the home page UI in `app`.
+
+#### 0.6.4
+
+- Refactored the Capture page UI in `render-ui`.
+
+#### 0.6.5
+
+- Refactored the editor page UI in `render-ui`.
+- Added unified material configuration parsing to `render-core-material`.
+- Refactored the reusable panel structure to support new feature requirements.
+
+#### 0.6.6
+
+- Refactored the save preview page UI in `render-ui`.
+
+#### 0.6.7
+
+- Unified the deep blue theme colors across `app` and `render-ui`, and added English, Simplified Chinese, and French strings.
+
 ### 0.5
 
 - Add support for capturing, importing, and saving images to the gallery.

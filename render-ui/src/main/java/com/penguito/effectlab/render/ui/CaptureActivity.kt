@@ -1,50 +1,49 @@
 package com.penguito.effectlab.render.ui
 
-import android.app.Activity
 import android.content.Context
 import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
 import android.util.Log
 import android.view.Surface
 import android.view.SurfaceHolder
 import android.view.SurfaceView
-import android.view.View
-import android.widget.Button
-import android.widget.RadioButton
-import android.widget.RadioGroup
-import android.widget.SeekBar
+import android.widget.ImageButton
 import android.widget.TextView
+import androidx.fragment.app.FragmentActivity
 import com.penguito.effectlab.render.core.camera.Camera2Listener
 import com.penguito.effectlab.render.core.camera.Camera2Manager
 import com.penguito.effectlab.render.core.camera.CameraConfiguration
 import com.penguito.effectlab.render.core.camera.CameraError
 import com.penguito.effectlab.render.core.camera.CameraErrorCode
 import com.penguito.effectlab.render.core.camera.LensFacing
-import com.penguito.effectlab.render.core.material.FilterMaterialManager
+import com.penguito.effectlab.render.core.material.FilterMaterial
+import com.penguito.effectlab.render.core.material.MaterialConfig
+import com.penguito.effectlab.render.core.material.MaterialManager
+import com.penguito.effectlab.render.core.material.MaterialType
 import com.penguito.effectlab.render.core.permission.CameraPermissionGate
-import com.penguito.effectlab.render.sdk.ImageParams
 import com.penguito.effectlab.render.sdk.PreviewResolution
 import com.penguito.effectlab.render.sdk.RenderEngine
 import com.penguito.effectlab.render.sdk.RenderMode
 import java.io.File
 import java.io.IOException
 
-class CaptureActivity : Activity(), SurfaceHolder.Callback, Camera2Listener, RenderEngine.InitListener, RenderEngine.DebugInfoListener {
+class CaptureActivity : FragmentActivity(), SurfaceHolder.Callback, Camera2Listener, RenderEngine.InitListener, RenderEngine.DebugInfoListener {
     private val permissionGate by lazy { CameraPermissionGate(this) }
     private val cameraManager by lazy { Camera2Manager(this, this) }
-    private val filterMaterialManager by lazy { FilterMaterialManager(this) }
+    private val materialManager by lazy { MaterialManager(this) }
     private val renderEngine by lazy { RenderEngine() }
 
     private var previewView: SurfaceView? = null
     private var lifecycleStatus: TextView? = null
     private var debugInfo: TextView? = null
-    private var switchCameraButton: Button? = null
-    private var captureButton: Button? = null
-    private var adjustmentSeekBar: SeekBar? = null
+    private var filterButton: ImageButton? = null
+    private var switchCameraButton: ImageButton? = null
+    private var captureButton: ImageButton? = null
     private var outputSurface: Surface? = null
     private var cameraConfiguration: CameraConfiguration? = null
-    private var imageParams = ImageParams.defaults()
-    private var selectedAdjustment = Adjustment.BRIGHTNESS
+    private var selectedFilterId: String? = null
+    private var filterIconPadding = 0
     private var isCaptureResumed = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -61,37 +60,18 @@ class CaptureActivity : Activity(), SurfaceHolder.Callback, Camera2Listener, Ren
         }
         debugInfo = findViewById(R.id.capture_debug_info)
         renderEngine.setDebugInfoListener(this)
-        switchCameraButton = findViewById<Button>(R.id.capture_switch_camera).also {
+        filterButton = findViewById<ImageButton>(R.id.capture_filter_button).also {
+            filterIconPadding = it.paddingLeft
+        }
+        findViewById<ImageButton>(R.id.capture_back).setOnClickListener { finish() }
+        switchCameraButton = findViewById<ImageButton>(R.id.capture_switch_camera).also {
             it.setOnClickListener { cameraManager.switchCamera() }
         }
-        captureButton = findViewById<Button>(R.id.capture_photo).also {
+        captureButton = findViewById<ImageButton>(R.id.capture_photo).also {
             it.setOnClickListener { captureImage() }
         }
-        adjustmentSeekBar = findViewById<SeekBar>(R.id.capture_adjustment_seek_bar).also {
-            it.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
-                override fun onProgressChanged(
-                    seekBar: SeekBar,
-                    progress: Int,
-                    fromUser: Boolean,
-                ) {
-                    if (fromUser) {
-                        updateImageParams(progress.toAdjustmentValue())
-                    }
-                }
-
-                override fun onStartTrackingTouch(seekBar: SeekBar) = Unit
-
-                override fun onStopTrackingTouch(seekBar: SeekBar) = Unit
-            })
-        }
-        findViewById<RadioGroup>(R.id.capture_adjustment_group).setOnCheckedChangeListener { _, checkedId ->
-            selectedAdjustment = when (checkedId) {
-                R.id.capture_warmth -> Adjustment.WARMTH
-                else -> Adjustment.BRIGHTNESS
-            }
-            showSelectedAdjustment()
-        }
-        setupFilterList()
+        setupFilterPanel()
+        setupAlgorithmPanel()
     }
 
     override fun onResume() {
@@ -180,27 +160,6 @@ class CaptureActivity : Activity(), SurfaceHolder.Callback, Camera2Listener, Ren
         )
     }
 
-    private fun showSelectedAdjustment() {
-        val value = when (selectedAdjustment) {
-            Adjustment.BRIGHTNESS -> imageParams.brightness
-            Adjustment.WARMTH -> imageParams.warmth
-        }
-        adjustmentSeekBar?.progress = value.toAdjustmentProgress()
-    }
-
-    private fun updateImageParams(value: Float) {
-        imageParams = when (selectedAdjustment) {
-            Adjustment.BRIGHTNESS -> ImageParams.builder(imageParams)
-                .setBrightness(value)
-                .build()
-
-            Adjustment.WARMTH -> ImageParams.builder(imageParams)
-                .setWarmth(value)
-                .build()
-        }
-        renderEngine.setRenderParams(imageParams)
-    }
-
     private fun captureImage() {
         captureButton?.isEnabled = false
         renderEngine.captureFrame(object : RenderEngine.CaptureCallback {
@@ -243,33 +202,59 @@ class CaptureActivity : Activity(), SurfaceHolder.Callback, Camera2Listener, Ren
         lifecycleStatus?.setText(R.string.capture_image_failed)
     }
 
-    // test for filter
-    private fun setupFilterList() {
-        val filterGroup = findViewById<RadioGroup>(R.id.capture_filter_group)
-        val filterList = filterMaterialManager.initFilterList()
-            .sortedBy { if (it.id == CYBER_PUNK_FILTER_ID) 0 else 1 }
-        for (material in filterList) {
-            val filterButton = layoutInflater.inflate(
-                R.layout.item_capture_filter,
-                filterGroup,
-                false,
-            ) as RadioButton
-            filterButton.id = View.generateViewId()
-            filterButton.text = material.displayName
-            filterButton.tag = material.rootPath
-            filterGroup.addView(filterButton)
+    private fun setupFilterPanel() {
+        val filterList = materialManager.loadMaterialList(MaterialConfig.FILTER_LIST, MaterialType.FILTER)
+            .filterIsInstance<FilterMaterial>()
+        val filtersById = filterList.associateBy { it.id }
+        val filterItems = filterList.map {
+            SelectionPanelItem(
+                id = it.id,
+                name = it.displayName,
+                icon = SelectionPanelIcon.FilePath(it.iconPath),
+            )
         }
-        filterGroup.setOnCheckedChangeListener { group, checkedId ->
-            val filterButton = group.findViewById<RadioButton>(checkedId)
-            renderEngine.setFilter(filterButton?.tag as? String)
+        filterButton?.setOnClickListener {
+            SelectionPanelBottomSheet().apply {
+                setPanelName(this@CaptureActivity.getString(R.string.capture_filter))
+                setOnItemSelectedListener { item ->
+                    selectedFilterId = item?.id
+                    val filter = item?.let { filtersById[it.id] }
+                    renderEngine.setFilter(filter?.rootPath)
+                    showFilterIcon(filter?.iconPath)
+                }
+                setItems(
+                    items = filterItems,
+                    emptyText = this@CaptureActivity.getString(R.string.capture_filter_empty),
+                    showNoneButton = true,
+                    selectedItemId = selectedFilterId,
+                )
+            }.show(supportFragmentManager, SelectionPanelBottomSheet::class.java.simpleName)
         }
     }
 
-    private fun Int.toAdjustmentValue(): Float =
-        (this - ADJUSTMENT_PROGRESS_CENTER) / ADJUSTMENT_PROGRESS_SCALE
+    private fun showFilterIcon(iconPath: String?) {
+        val button = filterButton ?: return
+        if (iconPath == null) {
+            button.setPadding(filterIconPadding, filterIconPadding, filterIconPadding, filterIconPadding)
+            button.setImageResource(R.drawable.icon_capture_filter)
+            return
+        }
+        button.setPadding(0, 0, 0, 0)
+        button.setImageURI(Uri.fromFile(File(iconPath)))
+    }
 
-    private fun Float.toAdjustmentProgress(): Int =
-        (this * ADJUSTMENT_PROGRESS_SCALE + ADJUSTMENT_PROGRESS_CENTER).toInt()
+    private fun setupAlgorithmPanel() {
+        findViewById<ImageButton>(R.id.capture_algorithm_button).setOnClickListener {
+            SelectionPanelBottomSheet().apply {
+                setHeaderVisible(false)
+                setPanelName(this@CaptureActivity.getString(R.string.capture_algorithm))
+                setItems(
+                    items = emptyList(),
+                    emptyText = this@CaptureActivity.getString(R.string.capture_algorithm_developing),
+                )
+            }.show(supportFragmentManager, SelectionPanelBottomSheet::class.java.simpleName)
+        }
+    }
 
     override fun onRenderReady(cameraSurface: Surface?) {
         val configuration = cameraConfiguration ?: return
@@ -288,14 +273,16 @@ class CaptureActivity : Activity(), SurfaceHolder.Callback, Camera2Listener, Ren
     }
 
     override fun onDebugInfo(
-        frameDurationMillis: Float,
+        sdkRenderMillis: Float,
+        cameraFrameMillis: Float,
         framesPerSecond: Float,
     ) {
         if (!isCaptureResumed) return
 
         debugInfo?.text = getString(
             R.string.capture_debug_info,
-            frameDurationMillis,
+            sdkRenderMillis,
+            cameraFrameMillis,
             framesPerSecond,
         )
     }
@@ -304,12 +291,6 @@ class CaptureActivity : Activity(), SurfaceHolder.Callback, Camera2Listener, Ren
         if (!isCaptureResumed) return
 
         cameraConfiguration = configuration
-        switchCameraButton?.setText(
-            when (configuration.lensFacing) {
-                LensFacing.FRONT -> R.string.capture_lens_front
-                LensFacing.BACK -> R.string.capture_lens_back
-            },
-        )
         switchCameraButton?.isEnabled = true
         captureButton?.isEnabled = true
         showCameraConfiguration(configuration)
@@ -341,16 +322,8 @@ class CaptureActivity : Activity(), SurfaceHolder.Callback, Camera2Listener, Ren
 
     companion object {
         private const val LOG_TAG = "PELabCapture"
-        private const val ADJUSTMENT_PROGRESS_CENTER = 100
-        private const val ADJUSTMENT_PROGRESS_SCALE = 100.0F
-        private const val CYBER_PUNK_FILTER_ID = "cyber_punk"
         private const val CAPTURE_FILE_NAME = "captured_image.jpg"
 
         fun createIntent(context: Context): Intent = Intent(context, CaptureActivity::class.java)
-    }
-
-    private enum class Adjustment {
-        BRIGHTNESS,
-        WARMTH,
     }
 }

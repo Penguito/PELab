@@ -10,6 +10,40 @@ PELab, abréviation de Penguito Effect Lab, a pour objectif de construire de zé
 
 ## Avancement actuel du développement
 
+### 0.6
+
+- Finaliser l’interface utilisateur de base des pages d’accueil, de capture, d’édition et de prévisualisation avant enregistrement.
+
+#### 0.6.1
+
+- Uniformisation dans `render-ui` du contrat de données relatif à la source et au chemin des images entre les pages.
+
+#### 0.6.2
+
+- Ajout dans `render-ui` d’une interface de panneau réutilisable servant de composant de base pour les panneaux de l’application.
+
+#### 0.6.3
+
+- Refactorisation de l’interface utilisateur de la page d’accueil dans `app`.
+
+#### 0.6.4
+
+- Refactorisation de l’interface utilisateur de la page de capture dans `render-ui`.
+
+#### 0.6.5
+
+- Refactorisation de l’interface utilisateur de la page d’édition dans `render-ui`.
+- Ajout dans `render-core-material` d’une analyse unifiée des configurations de ressources.
+- Refactorisation de la structure du panneau réutilisable afin de prendre en charge les nouvelles exigences fonctionnelles.
+
+#### 0.6.6
+
+- Refactorisation de l’interface utilisateur de la page de prévisualisation avant enregistrement dans `render-ui`.
+
+#### 0.6.7
+
+- Uniformisation des couleurs du thème bleu foncé dans `app` et `render-ui`, avec ajout des textes en anglais, chinois simplifié et français.
+
 ### 0.5
 
 - Ajouter la prise en charge de la capture, de l’importation et de l’enregistrement d’images dans la galerie.

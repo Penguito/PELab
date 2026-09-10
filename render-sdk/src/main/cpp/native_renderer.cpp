@@ -303,9 +303,26 @@ bool NativeRenderer::CaptureFrame(void* pixels, int row_stride) const {
 
 void NativeRenderer::RenderToOutput(GLuint preview_texture) const {
 
-    // bind framebuffer
+    // clear output surface
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
     glViewport(0, 0, output_width_, output_height_);
+    glClear(GL_COLOR_BUFFER_BIT);
+
+    // fit preview into output surface
+    const float render_ratio = static_cast<float>(normalized_width_) / static_cast<float>(normalized_height_);
+    const float output_ratio = static_cast<float>(output_width_) / static_cast<float>(output_height_);
+    int preview_width = output_width_;
+    int preview_height = output_height_;
+    if (render_ratio > output_ratio) {
+        preview_height = static_cast<int>(output_width_ / render_ratio);
+    } else {
+        preview_width = static_cast<int>(output_height_ * render_ratio);
+    }
+    glViewport(
+            (output_width_ - preview_width) / 2,
+            (output_height_ - preview_height) / 2,
+            preview_width,
+            preview_height);
 
     // use program
     glUseProgram(preview_program_);

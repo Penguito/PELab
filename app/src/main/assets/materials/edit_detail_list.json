@@ -1,0 +1,25 @@
+{
+  "categories": [
+    {
+      "id": "detail",
+      "materials": [
+        {
+          "id": "grain",
+          "displayName": "Grain",
+          "iconResource": "icon_editor_grain",
+          "minimum": 0,
+          "maximum": 100,
+          "defaultValue": 0
+        },
+        {
+          "id": "vignette",
+          "displayName": "Vignette",
+          "iconResource": "icon_editor_vignette",
+          "minimum": 0,
+          "maximum": 100,
+          "defaultValue": 0
+        }
+      ]
+    }
+  ]
+}

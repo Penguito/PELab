@@ -6,4 +6,4 @@ data class FilterMaterial(
     val displayName: String,
     val rootPath: String,
     val iconPath: String,
-)
+) : Material

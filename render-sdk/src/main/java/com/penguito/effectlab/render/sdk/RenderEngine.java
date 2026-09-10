@@ -24,7 +24,7 @@ public final class RenderEngine implements Closeable {
     }
 
     public interface DebugInfoListener {
-        void onDebugInfo(float frameDurationMillis, float framesPerSecond);
+        void onDebugInfo(float sdkRenderMillis, float cameraFrameMillis, float framesPerSecond);
     }
 
     public interface CaptureCallback {
@@ -54,10 +54,10 @@ public final class RenderEngine implements Closeable {
     public RenderEngine() {
         renderThread.start();
         renderHandler = new Handler(renderThread.getLooper());
-        debugTracker = new RenderDebugTracker((frameDurationMillis, framesPerSecond) ->
+        debugTracker = new RenderDebugTracker((sdkRenderMillis, cameraFrameMillis, framesPerSecond) ->
             mainHandler.post(() -> {
                 if (debugInfoListener != null) {
-                    debugInfoListener.onDebugInfo(frameDurationMillis, framesPerSecond);
+                    debugInfoListener.onDebugInfo(sdkRenderMillis, cameraFrameMillis, framesPerSecond);
                 }
             })
         );
@@ -105,7 +105,24 @@ public final class RenderEngine implements Closeable {
             reportInitError("Image path is missing", listener);
             return;
         }
-        if (!initRendererOnRenderThread(outputSurface, previewResolution)) {
+
+        int renderWidth = previewResolution.getHeight();
+        int renderHeight = previewResolution.getWidth();
+        BitmapRenderInput bitmapInput = null;
+        if (inputMode == RenderMode.IMAGE) {
+            bitmapInput = new BitmapRenderInput(this);
+            if (!bitmapInput.load(imagePath)) {
+                reportInitError("Bitmap input initialization failed: " + imagePath, listener);
+                return;
+            }
+            renderWidth = bitmapInput.getWidth();
+            renderHeight = bitmapInput.getHeight();
+        }
+
+        if (!initRendererOnRenderThread(outputSurface, renderWidth, renderHeight)) {
+            if (bitmapInput != null) {
+                bitmapInput.release();
+            }
             reportInitError("Native renderer initialization failed", listener);
             return;
         }
@@ -116,12 +133,11 @@ public final class RenderEngine implements Closeable {
             renderInput = cameraInput;
             cameraSurface = cameraInput.getInputSurface();
         } else {
-            BitmapRenderInput bitmapInput = new BitmapRenderInput(this);
-            if (!bitmapInput.init(imagePath)) {
+            renderInput = bitmapInput;
+            if (!bitmapInput.upload()) {
                 reportInitError("Bitmap input initialization failed: " + imagePath, listener);
                 return;
             }
-            renderInput = bitmapInput;
             renderInput.requestRender();
         }
 
@@ -171,14 +187,14 @@ public final class RenderEngine implements Closeable {
         renderHandler.post(this::releaseOnRenderThread);
     }
 
-    private boolean initRendererOnRenderThread(Surface outputSurface, PreviewResolution previewResolution) {
-        nativeHandle = nativeInitRenderer(outputSurface, previewResolution.getHeight(), previewResolution.getWidth());
+    private boolean initRendererOnRenderThread(Surface outputSurface, int renderWidth, int renderHeight) {
+        nativeHandle = nativeInitRenderer(outputSurface, renderWidth, renderHeight);
         if (nativeHandle == 0L) {
             return false;
         }
 
-        captureWidth = previewResolution.getHeight();
-        captureHeight = previewResolution.getWidth();
+        captureWidth = renderWidth;
+        captureHeight = renderHeight;
         setImageParams(imageParams);
         applyFilter(lutPath);
         return true;
