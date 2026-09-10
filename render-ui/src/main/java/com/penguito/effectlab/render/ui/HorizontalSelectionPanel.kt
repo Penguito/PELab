@@ -226,7 +226,10 @@ class HorizontalSelectionPanel @JvmOverloads constructor(
             itemContainer,
             false,
         )
-        itemView.findViewById<TextView>(R.id.selection_panel_item_name).text = item.name
+        itemView.findViewById<TextView>(R.id.selection_panel_item_name).apply {
+            text = item.name
+            isSelected = true
+        }
         item.icon?.let {
             itemView.findViewById<ImageView>(R.id.selection_panel_item_icon).showIcon(it)
         }
@@ -250,7 +253,13 @@ class HorizontalSelectionPanel @JvmOverloads constructor(
     private fun updateItemSelection() {
         noneButton.isSelected = selectedItemId == null
         itemViews.forEach { (itemId, itemView) ->
-            itemView.isSelected = itemId == selectedItemId
+            val selected = itemId == selectedItemId
+            itemView.isSelected = selected
+            itemView.findViewById<TextView>(R.id.selection_panel_item_name).apply {
+                isActivated = selected
+                isSelected = false
+                isSelected = true
+            }
         }
     }
 

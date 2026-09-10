@@ -29,7 +29,7 @@
                 android:fontFamily="sans-serif-light"
                 android:letterSpacing="0.08"
                 android:text="@string/app_full_name"
-                android:textColor="@color/on_background"
+                android:textColor="@color/background_second"
                 android:textSize="32sp" />
 
         </FrameLayout>
@@ -59,7 +59,7 @@
                     android:paddingStart="30dp"
                     android:paddingEnd="30dp"
                     android:text="@string/main_capture_mode"
-                    android:textColor="@color/on_background"
+                    android:textColor="@color/background_second"
                     android:textSize="16sp" />
 
                 <Button
@@ -75,7 +75,7 @@
                     android:paddingStart="30dp"
                     android:paddingEnd="30dp"
                     android:text="@string/main_image_mode"
-                    android:textColor="@color/on_background"
+                    android:textColor="@color/background_second"
                     android:textSize="16sp" />
 
             </LinearLayout>
@@ -99,7 +99,7 @@
                 android:fontFamily="sans-serif-light"
                 android:gravity="center"
                 android:text="@string/native_bridge_checking"
-                android:textColor="@color/on_background"
+                android:textColor="@color/background_second"
                 android:textSize="11sp" />
 
         </FrameLayout>
