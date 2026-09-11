@@ -7,7 +7,18 @@ namespace pelab {
 class ImagePass final {
 public:
     bool Init(int width, int height);
-    void SetParams(float brightness, float warmth);
+    void SetParams(
+            float brightness,
+            float contrast,
+            float exposure,
+            float highlights,
+            float shadows,
+            float warmth,
+            float tint,
+            float saturation,
+            float vibrance,
+            float grain,
+            float vignette);
     void Render(GLuint input_texture, GLuint vertex_array) const;
     GLuint GetOutputTexture() const;
     void Release();
@@ -23,7 +34,16 @@ private:
     GLint brightness_location_ = -1;
     GLint warmth_location_ = -1;
     float brightness_ = 0.0F;
+    float contrast_ = 0.0F;
+    float exposure_ = 0.0F;
+    float highlights_ = 0.0F;
+    float shadows_ = 0.0F;
     float warmth_ = 0.0F;
+    float tint_ = 0.0F;
+    float saturation_ = 0.0F;
+    float vibrance_ = 0.0F;
+    float grain_ = 0.0F;
+    float vignette_ = 0.0F;
     int width_ = 0;
     int height_ = 0;
 };

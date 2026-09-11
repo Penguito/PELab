@@ -55,9 +55,29 @@ bool ImagePass::Init(int width, int height) {
     return CreateImageProgram();
 }
 
-void ImagePass::SetParams(float brightness, float warmth) {
+void ImagePass::SetParams(
+        float brightness,
+        float contrast,
+        float exposure,
+        float highlights,
+        float shadows,
+        float warmth,
+        float tint,
+        float saturation,
+        float vibrance,
+        float grain,
+        float vignette) {
     brightness_ = brightness;
+    contrast_ = contrast;
+    exposure_ = exposure;
+    highlights_ = highlights;
+    shadows_ = shadows;
     warmth_ = warmth;
+    tint_ = tint;
+    saturation_ = saturation;
+    vibrance_ = vibrance;
+    grain_ = grain;
+    vignette_ = vignette;
 }
 
 void ImagePass::Render(GLuint input_texture, GLuint vertex_array) const {

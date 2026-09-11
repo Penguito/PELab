@@ -22,7 +22,18 @@ public:
     bool Init(ANativeWindow* output_window, int normalized_width, int normalized_height);
     GLuint GetCameraInputTexture() const;
     bool SetBitmap(const void* pixels, int width, int height, int row_stride);
-    void SetImageParams(float brightness, float warmth);
+    void SetImageParams(
+            float brightness,
+            float contrast,
+            float exposure,
+            float highlights,
+            float shadows,
+            float warmth,
+            float tint,
+            float saturation,
+            float vibrance,
+            float grain,
+            float vignette);
     bool SetLutTexture(const void* pixels, int width, int height, int row_stride);
     void RenderCameraFrame(const float* texture_matrix);
     void RenderBitmap();

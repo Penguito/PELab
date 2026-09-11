@@ -222,8 +222,30 @@ bool NativeRenderer::SetBitmap(
     return bitmap_input_pass_.SetBitmap(pixels, width, height, row_stride);
 }
 
-void NativeRenderer::SetImageParams(float brightness, float warmth) {
-    image_pass_.SetParams(brightness, warmth);
+void NativeRenderer::SetImageParams(
+        float brightness,
+        float contrast,
+        float exposure,
+        float highlights,
+        float shadows,
+        float warmth,
+        float tint,
+        float saturation,
+        float vibrance,
+        float grain,
+        float vignette) {
+    image_pass_.SetParams(
+            brightness,
+            contrast,
+            exposure,
+            highlights,
+            shadows,
+            warmth,
+            tint,
+            saturation,
+            vibrance,
+            grain,
+            vignette);
 }
 
 bool NativeRenderer::SetLutTexture(const void* pixels, int width, int height, int row_stride) {

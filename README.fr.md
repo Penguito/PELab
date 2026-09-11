@@ -10,6 +10,14 @@ PELab, abréviation de Penguito Effect Lab, a pour objectif de construire de zé
 
 ## Avancement actuel du développement
 
+### 0.7
+
+- Finaliser les fonctions d’édition d’image, notamment les réglages de la lumière, des couleurs et des détails.
+
+#### 0.7.1
+
+- Finalisation de la transmission de tous les paramètres d’image du SDK Java vers le Native Renderer et l’Image Pass via JNI.
+
 ### 0.6
 
 - Finaliser l’interface utilisateur de base des pages d’accueil, de capture, d’édition et de prévisualisation avant enregistrement.
