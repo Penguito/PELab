@@ -18,6 +18,10 @@ PELab, short for Penguito Effect Lab, aims to build a complete Android applicati
 
 - Completed the transfer of all image parameters from the Java SDK through JNI to the Native Renderer and Image Pass.
 
+#### 0.7.2
+
+- Implemented brightness, contrast, exposure, highlights, and shadows adjustments in `render-sdk`.
+
 ### 0.6
 
 - Complete the basic UI for the home, capture, editor, and save preview pages.

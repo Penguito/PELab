@@ -18,6 +18,10 @@ PELab 全称为 Penguito Effect Lab，旨在从零开始构建一个完整的、
 
 - 打通全部图片参数从 Java SDK 到 JNI、Native Renderer 和 Image Pass 的传递链路。
 
+#### 0.7.2
+
+- 在 `render-sdk` 中实现亮度、对比度、曝光、高光和暗部调节。
+
 ### 0.6
 
 - 完成主页、拍摄页、编辑页和保存预览页的基本 UI。

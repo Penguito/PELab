@@ -32,6 +32,10 @@ private:
     GLuint image_program_ = 0;
     GLint input_texture_location_ = -1;
     GLint brightness_location_ = -1;
+    GLint contrast_location_ = -1;
+    GLint exposure_location_ = -1;
+    GLint highlights_location_ = -1;
+    GLint shadows_location_ = -1;
     GLint warmth_location_ = -1;
     float brightness_ = 0.0F;
     float contrast_ = 0.0F;

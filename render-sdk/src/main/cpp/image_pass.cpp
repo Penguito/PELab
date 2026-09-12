@@ -28,18 +28,35 @@ precision mediump float;
 
 uniform sampler2D inputTexture;
 uniform float brightness;
+uniform float contrast;
+uniform float exposure;
+uniform float highlights;
+uniform float shadows;
 uniform float warmth;
 
 in vec2 imageTextureCoordinate;
 out vec4 outputColor;
 
+vec3 adjustTone(vec3 color, float amount, float mask) {
+    vec3 availableRange = amount >= 0.0 ? vec3(1.0) - color : color;
+    return color + amount * mask * availableRange * 0.5;
+}
+
 void main() {
     vec4 color = texture(inputTexture, imageTextureCoordinate);
-    color.rgb += brightness;
-    color.r += warmth * 0.15;
-    color.b -= warmth * 0.15;
-    color.rgb = clamp(color.rgb, 0.0, 1.0);
-    outputColor = color;
+    float sourceLuminance = dot(color.rgb, vec3(0.2126, 0.7152, 0.0722));
+    float highlightMask = smoothstep(0.5, 1.0, sourceLuminance);
+    float shadowMask = 1.0 - smoothstep(0.0, 0.5, sourceLuminance);
+
+    vec3 adjustedColor = color.rgb * exp2(exposure);
+    adjustedColor += brightness;
+    adjustedColor = (adjustedColor - vec3(0.5)) * (1.0 + contrast) + vec3(0.5);
+    adjustedColor = clamp(adjustedColor, 0.0, 1.0);
+    adjustedColor = adjustTone(adjustedColor, highlights, highlightMask);
+    adjustedColor = adjustTone(adjustedColor, shadows, shadowMask);
+    adjustedColor.r += warmth * 0.15;
+    adjustedColor.b -= warmth * 0.15;
+    outputColor = vec4(clamp(adjustedColor, 0.0, 1.0), color.a);
 }
 )";
 
@@ -95,6 +112,10 @@ void ImagePass::Render(GLuint input_texture, GLuint vertex_array) const {
     glBindTexture(GL_TEXTURE_2D, input_texture);
     glUniform1i(input_texture_location_, 0);
     glUniform1f(brightness_location_, brightness_);
+    glUniform1f(contrast_location_, contrast_);
+    glUniform1f(exposure_location_, exposure_);
+    glUniform1f(highlights_location_, highlights_);
+    glUniform1f(shadows_location_, shadows_);
     glUniform1f(warmth_location_, warmth_);
 
     // render input texture to image target
@@ -167,6 +188,14 @@ bool ImagePass::CreateImageProgram() {
             glGetUniformLocation(image_program_, "inputTexture");
     brightness_location_ =
             glGetUniformLocation(image_program_, "brightness");
+    contrast_location_ =
+            glGetUniformLocation(image_program_, "contrast");
+    exposure_location_ =
+            glGetUniformLocation(image_program_, "exposure");
+    highlights_location_ =
+            glGetUniformLocation(image_program_, "highlights");
+    shadows_location_ =
+            glGetUniformLocation(image_program_, "shadows");
     warmth_location_ =
             glGetUniformLocation(image_program_, "warmth");
     return true;
@@ -188,6 +217,10 @@ void ImagePass::Release() {
     image_program_ = 0;
     input_texture_location_ = -1;
     brightness_location_ = -1;
+    contrast_location_ = -1;
+    exposure_location_ = -1;
+    highlights_location_ = -1;
+    shadows_location_ = -1;
     warmth_location_ = -1;
     width_ = 0;
     height_ = 0;
