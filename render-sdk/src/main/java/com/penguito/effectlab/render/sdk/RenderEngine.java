@@ -206,7 +206,16 @@ public final class RenderEngine implements Closeable {
         nativeSetImageParams(
                 nativeHandle,
                 params.getBrightness(),
-                params.getWarmth()
+                params.getContrast(),
+                params.getExposure(),
+                params.getHighlights(),
+                params.getShadows(),
+                params.getWarmth(),
+                params.getTint(),
+                params.getSaturation(),
+                params.getVibrance(),
+                params.getGrain(),
+                params.getVignette()
         );
         requestRenderOnRenderThread();
     }
@@ -354,7 +363,19 @@ public final class RenderEngine implements Closeable {
 
     private static native void nativeRenderBitmap(long nativeHandle);
 
-    private static native void nativeSetImageParams(long nativeHandle, float brightness, float warmth);
+    private static native void nativeSetImageParams(
+            long nativeHandle,
+            float brightness,
+            float contrast,
+            float exposure,
+            float highlights,
+            float shadows,
+            float warmth,
+            float tint,
+            float saturation,
+            float vibrance,
+            float grain,
+            float vignette);
 
     private static native boolean nativeSetLutTexture(long nativeHandle, Bitmap lutBitmap);
 

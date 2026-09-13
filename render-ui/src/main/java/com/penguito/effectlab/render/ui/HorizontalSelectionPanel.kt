@@ -4,6 +4,7 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.net.Uri
 import android.util.AttributeSet
+import android.view.HapticFeedbackConstants
 import android.view.LayoutInflater
 import android.view.MotionEvent
 import android.view.View
@@ -45,6 +46,7 @@ class HorizontalSelectionPanel @JvmOverloads constructor(
     private val header: View
     private val seekContainer: View
     private val seekBar: SeekBar
+    private val seekCenterMark: View
     private val compareButton: ImageButton
     private val categoryScrollView: HorizontalScrollView
     private val categoryContainer: LinearLayout
@@ -65,6 +67,9 @@ class HorizontalSelectionPanel @JvmOverloads constructor(
     private var compareStartedListener: (() -> Unit)? = null
     private var compareStoppedListener: (() -> Unit)? = null
     private var isComparing = false
+    private var valueMinimum = 0
+    private var isZeroCentered = false
+    private var lastUserValue: Int? = null
 
     init {
         LayoutInflater.from(context).inflate(R.layout.panel_layout_item, this)
@@ -81,20 +86,37 @@ class HorizontalSelectionPanel @JvmOverloads constructor(
         seekBar = findViewById<SeekBar>(R.id.selection_panel_seek_bar).also {
             it.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
                 override fun onProgressChanged(seekBar: SeekBar, progress: Int, fromUser: Boolean) {
+                    if (!fromUser) return
+
+                    val value = valueMinimum + progress
+                    val previousValue = lastUserValue
+                    if (
+                        isZeroCentered &&
+                        previousValue != null &&
+                        ((previousValue < 0 && value >= 0) || (previousValue > 0 && value <= 0))
+                    ) {
+                        seekBar.performHapticFeedback(HapticFeedbackConstants.CLOCK_TICK)
+                    }
+                    lastUserValue = value
                     selectedItemId?.let { itemId ->
                         if (itemDefaultValues.containsKey(itemId)) {
-                            itemValues[itemId] = progress
+                            itemValues[itemId] = value
                             updateItemValue(itemId)
                         }
                     }
-                    if (fromUser) valueChangedListener?.invoke(progress)
+                    valueChangedListener?.invoke(value)
                 }
 
-                override fun onStartTrackingTouch(seekBar: SeekBar) = Unit
+                override fun onStartTrackingTouch(seekBar: SeekBar) {
+                    lastUserValue = valueMinimum + seekBar.progress
+                }
 
-                override fun onStopTrackingTouch(seekBar: SeekBar) = Unit
+                override fun onStopTrackingTouch(seekBar: SeekBar) {
+                    lastUserValue = null
+                }
             })
         }
+        seekCenterMark = findViewById(R.id.selection_panel_seek_center_mark)
         compareButton = findViewById(R.id.selection_panel_compare)
         setupCompareButton()
         categoryScrollView = findViewById(R.id.selection_panel_category_scroll)
@@ -157,9 +179,21 @@ class HorizontalSelectionPanel @JvmOverloads constructor(
         value: Int,
     ) {
         seekContainer.visibility = View.VISIBLE
-        seekBar.min = minimum
-        seekBar.max = maximum
-        seekBar.progress = value
+        // keep widget progress nonnegative and expose the configured logical value
+        valueMinimum = minimum
+        isZeroCentered = minimum < 0 && minimum == -maximum
+        lastUserValue = null
+        seekCenterMark.visibility = if (isZeroCentered) View.VISIBLE else View.GONE
+        seekBar.min = 0
+        seekBar.max = maximum - minimum
+        val currentValue = value.coerceIn(minimum, maximum)
+        seekBar.progress = currentValue - minimum
+        selectedItemId?.let { itemId ->
+            if (itemDefaultValues.containsKey(itemId)) {
+                itemValues[itemId] = currentValue
+                updateItemValue(itemId)
+            }
+        }
     }
 
     fun hideValueRange() {

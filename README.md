@@ -10,6 +10,30 @@ PELab, short for Penguito Effect Lab, aims to build a complete Android applicati
 
 ## Current Development Progress
 
+### 0.7
+
+- Complete image editing capabilities including lighting, color, and detail adjustments.
+
+#### 0.7.1
+
+- Completed the transfer of all image parameters from the Java SDK through JNI to the Native Renderer and Image Pass.
+
+#### 0.7.2
+
+- Implemented brightness, contrast, exposure, highlights, and shadows adjustments in `render-sdk`.
+
+#### 0.7.3
+
+- Implemented warmth, tint, saturation, and vibrance adjustments in `render-sdk`.
+
+#### 0.7.4
+
+- Implemented grain and vignette adjustments in `render-sdk`.
+
+#### 0.7.5
+
+- Connected the image adjustment interface in `render-ui` and completed the full parameter adjustment pipeline.
+
 ### 0.6
 
 - Complete the basic UI for the home, capture, editor, and save preview pages.

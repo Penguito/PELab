@@ -15,6 +15,7 @@ import com.penguito.effectlab.render.core.material.ImageEditMaterial
 import com.penguito.effectlab.render.core.material.MaterialConfig
 import com.penguito.effectlab.render.core.material.MaterialManager
 import com.penguito.effectlab.render.core.material.MaterialType
+import com.penguito.effectlab.render.sdk.ImageParams
 import com.penguito.effectlab.render.sdk.PreviewResolution
 import com.penguito.effectlab.render.sdk.RenderEngine
 import com.penguito.effectlab.render.sdk.RenderMode
@@ -32,6 +33,8 @@ class EditorActivity : FragmentActivity(), SurfaceHolder.Callback, RenderEngine.
     private lateinit var imageIntentData: ImageIntentData
     private var outputSurface: Surface? = null
     private val materialValues = mutableMapOf<String, Int>()
+    private val selectedMaterialIds = mutableMapOf<String, String>()
+    private var imageParams = ImageParams.defaults()
     private var selectedFilterId: String? = null
     private var selectedFilterRootPath: String? = null
     private var isEditorResumed = false
@@ -109,6 +112,9 @@ class EditorActivity : FragmentActivity(), SurfaceHolder.Callback, RenderEngine.
         val surface = outputSurface ?: return
         if (!isEditorResumed) return
 
+        // restore editor adjustments before rebuilding the renderer
+        renderEngine.setRenderParams(imageParams)
+        renderEngine.setFilter(selectedFilterRootPath)
         renderEngine.init(surface, PreviewResolution.P720, RenderMode.IMAGE, imageIntentData.imagePath, this)
     }
 
@@ -156,7 +162,13 @@ class EditorActivity : FragmentActivity(), SurfaceHolder.Callback, RenderEngine.
     private fun showEditPanelWithSeekBar(panelName: String, materialListPath: String) {
         val materials = materialManager.loadMaterialList(materialListPath, MaterialType.IMAGE_EDIT)
             .filterIsInstance<ImageEditMaterial>()
-        var selectedMaterial = materials.first()
+        if (materials.isEmpty()) {
+            showEditPanel(panelName)
+            return
+        }
+        var selectedMaterial = materials.firstOrNull { it.id == selectedMaterialIds[materialListPath] }
+            ?: materials.first()
+        selectedMaterialIds[materialListPath] = selectedMaterial.id
         materials.forEach {
             materialValues.putIfAbsent(materialKey(materialListPath, it), it.defaultValue)
         }
@@ -164,6 +176,16 @@ class EditorActivity : FragmentActivity(), SurfaceHolder.Callback, RenderEngine.
             setHeaderVisible(false)
             setCompareVisible(true)
             setPanelName(panelName)
+            setOnCompareListener(
+                onStarted = {
+                    // compare only this panel without changing stored values
+                    val defaultParams = materials.fold(imageParams) { params, material ->
+                        params.withMaterialValue(material, material.defaultValue)
+                    }
+                    renderEngine.setRenderParams(defaultParams)
+                },
+                onStopped = { renderEngine.setRenderParams(imageParams) },
+            )
             setItems(
                 items = materials.map { createSelectionItem(materialListPath, it) },
                 emptyText = "",
@@ -176,10 +198,14 @@ class EditorActivity : FragmentActivity(), SurfaceHolder.Callback, RenderEngine.
             )
             setOnValueChangedListener {
                 materialValues[materialKey(materialListPath, selectedMaterial)] = it
+                imageParams = imageParams.withMaterialValue(selectedMaterial, it)
+                renderEngine.setRenderParams(imageParams)
             }
         }
         bottomSheet.setOnItemSelectedListener { item ->
-            selectedMaterial = materials.first { it.id == item?.id }
+            selectedMaterial = materials.firstOrNull { it.id == item?.id }
+                ?: return@setOnItemSelectedListener
+            selectedMaterialIds[materialListPath] = selectedMaterial.id
             bottomSheet.setValueRange(
                 selectedMaterial.minimum,
                 selectedMaterial.maximum,

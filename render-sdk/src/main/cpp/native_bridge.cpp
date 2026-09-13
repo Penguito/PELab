@@ -108,8 +108,28 @@ Java_com_penguito_effectlab_render_sdk_RenderEngine_nativeSetImageParams(
         jclass,
         jlong handle,
         jfloat brightness,
-        jfloat warmth) {
-    FromHandle(handle)->SetImageParams(brightness, warmth);
+        jfloat contrast,
+        jfloat exposure,
+        jfloat highlights,
+        jfloat shadows,
+        jfloat warmth,
+        jfloat tint,
+        jfloat saturation,
+        jfloat vibrance,
+        jfloat grain,
+        jfloat vignette) {
+    FromHandle(handle)->SetImageParams(
+            brightness,
+            contrast,
+            exposure,
+            highlights,
+            shadows,
+            warmth,
+            tint,
+            saturation,
+            vibrance,
+            grain,
+            vignette);
 }
 
 extern "C" JNIEXPORT jboolean JNICALL

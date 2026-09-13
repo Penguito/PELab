@@ -70,6 +70,14 @@
                 android:progressTint="@color/background_third"
                 android:thumbTint="@color/background_second" />
 
+            <View
+                android:id="@+id/selection_panel_seek_center_mark"
+                android:layout_width="6dp"
+                android:layout_height="6dp"
+                android:layout_gravity="center"
+                android:background="@drawable/panel_indicator_neutral_point"
+                android:visibility="gone" />
+
         </FrameLayout>
 
         <FrameLayout
