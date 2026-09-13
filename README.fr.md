@@ -30,6 +30,10 @@ PELab, abréviation de Penguito Effect Lab, a pour objectif de construire de zé
 
 - Implémentation des réglages de grain et de vignettage dans `render-sdk`.
 
+#### 0.7.5
+
+- Connexion de l’interface de réglage d’image dans `render-ui` et finalisation de la chaîne de réglage de tous les paramètres.
+
 ### 0.6
 
 - Finaliser l’interface utilisateur de base des pages d’accueil, de capture, d’édition et de prévisualisation avant enregistrement.

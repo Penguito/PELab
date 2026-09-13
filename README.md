@@ -30,6 +30,10 @@ PELab, short for Penguito Effect Lab, aims to build a complete Android applicati
 
 - Implemented grain and vignette adjustments in `render-sdk`.
 
+#### 0.7.5
+
+- Connected the image adjustment interface in `render-ui` and completed the full parameter adjustment pipeline.
+
 ### 0.6
 
 - Complete the basic UI for the home, capture, editor, and save preview pages.
