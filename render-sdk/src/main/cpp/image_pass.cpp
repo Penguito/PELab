@@ -76,7 +76,7 @@ vec3 adjustGrain(vec3 color, float amount) {
     seed = (seed ^ (seed >> 13u)) * 3266489917u;
     seed ^= seed >> 16u;
     highp float noise = float(seed & 65535u) / 65535.0 - 0.5;
-    return color + vec3(noise * amount * 0.12);
+    return color + vec3(noise * amount * 0.3);
 }
 
 vec3 adjustVignette(vec3 color, float amount) {
