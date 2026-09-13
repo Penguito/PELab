@@ -36,6 +36,9 @@ uniform float warmth;
 uniform float tint;
 uniform float saturation;
 uniform float vibrance;
+uniform float grain;
+uniform float vignette;
+uniform highp vec2 imageResolution;
 
 in vec2 imageTextureCoordinate;
 out vec4 outputColor;
@@ -61,6 +64,33 @@ vec3 adjustVibrance(vec3 color, float amount) {
     return adjustSaturation(color, amount * (1.0 - colorRange));
 }
 
+vec3 adjustGrain(vec3 color, float amount) {
+    if (amount <= 0.0) {
+        return color;
+    }
+
+    // generate stable monochrome noise from target pixel coordinates
+    highp uvec2 pixel = uvec2(gl_FragCoord.xy);
+    highp uint seed = pixel.x + pixel.y * 4099u;
+    seed = (seed ^ (seed >> 16u)) * 2246822519u;
+    seed = (seed ^ (seed >> 13u)) * 3266489917u;
+    seed ^= seed >> 16u;
+    highp float noise = float(seed & 65535u) / 65535.0 - 0.5;
+    return color + vec3(noise * amount * 0.12);
+}
+
+vec3 adjustVignette(vec3 color, float amount) {
+    if (amount <= 0.0) {
+        return color;
+    }
+
+    // normalize pixel distance by the half diagonal of the image target
+    highp vec2 position = (gl_FragCoord.xy - imageResolution * 0.5)
+            / (length(imageResolution) * 0.5);
+    float mask = smoothstep(0.35, 1.0, length(position));
+    return color * (1.0 - amount * mask * 0.6);
+}
+
 void main() {
     vec4 color = texture(inputTexture, imageTextureCoordinate);
     float sourceLuminance = getLuminance(color.rgb);
@@ -78,6 +108,8 @@ void main() {
     adjustedColor = clamp(adjustedColor, 0.0, 1.0);
     adjustedColor = adjustSaturation(adjustedColor, saturation);
     adjustedColor = adjustVibrance(clamp(adjustedColor, 0.0, 1.0), vibrance);
+    adjustedColor = adjustGrain(clamp(adjustedColor, 0.0, 1.0), grain);
+    adjustedColor = adjustVignette(adjustedColor, vignette);
     outputColor = vec4(clamp(adjustedColor, 0.0, 1.0), color.a);
 }
 )";
@@ -142,6 +174,9 @@ void ImagePass::Render(GLuint input_texture, GLuint vertex_array) const {
     glUniform1f(tint_location_, tint_);
     glUniform1f(saturation_location_, saturation_);
     glUniform1f(vibrance_location_, vibrance_);
+    glUniform1f(grain_location_, grain_);
+    glUniform1f(vignette_location_, vignette_);
+    glUniform2f(image_resolution_location_, static_cast<float>(width_), static_cast<float>(height_));
 
     // render input texture to image target
     glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
@@ -229,6 +264,12 @@ bool ImagePass::CreateImageProgram() {
             glGetUniformLocation(image_program_, "saturation");
     vibrance_location_ =
             glGetUniformLocation(image_program_, "vibrance");
+    grain_location_ =
+            glGetUniformLocation(image_program_, "grain");
+    vignette_location_ =
+            glGetUniformLocation(image_program_, "vignette");
+    image_resolution_location_ =
+            glGetUniformLocation(image_program_, "imageResolution");
     return true;
 }
 
@@ -256,6 +297,9 @@ void ImagePass::Release() {
     tint_location_ = -1;
     saturation_location_ = -1;
     vibrance_location_ = -1;
+    grain_location_ = -1;
+    vignette_location_ = -1;
+    image_resolution_location_ = -1;
     width_ = 0;
     height_ = 0;
 }

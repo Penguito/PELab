@@ -40,6 +40,9 @@ private:
     GLint tint_location_ = -1;
     GLint saturation_location_ = -1;
     GLint vibrance_location_ = -1;
+    GLint grain_location_ = -1;
+    GLint vignette_location_ = -1;
+    GLint image_resolution_location_ = -1;
     float brightness_ = 0.0F;
     float contrast_ = 0.0F;
     float exposure_ = 0.0F;
