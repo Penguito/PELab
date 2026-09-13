@@ -33,18 +33,37 @@ uniform float exposure;
 uniform float highlights;
 uniform float shadows;
 uniform float warmth;
+uniform float tint;
+uniform float saturation;
+uniform float vibrance;
 
 in vec2 imageTextureCoordinate;
 out vec4 outputColor;
+
+float getLuminance(vec3 color) {
+    return dot(color, vec3(0.2126, 0.7152, 0.0722));
+}
 
 vec3 adjustTone(vec3 color, float amount, float mask) {
     vec3 availableRange = amount >= 0.0 ? vec3(1.0) - color : color;
     return color + amount * mask * availableRange * 0.5;
 }
 
+vec3 adjustSaturation(vec3 color, float amount) {
+    vec3 grayscale = vec3(getLuminance(color));
+    return mix(grayscale, color, 1.0 + amount);
+}
+
+vec3 adjustVibrance(vec3 color, float amount) {
+    float maximum = max(max(color.r, color.g), color.b);
+    float minimum = min(min(color.r, color.g), color.b);
+    float colorRange = maximum - minimum;
+    return adjustSaturation(color, amount * (1.0 - colorRange));
+}
+
 void main() {
     vec4 color = texture(inputTexture, imageTextureCoordinate);
-    float sourceLuminance = dot(color.rgb, vec3(0.2126, 0.7152, 0.0722));
+    float sourceLuminance = getLuminance(color.rgb);
     float highlightMask = smoothstep(0.5, 1.0, sourceLuminance);
     float shadowMask = 1.0 - smoothstep(0.0, 0.5, sourceLuminance);
 
@@ -54,8 +73,11 @@ void main() {
     adjustedColor = clamp(adjustedColor, 0.0, 1.0);
     adjustedColor = adjustTone(adjustedColor, highlights, highlightMask);
     adjustedColor = adjustTone(adjustedColor, shadows, shadowMask);
-    adjustedColor.r += warmth * 0.15;
-    adjustedColor.b -= warmth * 0.15;
+    adjustedColor += warmth * vec3(0.15, 0.0, -0.15);
+    adjustedColor += tint * vec3(0.1, -0.04, 0.1);
+    adjustedColor = clamp(adjustedColor, 0.0, 1.0);
+    adjustedColor = adjustSaturation(adjustedColor, saturation);
+    adjustedColor = adjustVibrance(clamp(adjustedColor, 0.0, 1.0), vibrance);
     outputColor = vec4(clamp(adjustedColor, 0.0, 1.0), color.a);
 }
 )";
@@ -117,6 +139,9 @@ void ImagePass::Render(GLuint input_texture, GLuint vertex_array) const {
     glUniform1f(highlights_location_, highlights_);
     glUniform1f(shadows_location_, shadows_);
     glUniform1f(warmth_location_, warmth_);
+    glUniform1f(tint_location_, tint_);
+    glUniform1f(saturation_location_, saturation_);
+    glUniform1f(vibrance_location_, vibrance_);
 
     // render input texture to image target
     glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
@@ -198,6 +223,12 @@ bool ImagePass::CreateImageProgram() {
             glGetUniformLocation(image_program_, "shadows");
     warmth_location_ =
             glGetUniformLocation(image_program_, "warmth");
+    tint_location_ =
+            glGetUniformLocation(image_program_, "tint");
+    saturation_location_ =
+            glGetUniformLocation(image_program_, "saturation");
+    vibrance_location_ =
+            glGetUniformLocation(image_program_, "vibrance");
     return true;
 }
 
@@ -222,6 +253,9 @@ void ImagePass::Release() {
     highlights_location_ = -1;
     shadows_location_ = -1;
     warmth_location_ = -1;
+    tint_location_ = -1;
+    saturation_location_ = -1;
+    vibrance_location_ = -1;
     width_ = 0;
     height_ = 0;
 }

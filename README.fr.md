@@ -22,6 +22,10 @@ PELab, abréviation de Penguito Effect Lab, a pour objectif de construire de zé
 
 - Implémentation des réglages de luminosité, de contraste, d’exposition, de hautes lumières et d’ombres dans `render-sdk`.
 
+#### 0.7.3
+
+- Implémentation des réglages de température de couleur, de teinte, de saturation et de vibrance dans `render-sdk`.
+
 ### 0.6
 
 - Finaliser l’interface utilisateur de base des pages d’accueil, de capture, d’édition et de prévisualisation avant enregistrement.

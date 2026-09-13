@@ -37,6 +37,9 @@ private:
     GLint highlights_location_ = -1;
     GLint shadows_location_ = -1;
     GLint warmth_location_ = -1;
+    GLint tint_location_ = -1;
+    GLint saturation_location_ = -1;
+    GLint vibrance_location_ = -1;
     float brightness_ = 0.0F;
     float contrast_ = 0.0F;
     float exposure_ = 0.0F;
