@@ -54,16 +54,20 @@ class MaterialManager(context: Context) {
         val assetRoot = getString(ASSET_ROOT_KEY)
         val filterDirectory = File(filterRoot, filterId)
         val lutFile = File(filterDirectory, LUT_FILE_NAME)
+        val iconFile = File(filterDirectory, ICON_FILE_NAME)
 
         filterDirectory.mkdirs()
         applicationContext.assets.open("$assetRoot/$LUT_FILE_NAME").use { input ->
             lutFile.outputStream().use(input::copyTo)
         }
+        applicationContext.assets.open("$assetRoot/$ICON_FILE_NAME").use { input ->
+            iconFile.outputStream().use(input::copyTo)
+        }
         return FilterMaterial(
             id = filterId,
             displayName = getString(DISPLAY_NAME_KEY),
             rootPath = filterDirectory.absolutePath,
-            iconPath = lutFile.absolutePath,
+            iconPath = iconFile.absolutePath,
         )
     }
 
@@ -74,6 +78,7 @@ class MaterialManager(context: Context) {
     private companion object {
         const val INSTALLED_FILTER_ROOT = "materials/filters"
         const val LUT_FILE_NAME = "lut.png"
+        const val ICON_FILE_NAME = "icon.jpg"
         const val CATEGORIES_KEY = "categories"
         const val MATERIALS_KEY = "materials"
         const val ID_KEY = "id"
