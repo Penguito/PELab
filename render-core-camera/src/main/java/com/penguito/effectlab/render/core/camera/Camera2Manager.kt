@@ -1,11 +1,14 @@
 package com.penguito.effectlab.render.core.camera
 
 import android.content.Context
+import android.graphics.Rect
 import android.hardware.camera2.CameraAccessException
 import android.hardware.camera2.CameraCaptureSession
+import android.hardware.camera2.CameraCharacteristics
 import android.hardware.camera2.CameraDevice
 import android.hardware.camera2.CameraManager
 import android.hardware.camera2.CaptureRequest
+import android.hardware.camera2.params.MeteringRectangle
 import android.os.Handler
 import android.os.HandlerThread
 import android.os.Looper
@@ -13,6 +16,8 @@ import android.util.Log
 import android.view.Surface
 import com.penguito.effectlab.render.sdk.PreviewResolution
 import java.io.Closeable
+import kotlin.math.absoluteValue
+import kotlin.math.roundToInt
 
 /**
  * Opens a Camera2 stream based on the configuration and writes frames to the Surface.
@@ -37,6 +42,10 @@ class Camera2Manager(
     private var cameraCallback: CameraDevice.StateCallback? = null
     private var cameraDevice: CameraDevice? = null
     private var captureSession: CameraCaptureSession? = null
+    private var previewRequestBuilder: CaptureRequest.Builder? = null
+    private var cameraCharacteristics: CameraCharacteristics? = null
+    private var zoomRatio = MIN_ZOOM_RATIO
+    private var exposureCompensation = DEFAULT_EXPOSURE_COMPENSATION
     private var isClosed = false
 
     fun createConfiguration(
@@ -77,12 +86,48 @@ class Camera2Manager(
                 previewResolution = configuration.previewResolution,
             ) ?: return@post
 
+            resetControls()
             releaseCamera()
             cameraConfiguration = switchedConfiguration
             openCamera(
                 outputSurface = surface,
                 configuration = switchedConfiguration,
             )
+        }
+    }
+
+    fun setZoomRatio(zoomRatio: Float) {
+        if (!zoomRatio.isFinite()) return
+
+        cameraHandler.post {
+            this.zoomRatio = zoomRatio.coerceIn(MIN_ZOOM_RATIO, MAX_ZOOM_RATIO)
+            updatePreviewRequest()
+        }
+    }
+
+    fun focusAt(
+        normalizedX: Float,
+        normalizedY: Float,
+    ) {
+        if (!normalizedX.isFinite() || !normalizedY.isFinite()) return
+
+        cameraHandler.post {
+            startFocus(
+                normalizedX = normalizedX.coerceIn(0F, 1F),
+                normalizedY = normalizedY.coerceIn(0F, 1F),
+            )
+        }
+    }
+
+    fun setExposureCompensation(exposureCompensation: Float) {
+        if (!exposureCompensation.isFinite()) return
+
+        cameraHandler.post {
+            this.exposureCompensation = exposureCompensation.coerceIn(
+                MIN_EXPOSURE_COMPENSATION,
+                MAX_EXPOSURE_COMPENSATION,
+            )
+            updatePreviewRequest()
         }
     }
 
@@ -192,10 +237,13 @@ class Camera2Manager(
         configuration: CameraConfiguration,
     ) {
         try {
-            val previewRequest = camera
+            val characteristics = cameraManager.getCameraCharacteristics(configuration.cameraId)
+            val previewRequestBuilder = camera
                 .createCaptureRequest(CameraDevice.TEMPLATE_PREVIEW)
-                .apply { addTarget(outputSurface) }
-                .build()
+                .apply {
+                    addTarget(outputSurface)
+                    applyPreviewControls(this, characteristics)
+                }
 
             camera.createCaptureSession(
                 listOf(outputSurface),
@@ -207,9 +255,12 @@ class Camera2Manager(
                         }
 
                         captureSession = session
+                        this@Camera2Manager.previewRequestBuilder = previewRequestBuilder
+                        cameraCharacteristics = characteristics
+                        applyPreviewControls(previewRequestBuilder, characteristics)
                         startPreviewRequest(
                             session = session,
-                            previewRequest = previewRequest,
+                            previewRequest = previewRequestBuilder.build(),
                             configuration = configuration,
                         )
                     }
@@ -242,6 +293,190 @@ class Camera2Manager(
             )
             releaseCamera()
         }
+    }
+
+    private fun updatePreviewRequest() {
+        val session = captureSession ?: return
+        val requestBuilder = previewRequestBuilder ?: return
+        val characteristics = cameraCharacteristics ?: return
+        val configuration = cameraConfiguration ?: return
+
+        applyPreviewControls(requestBuilder, characteristics)
+        try {
+            session.setRepeatingRequest(requestBuilder.build(), null, cameraHandler)
+        } catch (error: CameraAccessException) {
+            reportError(
+                code = CameraErrorCode.ACCESS_FAILED,
+                configuration = configuration,
+                cause = error,
+            )
+            releaseCamera()
+        } catch (error: IllegalStateException) {
+            reportError(
+                code = CameraErrorCode.CAPTURE_SESSION_FAILED,
+                configuration = configuration,
+                cause = error,
+            )
+            releaseCamera()
+        }
+    }
+
+    private fun applyPreviewControls(
+        requestBuilder: CaptureRequest.Builder,
+        characteristics: CameraCharacteristics,
+    ) {
+        applyZoom(requestBuilder, characteristics)
+        applyExposureCompensation(requestBuilder, characteristics)
+    }
+
+    private fun applyZoom(
+        requestBuilder: CaptureRequest.Builder,
+        characteristics: CameraCharacteristics,
+    ) {
+        val activeArray = characteristics[CameraCharacteristics.SENSOR_INFO_ACTIVE_ARRAY_SIZE] ?: return
+        val maximumDigitalZoom = characteristics[
+            CameraCharacteristics.SCALER_AVAILABLE_MAX_DIGITAL_ZOOM
+        ] ?: MIN_ZOOM_RATIO
+        val appliedZoomRatio = zoomRatio.coerceAtMost(maximumDigitalZoom)
+        requestBuilder.set(
+            CaptureRequest.SCALER_CROP_REGION,
+            createCropRegion(activeArray, appliedZoomRatio),
+        )
+    }
+
+    private fun applyExposureCompensation(
+        requestBuilder: CaptureRequest.Builder,
+        characteristics: CameraCharacteristics,
+    ) {
+        val range = characteristics[
+            CameraCharacteristics.CONTROL_AE_COMPENSATION_RANGE
+        ] ?: return
+        val compensation = if (exposureCompensation >= DEFAULT_EXPOSURE_COMPENSATION) {
+            (range.upper * exposureCompensation).roundToInt()
+        } else {
+            (range.lower * exposureCompensation.absoluteValue).roundToInt()
+        }
+        requestBuilder.set(CaptureRequest.CONTROL_AE_EXPOSURE_COMPENSATION, compensation)
+    }
+
+    private fun startFocus(
+        normalizedX: Float,
+        normalizedY: Float,
+    ) {
+        val session = captureSession ?: return
+        val requestBuilder = previewRequestBuilder ?: return
+        val characteristics = cameraCharacteristics ?: return
+        val configuration = cameraConfiguration ?: return
+
+        // create a metering region inside the current zoom crop
+        val activeArray = characteristics[CameraCharacteristics.SENSOR_INFO_ACTIVE_ARRAY_SIZE] ?: return
+        val cropRegion = requestBuilder.get(CaptureRequest.SCALER_CROP_REGION) ?: activeArray
+        val meteringRegion = createMeteringRegion(
+            cropRegion = cropRegion,
+            normalizedX = normalizedX,
+            normalizedY = normalizedY,
+        )
+
+        // check the focus and exposure regions supported by the current camera
+        val supportsAutoFocus = (characteristics[CameraCharacteristics.CONTROL_MAX_REGIONS_AF] ?: 0) > 0
+        val supportsAutoExposure = (characteristics[CameraCharacteristics.CONTROL_MAX_REGIONS_AE] ?: 0) > 0
+        if (!supportsAutoFocus && !supportsAutoExposure) return
+
+        // apply the metering region to autofocus and auto exposure
+        if (supportsAutoFocus) {
+            requestBuilder.set(CaptureRequest.CONTROL_AF_MODE, CaptureRequest.CONTROL_AF_MODE_AUTO)
+            requestBuilder.set(CaptureRequest.CONTROL_AF_REGIONS, arrayOf(meteringRegion))
+        }
+        if (supportsAutoExposure) {
+            requestBuilder.set(CaptureRequest.CONTROL_AE_REGIONS, arrayOf(meteringRegion))
+        }
+
+        try {
+            // cancel the previous focus and trigger a new autofocus request
+            if (supportsAutoFocus) {
+                requestBuilder.set(
+                    CaptureRequest.CONTROL_AF_TRIGGER,
+                    CaptureRequest.CONTROL_AF_TRIGGER_CANCEL,
+                )
+                val cancelRequest = requestBuilder.build()
+                requestBuilder.set(
+                    CaptureRequest.CONTROL_AF_TRIGGER,
+                    CaptureRequest.CONTROL_AF_TRIGGER_START,
+                )
+                val focusRequest = requestBuilder.build()
+                requestBuilder.set(
+                    CaptureRequest.CONTROL_AF_TRIGGER,
+                    CaptureRequest.CONTROL_AF_TRIGGER_IDLE,
+                )
+                session.capture(cancelRequest, null, cameraHandler)
+                session.capture(focusRequest, null, cameraHandler)
+            }
+
+            // keep preview running with the new focus and exposure state
+            session.setRepeatingRequest(requestBuilder.build(), null, cameraHandler)
+        } catch (error: CameraAccessException) {
+            reportError(
+                code = CameraErrorCode.ACCESS_FAILED,
+                configuration = configuration,
+                cause = error,
+            )
+            releaseCamera()
+        } catch (error: IllegalStateException) {
+            reportError(
+                code = CameraErrorCode.CAPTURE_SESSION_FAILED,
+                configuration = configuration,
+                cause = error,
+            )
+            releaseCamera()
+        }
+    }
+
+    private fun createCropRegion(
+        activeArray: Rect,
+        zoomRatio: Float,
+    ): Rect {
+        val cropWidth = (activeArray.width() / zoomRatio).roundToInt()
+        val cropHeight = (activeArray.height() / zoomRatio).roundToInt()
+        val left = activeArray.left + (activeArray.width() - cropWidth) / 2
+        val top = activeArray.top + (activeArray.height() - cropHeight) / 2
+        return Rect(
+            left,
+            top,
+            left + cropWidth,
+            top + cropHeight,
+        )
+    }
+
+    private fun createMeteringRegion(
+        cropRegion: Rect,
+        normalizedX: Float,
+        normalizedY: Float,
+    ): MeteringRectangle {
+        val regionSize = (minOf(cropRegion.width(), cropRegion.height()) * FOCUS_REGION_RATIO)
+            .roundToInt()
+            .coerceAtLeast(1)
+        val centerX = cropRegion.left + (cropRegion.width() * normalizedX).roundToInt()
+        val centerY = cropRegion.top + (cropRegion.height() * normalizedY).roundToInt()
+        val left = (centerX - regionSize / 2).coerceIn(
+            cropRegion.left,
+            cropRegion.right - regionSize,
+        )
+        val top = (centerY - regionSize / 2).coerceIn(
+            cropRegion.top,
+            cropRegion.bottom - regionSize,
+        )
+        return MeteringRectangle(
+            left,
+            top,
+            regionSize,
+            regionSize,
+            MeteringRectangle.METERING_WEIGHT_MAX,
+        )
+    }
+
+    private fun resetControls() {
+        zoomRatio = MIN_ZOOM_RATIO
+        exposureCompensation = DEFAULT_EXPOSURE_COMPENSATION
     }
 
     // write continuous frames
@@ -278,6 +513,8 @@ class Camera2Manager(
 
         captureSession?.close()
         captureSession = null
+        previewRequestBuilder = null
+        cameraCharacteristics = null
 
         cameraDevice?.close()
         cameraDevice = null
@@ -313,5 +550,15 @@ class Camera2Manager(
             cameraConfiguration = null
             cameraThread.quitSafely()
         }
+    }
+
+    companion object {
+        const val MIN_ZOOM_RATIO = 1F
+        const val MAX_ZOOM_RATIO = 3F
+        const val MIN_EXPOSURE_COMPENSATION = -1F
+        const val MAX_EXPOSURE_COMPENSATION = 1F
+
+        private const val DEFAULT_EXPOSURE_COMPENSATION = 0F
+        private const val FOCUS_REGION_RATIO = 0.15F
     }
 }
