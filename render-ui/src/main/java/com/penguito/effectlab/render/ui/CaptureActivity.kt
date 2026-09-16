@@ -35,6 +35,7 @@ class CaptureActivity : FragmentActivity(), SurfaceHolder.Callback, Camera2Liste
     private val renderEngine by lazy { RenderEngine() }
 
     private var previewView: SurfaceView? = null
+    private var gestureView: CaptureGestureView? = null
     private var lifecycleStatus: TextView? = null
     private var debugInfo: TextView? = null
     private var filterButton: ImageButton? = null
@@ -43,6 +44,7 @@ class CaptureActivity : FragmentActivity(), SurfaceHolder.Callback, Camera2Liste
     private var outputSurface: Surface? = null
     private var cameraConfiguration: CameraConfiguration? = null
     private var selectedFilterId: String? = null
+    private var zoomRatio = Camera2Manager.MIN_ZOOM_RATIO
     private var filterIconPadding = 0
     private var isCaptureResumed = false
 
@@ -58,6 +60,10 @@ class CaptureActivity : FragmentActivity(), SurfaceHolder.Callback, Camera2Liste
         previewView = findViewById<SurfaceView>(R.id.capture_preview).also {
             it.holder.addCallback(this)
         }
+        gestureView = findViewById<CaptureGestureView>(R.id.capture_gesture).also {
+            it.setOnScaleListener(::updateZoomRatio)
+            it.setOnFocusListener(cameraManager::focusAt)
+        }
         debugInfo = findViewById(R.id.capture_debug_info)
         renderEngine.setDebugInfoListener(this)
         filterButton = findViewById<ImageButton>(R.id.capture_filter_button).also {
@@ -65,13 +71,24 @@ class CaptureActivity : FragmentActivity(), SurfaceHolder.Callback, Camera2Liste
         }
         findViewById<ImageButton>(R.id.capture_back).setOnClickListener { finish() }
         switchCameraButton = findViewById<ImageButton>(R.id.capture_switch_camera).also {
-            it.setOnClickListener { cameraManager.switchCamera() }
+            it.setOnClickListener {
+                zoomRatio = Camera2Manager.MIN_ZOOM_RATIO
+                cameraManager.switchCamera()
+            }
         }
         captureButton = findViewById<ImageButton>(R.id.capture_photo).also {
             it.setOnClickListener { captureImage() }
         }
         setupFilterPanel()
         setupAlgorithmPanel()
+    }
+
+    private fun updateZoomRatio(scaleFactor: Float) {
+        zoomRatio = (zoomRatio * scaleFactor).coerceIn(
+            Camera2Manager.MIN_ZOOM_RATIO,
+            Camera2Manager.MAX_ZOOM_RATIO,
+        )
+        cameraManager.setZoomRatio(zoomRatio)
     }
 
     override fun onResume() {

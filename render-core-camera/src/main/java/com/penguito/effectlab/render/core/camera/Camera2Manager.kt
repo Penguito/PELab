@@ -371,10 +371,16 @@ class Camera2Manager(
         // create a metering region inside the current zoom crop
         val activeArray = characteristics[CameraCharacteristics.SENSOR_INFO_ACTIVE_ARRAY_SIZE] ?: return
         val cropRegion = requestBuilder.get(CaptureRequest.SCALER_CROP_REGION) ?: activeArray
-        val meteringRegion = createMeteringRegion(
-            cropRegion = cropRegion,
+        val sensorPoint = toSensorCoordinates(
             normalizedX = normalizedX,
             normalizedY = normalizedY,
+            sensorOrientation = characteristics[CameraCharacteristics.SENSOR_ORIENTATION] ?: 0,
+            lensFacing = configuration.lensFacing,
+        )
+        val meteringRegion = createMeteringRegion(
+            cropRegion = cropRegion,
+            normalizedX = sensorPoint.first,
+            normalizedY = sensorPoint.second,
         )
 
         // check the focus and exposure regions supported by the current camera
@@ -445,6 +451,26 @@ class Camera2Manager(
             left + cropWidth,
             top + cropHeight,
         )
+    }
+
+    private fun toSensorCoordinates(
+        normalizedX: Float,
+        normalizedY: Float,
+        sensorOrientation: Int,
+        lensFacing: LensFacing,
+    ): Pair<Float, Float> {
+        val previewX = if (lensFacing == LensFacing.FRONT) 1F - normalizedX else normalizedX
+        val rotation = if (lensFacing == LensFacing.FRONT) {
+            (360 - sensorOrientation) % 360
+        } else {
+            sensorOrientation
+        }
+        return when (rotation) {
+            90 -> normalizedY to 1F - previewX
+            180 -> 1F - previewX to 1F - normalizedY
+            270 -> 1F - normalizedY to previewX
+            else -> previewX to normalizedY
+        }
     }
 
     private fun createMeteringRegion(
