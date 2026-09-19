@@ -63,6 +63,7 @@ class CaptureActivity : FragmentActivity(), SurfaceHolder.Callback, Camera2Liste
         gestureView = findViewById<CaptureGestureView>(R.id.capture_gesture).also {
             it.setOnScaleListener(::updateZoomRatio)
             it.setOnFocusListener(cameraManager::focusAt)
+            it.setOnExposureChangedListener(cameraManager::setExposureCompensation)
         }
         debugInfo = findViewById(R.id.capture_debug_info)
         renderEngine.setDebugInfoListener(this)
@@ -73,6 +74,7 @@ class CaptureActivity : FragmentActivity(), SurfaceHolder.Callback, Camera2Liste
         switchCameraButton = findViewById<ImageButton>(R.id.capture_switch_camera).also {
             it.setOnClickListener {
                 zoomRatio = Camera2Manager.MIN_ZOOM_RATIO
+                gestureView?.reset()
                 cameraManager.switchCamera()
             }
         }
