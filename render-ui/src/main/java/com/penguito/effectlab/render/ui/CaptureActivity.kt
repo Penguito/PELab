@@ -155,6 +155,7 @@ class CaptureActivity : FragmentActivity(), SurfaceHolder.Callback, Camera2Liste
 
     private fun pauseCapture() {
         Log.d(LOG_TAG, "Capture lifecycle paused")
+        gestureView?.hideControls()
         cameraManager.stop()
         renderEngine.stop()
         // adjust buttons

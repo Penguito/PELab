@@ -46,10 +46,7 @@ class CaptureGestureView @JvmOverloads constructor(
     private var isExposureDragging = false
     private var isExposureBarVisible = false
 
-    private val hideControlRunnable = Runnable {
-        isControlVisible = false
-        invalidate()
-    }
+    private val hideControlRunnable = Runnable(::hideControls)
 
     private val scaleGestureDetector = ScaleGestureDetector(
         context,
@@ -97,6 +94,10 @@ class CaptureGestureView @JvmOverloads constructor(
 
     fun reset() {
         exposureCompensation = 0F
+        hideControls()
+    }
+
+    fun hideControls() {
         isControlVisible = false
         isExposureDragging = false
         isExposureBarVisible = false
