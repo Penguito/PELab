@@ -10,6 +10,15 @@ PELab, abréviation de Penguito Effect Lab, a pour objectif de construire de zé
 
 ## Avancement actuel du développement
 
+### 0.8
+
+- Corriger des problèmes et étendre les fonctionnalités de l’application.
+
+#### 0.8.1
+
+- Extension des interactions gestuelles de la page de capture dans `render-ui` et `render-core-camera`.
+- Implémentation du zoom à deux doigts de 1 à 3× et de la mise au point par toucher, ainsi que de leurs composants d’interface.
+
 ### 0.7
 
 - Finaliser les fonctions d’édition d’image, notamment les réglages de la lumière, des couleurs et des détails.

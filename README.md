@@ -10,6 +10,15 @@ PELab, short for Penguito Effect Lab, aims to build a complete Android applicati
 
 ## Current Development Progress
 
+### 0.8
+
+- Fix issues and expand the app's capabilities.
+
+#### 0.8.1
+
+- Expanded capture-page gesture interactions in `render-ui` and `render-core-camera`.
+- Implemented 1–3× pinch zoom and tap-to-focus, including their UI components.
+
 ### 0.7
 
 - Complete image editing capabilities including lighting, color, and detail adjustments.
