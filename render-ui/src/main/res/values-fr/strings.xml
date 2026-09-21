@@ -30,8 +30,13 @@
     <string name="editor_image_saved">Image enregistrée dans l’album</string>
     <string name="editor_image_save_failed">Échec de l’enregistrement de l’image</string>
     <string name="editor_album_permission_denied">Autorisation d’écriture dans l’album refusée</string>
-    <string name="editor_feature_developing">Cette fonctionnalité est en cours de développement</string>
     <string name="editor_crop">Recadrage</string>
+    <string name="editor_crop_original">Original</string>
+    <string name="editor_crop_square">1:1</string>
+    <string name="editor_crop_4_3">4:3</string>
+    <string name="editor_crop_3_4">3:4</string>
+    <string name="editor_crop_16_9">16:9</string>
+    <string name="editor_crop_9_16">9:16</string>
     <string name="editor_lighting">Lumière</string>
     <string name="editor_color">Couleur</string>
     <string name="editor_detail">Détails</string>

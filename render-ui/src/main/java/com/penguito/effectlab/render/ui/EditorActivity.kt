@@ -2,6 +2,8 @@ package com.penguito.effectlab.render.ui
 
 import android.content.Context
 import android.content.Intent
+import android.graphics.BitmapFactory
+import android.graphics.RectF
 import android.os.Bundle
 import android.view.Surface
 import android.view.SurfaceHolder
@@ -37,6 +39,18 @@ class EditorActivity : FragmentActivity(), SurfaceHolder.Callback, RenderEngine.
     private var imageParams = ImageParams.defaults()
     private var selectedFilterId: String? = null
     private var selectedFilterRootPath: String? = null
+    private val originRatio by lazy {
+        val options = BitmapFactory.Options().apply { inJustDecodeBounds = true }
+        BitmapFactory.decodeFile(imageIntentData.imagePath, options)
+        if (options.outWidth > 0 && options.outHeight > 0) {
+            options.outWidth.toFloat() / options.outHeight
+        } else {
+            0F
+        }
+    }
+    private var cropRatio = CropRatio.ORIGINAL
+    private var displayRect = RectF()
+    private var cropRect = RectF()
     private var isEditorResumed = false
     private var isRenderReady = false
 
@@ -88,7 +102,9 @@ class EditorActivity : FragmentActivity(), SurfaceHolder.Callback, RenderEngine.
         resumeRender()
     }
 
-    override fun surfaceChanged(holder: SurfaceHolder, format: Int, width: Int, height: Int) = Unit
+    override fun surfaceChanged(holder: SurfaceHolder, format: Int, width: Int, height: Int) {
+        updateCropRects(width, height)
+    }
 
     override fun surfaceDestroyed(holder: SurfaceHolder) {
         outputSurface = null
@@ -120,22 +136,22 @@ class EditorActivity : FragmentActivity(), SurfaceHolder.Callback, RenderEngine.
 
     private fun setupEditorActions() {
         findViewById<View>(R.id.editor_crop).setOnClickListener {
-            showEditPanel(getString(R.string.editor_crop))
+            showCropPanel()
         }
         findViewById<View>(R.id.editor_lighting).setOnClickListener {
-            showEditPanelWithSeekBar(
+            showImageEditPanel(
                 getString(R.string.editor_lighting),
                 MaterialConfig.EDIT_LIGHTING_LIST,
             )
         }
         findViewById<View>(R.id.editor_color).setOnClickListener {
-            showEditPanelWithSeekBar(
+            showImageEditPanel(
                 getString(R.string.editor_color),
                 MaterialConfig.EDIT_COLOR_LIST,
             )
         }
         findViewById<View>(R.id.editor_detail).setOnClickListener {
-            showEditPanelWithSeekBar(
+            showImageEditPanel(
                 getString(R.string.editor_detail),
                 MaterialConfig.EDIT_DETAIL_LIST,
             )
@@ -148,24 +164,41 @@ class EditorActivity : FragmentActivity(), SurfaceHolder.Callback, RenderEngine.
         findViewById<View>(R.id.editor_filter_name).visibility = filterVisibility
     }
 
-    private fun showEditPanel(panelName: String) {
+    private fun showCropPanel() {
         SelectionPanelBottomSheet().apply {
             setHeaderVisible(false)
-            setPanelName(panelName)
+            setPanelName(this@EditorActivity.getString(R.string.editor_crop))
+            setOnItemSelectedListener { item ->
+                cropRatio = CropRatio.entries.firstOrNull { it.name == item?.id }
+                    ?: return@setOnItemSelectedListener
+                cropRect = cropRatio.createFrame(displayRect)
+            }
             setItems(
-                items = emptyList(),
-                emptyText = this@EditorActivity.getString(R.string.editor_feature_developing),
+                items = CropRatio.entries.map {
+                    SelectionPanelItem(
+                        id = it.name,
+                        name = this@EditorActivity.getString(it.labelResId),
+                        icon = SelectionPanelIcon.Resource(it.iconResId),
+                    )
+                },
+                emptyText = "",
+                selectedItemId = cropRatio.name,
             )
         }.show(supportFragmentManager, SelectionPanelBottomSheet::class.java.simpleName)
     }
 
-    private fun showEditPanelWithSeekBar(panelName: String, materialListPath: String) {
+    private fun updateCropRects(width: Int, height: Int) {
+        if (width <= 0 || height <= 0 || originRatio <= 0F) return
+
+        val previewRect = RectF(0F, 0F, width.toFloat(), height.toFloat())
+        displayRect = CropRatio.fitFrame(previewRect, originRatio)
+        cropRect = cropRatio.createFrame(displayRect)
+    }
+
+    private fun showImageEditPanel(panelName: String, materialListPath: String) {
         val materials = materialManager.loadMaterialList(materialListPath, MaterialType.IMAGE_EDIT)
             .filterIsInstance<ImageEditMaterial>()
-        if (materials.isEmpty()) {
-            showEditPanel(panelName)
-            return
-        }
+        if (materials.isEmpty()) return
         var selectedMaterial = materials.firstOrNull { it.id == selectedMaterialIds[materialListPath] }
             ?: materials.first()
         selectedMaterialIds[materialListPath] = selectedMaterial.id
