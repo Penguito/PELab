@@ -66,7 +66,9 @@ class EditorActivity : FragmentActivity(), SurfaceHolder.Callback, RenderEngine.
 
         setContentView(R.layout.activity_editor)
         imageIntentData = intentData
-        cropOverlayView = findViewById(R.id.editor_crop_overlay)
+        cropOverlayView = findViewById<CropOverlayView>(R.id.editor_crop_overlay).also {
+            it.setOnCropRectChangedListener { rect -> cropRect = rect }
+        }
         previewView = findViewById<SurfaceView>(R.id.editor_preview).also {
             it.holder.addCallback(this)
         }
@@ -167,6 +169,9 @@ class EditorActivity : FragmentActivity(), SurfaceHolder.Callback, RenderEngine.
     }
 
     private fun showCropPanel() {
+        cropOverlayView.visibility = View.VISIBLE
+        cropOverlayView.setEditing(true)
+        cropOverlayView.setCropRects(displayRect, cropRect)
         SelectionPanelBottomSheet().apply {
             setHeaderVisible(false)
             setPanelName(this@EditorActivity.getString(R.string.editor_crop))
@@ -174,8 +179,7 @@ class EditorActivity : FragmentActivity(), SurfaceHolder.Callback, RenderEngine.
                 cropRatio = CropRatio.entries.firstOrNull { it.name == item?.id }
                     ?: return@setOnItemSelectedListener
                 cropRect = cropRatio.createFrame(displayRect)
-                cropOverlayView.setCropRect(cropRect)
-                cropOverlayView.visibility = View.VISIBLE
+                cropOverlayView.setCropRects(displayRect, cropRect)
             }
             setItems(
                 items = CropRatio.entries.map {
@@ -197,13 +201,14 @@ class EditorActivity : FragmentActivity(), SurfaceHolder.Callback, RenderEngine.
         val previewRect = RectF(0F, 0F, width.toFloat(), height.toFloat())
         displayRect = CropRatio.fitFrame(previewRect, originRatio)
         cropRect = cropRatio.createFrame(displayRect)
-        cropOverlayView.setCropRect(cropRect)
+        cropOverlayView.setCropRects(displayRect, cropRect)
     }
 
     private fun showImageEditPanel(panelName: String, materialListPath: String) {
         val materials = materialManager.loadMaterialList(materialListPath, MaterialType.IMAGE_EDIT)
             .filterIsInstance<ImageEditMaterial>()
         if (materials.isEmpty()) return
+        cropOverlayView.setEditing(false)
         var selectedMaterial = materials.firstOrNull { it.id == selectedMaterialIds[materialListPath] }
             ?: materials.first()
         selectedMaterialIds[materialListPath] = selectedMaterial.id
@@ -267,6 +272,7 @@ class EditorActivity : FragmentActivity(), SurfaceHolder.Callback, RenderEngine.
     }
 
     private fun showFilterPanel() {
+        cropOverlayView.setEditing(false)
         val filterList = materialManager.loadMaterialList(MaterialConfig.FILTER_LIST, MaterialType.FILTER)
             .filterIsInstance<FilterMaterial>()
         val filtersById = filterList.associateBy { it.id }
