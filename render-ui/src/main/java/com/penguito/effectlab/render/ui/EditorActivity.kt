@@ -30,6 +30,7 @@ class EditorActivity : FragmentActivity(), SurfaceHolder.Callback, RenderEngine.
     private val materialManager by lazy { MaterialManager(this) }
 
     private lateinit var previewView: SurfaceView
+    private lateinit var cropOverlayView: CropOverlayView
     private lateinit var statusView: TextView
     private lateinit var nextButton: Button
     private lateinit var imageIntentData: ImageIntentData
@@ -65,6 +66,7 @@ class EditorActivity : FragmentActivity(), SurfaceHolder.Callback, RenderEngine.
 
         setContentView(R.layout.activity_editor)
         imageIntentData = intentData
+        cropOverlayView = findViewById(R.id.editor_crop_overlay)
         previewView = findViewById<SurfaceView>(R.id.editor_preview).also {
             it.holder.addCallback(this)
         }
@@ -172,6 +174,8 @@ class EditorActivity : FragmentActivity(), SurfaceHolder.Callback, RenderEngine.
                 cropRatio = CropRatio.entries.firstOrNull { it.name == item?.id }
                     ?: return@setOnItemSelectedListener
                 cropRect = cropRatio.createFrame(displayRect)
+                cropOverlayView.setCropRect(cropRect)
+                cropOverlayView.visibility = View.VISIBLE
             }
             setItems(
                 items = CropRatio.entries.map {
@@ -193,6 +197,7 @@ class EditorActivity : FragmentActivity(), SurfaceHolder.Callback, RenderEngine.
         val previewRect = RectF(0F, 0F, width.toFloat(), height.toFloat())
         displayRect = CropRatio.fitFrame(previewRect, originRatio)
         cropRect = cropRatio.createFrame(displayRect)
+        cropOverlayView.setCropRect(cropRect)
     }
 
     private fun showImageEditPanel(panelName: String, materialListPath: String) {
