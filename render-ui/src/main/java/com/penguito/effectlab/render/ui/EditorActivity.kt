@@ -2,7 +2,9 @@ package com.penguito.effectlab.render.ui
 
 import android.content.Context
 import android.content.Intent
+import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import android.graphics.Rect
 import android.graphics.RectF
 import android.os.Bundle
 import android.view.Surface
@@ -21,8 +23,10 @@ import com.penguito.effectlab.render.sdk.ImageParams
 import com.penguito.effectlab.render.sdk.PreviewResolution
 import com.penguito.effectlab.render.sdk.RenderEngine
 import com.penguito.effectlab.render.sdk.RenderMode
+import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.IOException
+import kotlin.math.roundToInt
 
 class EditorActivity : FragmentActivity(), SurfaceHolder.Callback, RenderEngine.InitListener {
 
@@ -318,7 +322,8 @@ class EditorActivity : FragmentActivity(), SurfaceHolder.Callback, RenderEngine.
         nextButton.isEnabled = false
         renderEngine.captureFrame(object : RenderEngine.CaptureCallback {
             override fun onCaptureCompleted(jpegData: ByteArray) {
-                val imageFile = savePreviewImage(jpegData)
+                val croppedJpegData = cropRenderedImage(jpegData)
+                val imageFile = croppedJpegData?.let { savePreviewImage(it) }
                 nextButton.isEnabled = isRenderReady
                 if (imageFile == null) {
                     statusView.setText(R.string.editor_preview_creation_failed)
@@ -338,6 +343,60 @@ class EditorActivity : FragmentActivity(), SurfaceHolder.Callback, RenderEngine.
                 statusView.setText(R.string.editor_preview_creation_failed)
             }
         })
+    }
+
+    private fun cropRenderedImage(jpegData: ByteArray): ByteArray? {
+        if (cropRect == displayRect) return jpegData
+
+        val renderedBitmap = BitmapFactory.decodeByteArray(jpegData, 0, jpegData.size)
+            ?: return null
+        val cropBounds = mapCropRect(renderedBitmap.width, renderedBitmap.height)
+        // if it is original,
+        if (cropBounds.left == 0 && cropBounds.top == 0 && cropBounds.right == renderedBitmap.width && cropBounds.bottom == renderedBitmap.height) {
+            renderedBitmap.recycle()
+            return jpegData
+        }
+        val croppedBitmap = try {
+            Bitmap.createBitmap(
+                renderedBitmap,
+                cropBounds.left,
+                cropBounds.top,
+                cropBounds.width(),
+                cropBounds.height(),
+            )
+        } finally {
+            renderedBitmap.recycle()
+        }
+
+        return try {
+            ByteArrayOutputStream().use { outputStream ->
+                if (croppedBitmap.compress(Bitmap.CompressFormat.JPEG, 95, outputStream)) {
+                    outputStream.toByteArray()
+                } else {
+                    null
+                }
+            }
+        } finally {
+            croppedBitmap.recycle()
+        }
+    }
+
+    private fun mapCropRect(bitmapWidth: Int, bitmapHeight: Int): Rect {
+        val horizontalScale = bitmapWidth / displayRect.width()
+        val verticalScale = bitmapHeight / displayRect.height()
+        val left = ((cropRect.left - displayRect.left) * horizontalScale)
+            .roundToInt()
+            .coerceIn(0, bitmapWidth - 1)
+        val top = ((cropRect.top - displayRect.top) * verticalScale)
+            .roundToInt()
+            .coerceIn(0, bitmapHeight - 1)
+        val right = ((cropRect.right - displayRect.left) * horizontalScale)
+            .roundToInt()
+            .coerceIn(left + 1, bitmapWidth)
+        val bottom = ((cropRect.bottom - displayRect.top) * verticalScale)
+            .roundToInt()
+            .coerceIn(top + 1, bitmapHeight)
+        return Rect(left, top, right, bottom)
     }
 
     private fun savePreviewImage(jpegData: ByteArray): File? {
