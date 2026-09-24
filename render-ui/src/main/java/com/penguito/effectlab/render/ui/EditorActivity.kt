@@ -203,9 +203,25 @@ class EditorActivity : FragmentActivity(), SurfaceHolder.Callback, RenderEngine.
         if (width <= 0 || height <= 0 || originRatio <= 0F) return
 
         val previewRect = RectF(0F, 0F, width.toFloat(), height.toFloat())
-        displayRect = CropRatio.fitFrame(previewRect, originRatio)
-        cropRect = cropRatio.createFrame(displayRect)
+        val newDisplayRect = CropRatio.fitFrame(previewRect, originRatio)
+        cropRect = if (displayRect.isEmpty || cropRect.isEmpty) {
+            cropRatio.createFrame(newDisplayRect)
+        } else {
+            mapCropRectToDisplay(displayRect, newDisplayRect)
+        }
+        displayRect = newDisplayRect
         cropOverlayView.setCropRects(displayRect, cropRect)
+    }
+
+    private fun mapCropRectToDisplay(previousDisplayRect: RectF, newDisplayRect: RectF): RectF {
+        val horizontalScale = newDisplayRect.width() / previousDisplayRect.width()
+        val verticalScale = newDisplayRect.height() / previousDisplayRect.height()
+        return RectF(
+            newDisplayRect.left + (cropRect.left - previousDisplayRect.left) * horizontalScale,
+            newDisplayRect.top + (cropRect.top - previousDisplayRect.top) * verticalScale,
+            newDisplayRect.left + (cropRect.right - previousDisplayRect.left) * horizontalScale,
+            newDisplayRect.top + (cropRect.bottom - previousDisplayRect.top) * verticalScale,
+        )
     }
 
     private fun showImageEditPanel(panelName: String, materialListPath: String) {
