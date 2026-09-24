@@ -1,4 +1,4 @@
-package com.penguito.effectlab.render.ui
+package com.penguito.effectlab.render.ui.capture
 
 import android.content.Context
 import android.graphics.Canvas
@@ -8,6 +8,7 @@ import android.view.GestureDetector
 import android.view.MotionEvent
 import android.view.ScaleGestureDetector
 import android.view.View
+import com.penguito.effectlab.render.ui.R
 import kotlin.math.abs
 
 class CaptureGestureView @JvmOverloads constructor(

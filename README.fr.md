@@ -19,6 +19,11 @@ PELab, abréviation de Penguito Effect Lab, a pour objectif de construire de zé
 - Extension des interactions gestuelles de la page de capture dans `render-ui` et `render-core-camera`.
 - Implémentation du zoom à deux doigts de 1 à 3× et de la mise au point par toucher, ainsi que de leurs composants d’interface.
 
+#### 0.8.2
+
+- Ajout dans `render-ui` de six formats de recadrage fixes : original, 1:1, 4:3, 3:4, 16:9 et 9:16.
+- Ajout d’un masque de recadrage, d’une grille des tiers et d’un cadre déplaçable et redimensionnable proportionnellement.
+
 ### 0.7
 
 - Finaliser les fonctions d’édition d’image, notamment les réglages de la lumière, des couleurs et des détails.

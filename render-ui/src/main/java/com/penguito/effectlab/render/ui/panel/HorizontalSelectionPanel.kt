@@ -1,4 +1,4 @@
-package com.penguito.effectlab.render.ui
+package com.penguito.effectlab.render.ui.panel
 
 import android.annotation.SuppressLint
 import android.content.Context
@@ -15,6 +15,7 @@ import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.SeekBar
 import android.widget.TextView
+import com.penguito.effectlab.render.ui.R
 import java.io.File
 
 data class SelectionPanelItem(
@@ -138,19 +139,19 @@ class HorizontalSelectionPanel @JvmOverloads constructor(
         itemValues.clear()
         itemDefaultValues.clear()
         this.selectedItemId = selectedItemId
-        noneButton.visibility = if (showNoneButton) View.VISIBLE else View.GONE
+        noneButton.visibility = if (showNoneButton) VISIBLE else GONE
         noneDivider.visibility = noneButton.visibility
 
         if (items.isEmpty()) {
             emptyView.text = emptyText
-            emptyView.visibility = View.VISIBLE
-            scrollView.visibility = View.GONE
+            emptyView.visibility = VISIBLE
+            scrollView.visibility = GONE
             updateItemSelection()
             return
         }
 
-        emptyView.visibility = View.GONE
-        scrollView.visibility = View.VISIBLE
+        emptyView.visibility = GONE
+        scrollView.visibility = VISIBLE
         items.forEach {
             if (it.value != null && it.defaultValue != null) {
                 itemValues[it.id] = it.value
@@ -168,7 +169,7 @@ class HorizontalSelectionPanel @JvmOverloads constructor(
         categoryContainer.removeAllViews()
         categoryViews.clear()
         this.selectedCategoryId = selectedCategoryId
-        categoryScrollView.visibility = if (categories.isEmpty()) View.INVISIBLE else View.VISIBLE
+        categoryScrollView.visibility = if (categories.isEmpty()) INVISIBLE else VISIBLE
         categories.forEach(::addCategory)
         updateCategorySelection()
     }
@@ -178,12 +179,12 @@ class HorizontalSelectionPanel @JvmOverloads constructor(
         maximum: Int,
         value: Int,
     ) {
-        seekContainer.visibility = View.VISIBLE
+        seekContainer.visibility = VISIBLE
         // keep widget progress nonnegative and expose the configured logical value
         valueMinimum = minimum
         isZeroCentered = minimum < 0 && minimum == -maximum
         lastUserValue = null
-        seekCenterMark.visibility = if (isZeroCentered) View.VISIBLE else View.GONE
+        seekCenterMark.visibility = if (isZeroCentered) VISIBLE else GONE
         seekBar.min = 0
         seekBar.max = maximum - minimum
         val currentValue = value.coerceIn(minimum, maximum)
@@ -197,16 +198,16 @@ class HorizontalSelectionPanel @JvmOverloads constructor(
     }
 
     fun hideValueRange() {
-        seekContainer.visibility = View.GONE
+        seekContainer.visibility = GONE
     }
 
     fun setHeaderVisible(visible: Boolean) {
-        header.visibility = if (visible) View.VISIBLE else View.GONE
+        header.visibility = if (visible) VISIBLE else GONE
     }
 
     fun setPanelName(name: CharSequence) {
         panelName.text = name
-        panelName.visibility = if (name.isEmpty()) View.GONE else View.VISIBLE
+        panelName.visibility = if (name.isEmpty()) GONE else VISIBLE
     }
 
     fun setOnItemSelectedListener(listener: (SelectionPanelItem?) -> Unit) {
@@ -222,7 +223,7 @@ class HorizontalSelectionPanel @JvmOverloads constructor(
     }
 
     fun setCompareVisible(visible: Boolean) {
-        compareButton.visibility = if (visible) View.VISIBLE else View.GONE
+        compareButton.visibility = if (visible) VISIBLE else GONE
     }
 
     fun setOnCompareListener(
@@ -302,7 +303,7 @@ class HorizontalSelectionPanel @JvmOverloads constructor(
         val defaultValue = itemDefaultValues[itemId]
         itemViews[itemId]?.findViewById<TextView>(R.id.selection_panel_item_value)?.apply {
             text = value?.toString()
-            visibility = if (value != null && value != defaultValue) View.VISIBLE else View.GONE
+            visibility = if (value != null && value != defaultValue) VISIBLE else GONE
         }
     }
 

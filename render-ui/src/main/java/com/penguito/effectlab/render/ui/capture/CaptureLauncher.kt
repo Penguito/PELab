@@ -1,4 +1,4 @@
-package com.penguito.effectlab.render.ui
+package com.penguito.effectlab.render.ui.capture
 
 import android.app.Activity
 import com.penguito.effectlab.render.core.permission.CameraPermissionGate

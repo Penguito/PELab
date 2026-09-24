@@ -1,4 +1,4 @@
-package com.penguito.effectlab.render.ui
+package com.penguito.effectlab.render.ui.capture
 
 import android.content.Context
 import android.content.Intent
@@ -25,6 +25,12 @@ import com.penguito.effectlab.render.core.permission.CameraPermissionGate
 import com.penguito.effectlab.render.sdk.PreviewResolution
 import com.penguito.effectlab.render.sdk.RenderEngine
 import com.penguito.effectlab.render.sdk.RenderMode
+import com.penguito.effectlab.render.ui.editor.EditorActivity
+import com.penguito.effectlab.render.ui.editor.ImageSource
+import com.penguito.effectlab.render.ui.R
+import com.penguito.effectlab.render.ui.panel.SelectionPanelBottomSheet
+import com.penguito.effectlab.render.ui.panel.SelectionPanelIcon
+import com.penguito.effectlab.render.ui.panel.SelectionPanelItem
 import java.io.File
 import java.io.IOException
 

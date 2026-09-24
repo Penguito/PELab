@@ -16,7 +16,7 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
-    <com.penguito.effectlab.render.ui.CropOverlayView
+    <com.penguito.effectlab.render.ui.editor.CropOverlayView
         android:id="@+id/editor_crop_overlay"
         android:layout_width="0dp"
         android:layout_height="0dp"

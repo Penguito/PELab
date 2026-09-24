@@ -1,4 +1,4 @@
-package com.penguito.effectlab.render.ui
+package com.penguito.effectlab.render.ui.panel
 
 import android.app.Dialog
 import android.graphics.Color
@@ -9,6 +9,7 @@ import android.widget.FrameLayout
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
+import com.penguito.effectlab.render.ui.R
 
 class SelectionPanelBottomSheet : BottomSheetDialogFragment(R.layout.panel_fragment_selection) {
     private var items = emptyList<SelectionPanelItem>()

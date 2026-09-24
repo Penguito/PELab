@@ -6,10 +6,10 @@ import android.os.Bundle
 import android.widget.Button
 import android.widget.TextView
 import android.widget.Toast
-import com.penguito.effectlab.render.ui.CaptureLauncher
-import com.penguito.effectlab.render.ui.EditorActivity
-import com.penguito.effectlab.render.ui.ImageSource
-import com.penguito.effectlab.render.ui.PhotoPickerLauncher
+import com.penguito.effectlab.render.ui.capture.CaptureLauncher
+import com.penguito.effectlab.render.ui.editor.EditorActivity
+import com.penguito.effectlab.render.ui.editor.ImageSource
+import com.penguito.effectlab.render.ui.editor.PhotoPickerLauncher
 import com.penguito.effectlab.render.ui.RenderSdkStatus
 
 class MainActivity : Activity() {

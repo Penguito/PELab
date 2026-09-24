@@ -1,4 +1,4 @@
-package com.penguito.effectlab.render.ui
+package com.penguito.effectlab.render.ui.editor
 
 import android.content.Context
 import android.graphics.Canvas
@@ -11,6 +11,7 @@ import android.os.Build
 import android.util.AttributeSet
 import android.view.MotionEvent
 import android.view.View
+import com.penguito.effectlab.render.ui.R
 import kotlin.math.abs
 
 class CropOverlayView @JvmOverloads constructor(

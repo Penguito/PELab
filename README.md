@@ -19,6 +19,11 @@ PELab, short for Penguito Effect Lab, aims to build a complete Android applicati
 - Expanded capture-page gesture interactions in `render-ui` and `render-core-camera`.
 - Implemented 1–3× pinch zoom and tap-to-focus, including their UI components.
 
+#### 0.8.2
+
+- Added six fixed crop ratios to `render-ui`: original, 1:1, 4:3, 3:4, 16:9, and 9:16.
+- Added a crop mask, rule-of-thirds grid, and a movable, proportionally resizable crop frame.
+
 ### 0.7
 
 - Complete image editing capabilities including lighting, color, and detail adjustments.

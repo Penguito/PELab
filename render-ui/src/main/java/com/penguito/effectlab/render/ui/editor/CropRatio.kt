@@ -1,6 +1,7 @@
-package com.penguito.effectlab.render.ui
+package com.penguito.effectlab.render.ui.editor
 
 import android.graphics.RectF
+import com.penguito.effectlab.render.ui.R
 
 internal enum class CropRatio(
     val labelResId: Int,

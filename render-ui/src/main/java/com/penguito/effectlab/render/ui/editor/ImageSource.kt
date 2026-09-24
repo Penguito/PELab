@@ -1,4 +1,4 @@
-package com.penguito.effectlab.render.ui
+package com.penguito.effectlab.render.ui.editor
 
 enum class ImageSource(val value: String) {
     CAPTURE("capture"),

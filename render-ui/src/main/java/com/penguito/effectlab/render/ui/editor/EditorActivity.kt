@@ -1,4 +1,4 @@
-package com.penguito.effectlab.render.ui
+package com.penguito.effectlab.render.ui.editor
 
 import android.content.Context
 import android.content.Intent
@@ -23,6 +23,10 @@ import com.penguito.effectlab.render.sdk.ImageParams
 import com.penguito.effectlab.render.sdk.PreviewResolution
 import com.penguito.effectlab.render.sdk.RenderEngine
 import com.penguito.effectlab.render.sdk.RenderMode
+import com.penguito.effectlab.render.ui.R
+import com.penguito.effectlab.render.ui.panel.SelectionPanelBottomSheet
+import com.penguito.effectlab.render.ui.panel.SelectionPanelIcon
+import com.penguito.effectlab.render.ui.panel.SelectionPanelItem
 import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.IOException
