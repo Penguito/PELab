@@ -1,4 +1,4 @@
-package com.penguito.effectlab.render.ui
+package com.penguito.effectlab.render.ui.editor
 
 import android.app.Activity
 import android.content.Context
@@ -17,6 +17,7 @@ import com.penguito.effectlab.render.core.permission.PermissionResult
 import com.penguito.effectlab.render.sdk.PreviewResolution
 import com.penguito.effectlab.render.sdk.RenderEngine
 import com.penguito.effectlab.render.sdk.RenderMode
+import com.penguito.effectlab.render.ui.R
 
 class SavePreviewActivity : Activity(), SurfaceHolder.Callback, RenderEngine.InitListener {
 

@@ -160,6 +160,15 @@ Java_com_penguito_effectlab_render_sdk_RenderEngine_nativeSetLutTexture(
     return uploaded ? JNI_TRUE : JNI_FALSE;
 }
 
+extern "C" JNIEXPORT void JNICALL
+Java_com_penguito_effectlab_render_sdk_RenderEngine_nativeSetFilterIntensity(
+        JNIEnv*,
+        jclass,
+        jlong handle,
+        jfloat intensity) {
+    FromHandle(handle)->SetFilterIntensity(intensity);
+}
+
 extern "C" JNIEXPORT jboolean JNICALL
 Java_com_penguito_effectlab_render_sdk_RenderEngine_nativeCaptureFrame(
         JNIEnv* env,

@@ -46,6 +46,7 @@ public final class RenderEngine implements Closeable {
     private DebugInfoListener debugInfoListener;
     private ImageParams imageParams = ImageParams.defaults();
     private String lutPath;
+    private float filterIntensity = 1.0F;
     private long nativeHandle;
     private int captureWidth;
     private int captureHeight;
@@ -168,6 +169,14 @@ public final class RenderEngine implements Closeable {
         renderHandler.post(() -> applyFilter(resolvedLutPath));
     }
 
+    public void setFilterIntensity(float intensity) {
+        if (isClosed) {
+            return;
+        }
+        float resolvedIntensity = Math.max(0.0F, Math.min(1.0F, intensity));
+        renderHandler.post(() -> applyFilterIntensity(resolvedIntensity));
+    }
+
     public void captureFrame(CaptureCallback callback) {
         if (callback == null) {
             throw new IllegalArgumentException("callback must not be null");
@@ -197,6 +206,7 @@ public final class RenderEngine implements Closeable {
         captureHeight = renderHeight;
         setImageParams(imageParams);
         applyFilter(lutPath);
+        applyFilterIntensity(filterIntensity);
         return true;
     }
 
@@ -257,6 +267,15 @@ public final class RenderEngine implements Closeable {
         if (!uploaded) {
             nativeSetLutTexture(nativeHandle, null);
         }
+        requestRenderOnRenderThread();
+    }
+
+    private void applyFilterIntensity(float intensity) {
+        filterIntensity = intensity;
+        if (nativeHandle == 0L) {
+            return;
+        }
+        nativeSetFilterIntensity(nativeHandle, intensity);
         requestRenderOnRenderThread();
     }
 
@@ -378,6 +397,8 @@ public final class RenderEngine implements Closeable {
             float vignette);
 
     private static native boolean nativeSetLutTexture(long nativeHandle, Bitmap lutBitmap);
+
+    private static native void nativeSetFilterIntensity(long nativeHandle, float intensity);
 
     private static native boolean nativeCaptureFrame(long nativeHandle, Bitmap bitmap);
 

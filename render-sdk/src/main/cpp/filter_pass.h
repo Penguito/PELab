@@ -8,6 +8,7 @@ class FilterPass final {
 public:
     bool Init(int width, int height);
     bool SetLutTexture(const void* pixels, int width, int height, int row_stride);
+    void SetIntensity(float intensity);
     bool IsEnabled() const;
     void Render(GLuint input_texture, GLuint vertex_array) const;
     GLuint GetOutputTexture() const;
@@ -24,10 +25,12 @@ private:
     GLint input_texture_location_ = -1;
     GLint lut_texture_location_ = -1;
     GLint lut_size_location_ = -1;
+    GLint intensity_location_ = -1;
     int width_ = 0;
     int height_ = 0;
     int lut_width_ = 0;
     int lut_height_ = 0;
+    float intensity_ = 1.0F;
 };
 
 }  // namespace pelab

@@ -1,4 +1,4 @@
-package com.penguito.effectlab.render.ui
+package com.penguito.effectlab.render.ui.editor
 
 import android.app.Activity
 import android.content.Intent

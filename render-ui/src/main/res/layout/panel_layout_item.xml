@@ -18,7 +18,7 @@
             android:gravity="center_vertical"
             android:orientation="horizontal"
             android:paddingStart="12dp"
-            android:paddingEnd="60dp">
+            android:paddingEnd="12dp">
 
             <ImageButton
                 android:id="@+id/selection_panel_none"
@@ -60,23 +60,41 @@
             android:layout_height="52dp"
             android:background="@color/panel_content"
             android:paddingStart="16dp"
-            android:paddingEnd="64dp"
+            android:paddingEnd="8dp"
             android:visibility="gone">
 
-            <SeekBar
-                android:id="@+id/selection_panel_seek_bar"
+            <FrameLayout
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                android:progressTint="@color/background_third"
-                android:thumbTint="@color/background_second" />
+                android:layout_marginEnd="48dp">
 
-            <View
-                android:id="@+id/selection_panel_seek_center_mark"
-                android:layout_width="6dp"
-                android:layout_height="6dp"
-                android:layout_gravity="center"
-                android:background="@drawable/panel_indicator_neutral_point"
-                android:visibility="gone" />
+                <SeekBar
+                    android:id="@+id/selection_panel_seek_bar"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:progressTint="@color/background_third"
+                    android:thumbTint="@color/background_second" />
+
+                <View
+                    android:id="@+id/selection_panel_seek_center_mark"
+                    android:layout_width="6dp"
+                    android:layout_height="6dp"
+                    android:layout_gravity="center"
+                    android:background="@drawable/panel_indicator_neutral_point"
+                    android:visibility="gone" />
+
+            </FrameLayout>
+
+            <ImageButton
+                android:id="@+id/selection_panel_compare"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:layout_gravity="center_vertical|end"
+                android:background="@android:color/transparent"
+                android:contentDescription="@string/editor_compare_original"
+                android:padding="12dp"
+                android:src="@drawable/icon_editor_compare"
+                android:tint="@color/background_second" />
 
         </FrameLayout>
 
@@ -128,18 +146,4 @@
             android:textStyle="bold" />
 
     </LinearLayout>
-
-    <ImageButton
-        android:id="@+id/selection_panel_compare"
-        android:layout_width="48dp"
-        android:layout_height="48dp"
-        android:layout_gravity="top|end"
-        android:layout_marginEnd="8dp"
-        android:background="@android:color/transparent"
-        android:contentDescription="@string/editor_compare_original"
-        android:padding="12dp"
-        android:src="@drawable/icon_editor_compare"
-        android:tint="@color/background_second"
-        android:visibility="gone" />
-
 </FrameLayout>

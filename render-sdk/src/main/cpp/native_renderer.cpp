@@ -252,6 +252,10 @@ bool NativeRenderer::SetLutTexture(const void* pixels, int width, int height, in
     return filter_pass_.SetLutTexture(pixels, width, height, row_stride);
 }
 
+void NativeRenderer::SetFilterIntensity(float intensity) {
+    filter_pass_.SetIntensity(intensity);
+}
+
 void NativeRenderer::RenderCameraFrame(const float* texture_matrix) {
 
     // Pass OES Input: OES texture -> normalized target

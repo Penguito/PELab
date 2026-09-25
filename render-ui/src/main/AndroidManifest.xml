@@ -3,15 +3,15 @@
 
     <application>
         <activity
-            android:name="com.penguito.effectlab.render.ui.CaptureActivity"
+            android:name="com.penguito.effectlab.render.ui.capture.CaptureActivity"
             android:exported="false"
             android:screenOrientation="portrait" />
         <activity
-            android:name="com.penguito.effectlab.render.ui.EditorActivity"
+            android:name="com.penguito.effectlab.render.ui.editor.EditorActivity"
             android:exported="false"
             android:screenOrientation="portrait" />
         <activity
-            android:name="com.penguito.effectlab.render.ui.SavePreviewActivity"
+            android:name="com.penguito.effectlab.render.ui.editor.SavePreviewActivity"
             android:exported="false"
             android:screenOrientation="portrait" />
     </application>

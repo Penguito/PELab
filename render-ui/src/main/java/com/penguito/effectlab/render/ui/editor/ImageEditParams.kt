@@ -1,4 +1,4 @@
-package com.penguito.effectlab.render.ui
+package com.penguito.effectlab.render.ui.editor
 
 import com.penguito.effectlab.render.core.material.ImageEditMaterial
 import com.penguito.effectlab.render.sdk.ImageParams

@@ -14,6 +14,15 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
+    <com.penguito.effectlab.render.ui.capture.CaptureGestureView
+        android:id="@+id/capture_gesture"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        app:layout_constraintBottom_toBottomOf="@id/capture_preview"
+        app:layout_constraintEnd_toEndOf="@id/capture_preview"
+        app:layout_constraintStart_toStartOf="@id/capture_preview"
+        app:layout_constraintTop_toTopOf="@id/capture_preview" />
+
     <ImageButton
         android:id="@+id/capture_back"
         android:layout_width="48dp"

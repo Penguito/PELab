@@ -1,4 +1,4 @@
-package com.penguito.effectlab.render.ui
+package com.penguito.effectlab.render.ui.panel
 
 import android.app.Dialog
 import android.graphics.Color
@@ -9,6 +9,7 @@ import android.widget.FrameLayout
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
+import com.penguito.effectlab.render.ui.R
 
 class SelectionPanelBottomSheet : BottomSheetDialogFragment(R.layout.panel_fragment_selection) {
     private var items = emptyList<SelectionPanelItem>()
@@ -20,7 +21,6 @@ class SelectionPanelBottomSheet : BottomSheetDialogFragment(R.layout.panel_fragm
     private var valueRange: IntRange? = null
     private var initialValue = 0
     private var headerVisible = true
-    private var compareVisible = false
     private var panelName: CharSequence = ""
     private var itemSelectedListener: ((SelectionPanelItem?) -> Unit)? = null
     private var categorySelectedListener: ((SelectionPanelCategory) -> Unit)? = null
@@ -47,7 +47,6 @@ class SelectionPanelBottomSheet : BottomSheetDialogFragment(R.layout.panel_fragm
                 onStopped = { compareStoppedListener?.invoke() },
             )
             setHeaderVisible(headerVisible)
-            setCompareVisible(compareVisible)
             setPanelName(panelName)
             setCategories(categories, selectedCategoryId)
             setItems(
@@ -106,12 +105,14 @@ class SelectionPanelBottomSheet : BottomSheetDialogFragment(R.layout.panel_fragm
             ?.setValueRange(minimum, maximum, initialValue)
     }
 
-    fun setHeaderVisible(visible: Boolean) {
-        headerVisible = visible
+    fun hideValueRange() {
+        valueRange = null
+        view?.findViewById<HorizontalSelectionPanel>(R.id.selection_panel)
+            ?.hideValueRange()
     }
 
-    fun setCompareVisible(visible: Boolean) {
-        compareVisible = visible
+    fun setHeaderVisible(visible: Boolean) {
+        headerVisible = visible
     }
 
     fun setPanelName(name: CharSequence) {

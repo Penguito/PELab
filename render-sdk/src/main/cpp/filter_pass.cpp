@@ -29,6 +29,7 @@ precision highp float;
 uniform sampler2D inputTexture;
 uniform sampler2D lutTexture;
 uniform vec2 lutTextureSize;
+uniform float filterIntensity;
 
 in vec2 imageTextureCoordinate;
 out vec4 outputColor;
@@ -57,8 +58,9 @@ void main() {
 
     vec3 lowerColor = texture(lutTexture, lowerCoordinate).rgb;
     vec3 upperColor = texture(lutTexture, upperCoordinate).rgb;
+    vec3 filterColor = mix(lowerColor, upperColor, fract(blueIndex));
     outputColor = vec4(
-            mix(lowerColor, upperColor, fract(blueIndex)),
+            mix(color.rgb, filterColor, filterIntensity),
             color.a);
 }
 )";
@@ -122,8 +124,12 @@ bool FilterPass::SetLutTexture(
     return true;
 }
 
+void FilterPass::SetIntensity(float intensity) {
+    intensity_ = intensity;
+}
+
 bool FilterPass::IsEnabled() const {
-    return lut_texture_ != 0;
+    return lut_texture_ != 0 && intensity_ > 0.0F;
 }
 
 void FilterPass::Render(GLuint input_texture, GLuint vertex_array) const {
@@ -147,6 +153,7 @@ void FilterPass::Render(GLuint input_texture, GLuint vertex_array) const {
             lut_size_location_,
             static_cast<GLfloat>(lut_width_),
             static_cast<GLfloat>(lut_height_));
+    glUniform1f(intensity_location_, intensity_);
 
     // render input texture to filter target
     glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
@@ -222,6 +229,8 @@ bool FilterPass::CreateFilterProgram() {
             glGetUniformLocation(filter_program_, "lutTexture");
     lut_size_location_ =
             glGetUniformLocation(filter_program_, "lutTextureSize");
+    intensity_location_ =
+            glGetUniformLocation(filter_program_, "filterIntensity");
     return true;
 }
 
@@ -246,10 +255,12 @@ void FilterPass::Release() {
     input_texture_location_ = -1;
     lut_texture_location_ = -1;
     lut_size_location_ = -1;
+    intensity_location_ = -1;
     width_ = 0;
     height_ = 0;
     lut_width_ = 0;
     lut_height_ = 0;
+    intensity_ = 1.0F;
 }
 
 }  // namespace pelab

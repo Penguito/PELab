@@ -1,4 +1,4 @@
-package com.penguito.effectlab.render.ui
+package com.penguito.effectlab.render.ui.capture
 
 import android.content.Context
 import android.content.Intent
@@ -25,6 +25,12 @@ import com.penguito.effectlab.render.core.permission.CameraPermissionGate
 import com.penguito.effectlab.render.sdk.PreviewResolution
 import com.penguito.effectlab.render.sdk.RenderEngine
 import com.penguito.effectlab.render.sdk.RenderMode
+import com.penguito.effectlab.render.ui.editor.EditorActivity
+import com.penguito.effectlab.render.ui.editor.ImageSource
+import com.penguito.effectlab.render.ui.R
+import com.penguito.effectlab.render.ui.panel.SelectionPanelBottomSheet
+import com.penguito.effectlab.render.ui.panel.SelectionPanelIcon
+import com.penguito.effectlab.render.ui.panel.SelectionPanelItem
 import java.io.File
 import java.io.IOException
 
@@ -35,6 +41,7 @@ class CaptureActivity : FragmentActivity(), SurfaceHolder.Callback, Camera2Liste
     private val renderEngine by lazy { RenderEngine() }
 
     private var previewView: SurfaceView? = null
+    private var gestureView: CaptureGestureView? = null
     private var lifecycleStatus: TextView? = null
     private var debugInfo: TextView? = null
     private var filterButton: ImageButton? = null
@@ -43,6 +50,8 @@ class CaptureActivity : FragmentActivity(), SurfaceHolder.Callback, Camera2Liste
     private var outputSurface: Surface? = null
     private var cameraConfiguration: CameraConfiguration? = null
     private var selectedFilterId: String? = null
+    private var filterIntensity = MAX_INTENSITY
+    private var zoomRatio = Camera2Manager.MIN_ZOOM_RATIO
     private var filterIconPadding = 0
     private var isCaptureResumed = false
 
@@ -58,6 +67,11 @@ class CaptureActivity : FragmentActivity(), SurfaceHolder.Callback, Camera2Liste
         previewView = findViewById<SurfaceView>(R.id.capture_preview).also {
             it.holder.addCallback(this)
         }
+        gestureView = findViewById<CaptureGestureView>(R.id.capture_gesture).also {
+            it.setOnScaleListener(::updateZoomRatio)
+            it.setOnFocusListener(cameraManager::focusAt)
+            it.setOnExposureChangedListener(cameraManager::setExposureCompensation)
+        }
         debugInfo = findViewById(R.id.capture_debug_info)
         renderEngine.setDebugInfoListener(this)
         filterButton = findViewById<ImageButton>(R.id.capture_filter_button).also {
@@ -65,13 +79,25 @@ class CaptureActivity : FragmentActivity(), SurfaceHolder.Callback, Camera2Liste
         }
         findViewById<ImageButton>(R.id.capture_back).setOnClickListener { finish() }
         switchCameraButton = findViewById<ImageButton>(R.id.capture_switch_camera).also {
-            it.setOnClickListener { cameraManager.switchCamera() }
+            it.setOnClickListener {
+                zoomRatio = Camera2Manager.MIN_ZOOM_RATIO
+                gestureView?.reset()
+                cameraManager.switchCamera()
+            }
         }
         captureButton = findViewById<ImageButton>(R.id.capture_photo).also {
             it.setOnClickListener { captureImage() }
         }
         setupFilterPanel()
         setupAlgorithmPanel()
+    }
+
+    private fun updateZoomRatio(scaleFactor: Float) {
+        zoomRatio = (zoomRatio * scaleFactor).coerceIn(
+            Camera2Manager.MIN_ZOOM_RATIO,
+            Camera2Manager.MAX_ZOOM_RATIO,
+        )
+        cameraManager.setZoomRatio(zoomRatio)
     }
 
     override fun onResume() {
@@ -136,6 +162,7 @@ class CaptureActivity : FragmentActivity(), SurfaceHolder.Callback, Camera2Liste
 
     private fun pauseCapture() {
         Log.d(LOG_TAG, "Capture lifecycle paused")
+        gestureView?.hideControls()
         cameraManager.stop()
         renderEngine.stop()
         // adjust buttons
@@ -214,13 +241,19 @@ class CaptureActivity : FragmentActivity(), SurfaceHolder.Callback, Camera2Liste
             )
         }
         filterButton?.setOnClickListener {
-            SelectionPanelBottomSheet().apply {
+            val bottomSheet = SelectionPanelBottomSheet().apply {
                 setPanelName(this@CaptureActivity.getString(R.string.capture_filter))
-                setOnItemSelectedListener { item ->
-                    selectedFilterId = item?.id
-                    val filter = item?.let { filtersById[it.id] }
-                    renderEngine.setFilter(filter?.rootPath)
-                    showFilterIcon(filter?.iconPath)
+                setOnCompareListener(
+                    onStarted = { renderEngine.setFilterIntensity(0F) },
+                    onStopped = {
+                        renderEngine.setFilterIntensity(
+                            filterIntensity / MAX_INTENSITY.toFloat(),
+                        )
+                    },
+                )
+                setOnValueChangedListener {
+                    filterIntensity = it
+                    renderEngine.setFilterIntensity(it / MAX_INTENSITY.toFloat())
                 }
                 setItems(
                     items = filterItems,
@@ -228,7 +261,36 @@ class CaptureActivity : FragmentActivity(), SurfaceHolder.Callback, Camera2Liste
                     showNoneButton = true,
                     selectedItemId = selectedFilterId,
                 )
-            }.show(supportFragmentManager, SelectionPanelBottomSheet::class.java.simpleName)
+                if (selectedFilterId != null) {
+                    setValueRange(
+                        MIN_INTENSITY,
+                        MAX_INTENSITY,
+                        filterIntensity,
+                    )
+                }
+            }
+            bottomSheet.setOnItemSelectedListener { item ->
+                if (item != null && item.id != selectedFilterId) {
+                    filterIntensity = MAX_INTENSITY
+                }
+                selectedFilterId = item?.id
+                val filter = item?.let { filtersById[it.id] }
+                renderEngine.setFilter(filter?.rootPath)
+                showFilterIcon(filter?.iconPath)
+                if (filter == null) {
+                    bottomSheet.hideValueRange()
+                } else {
+                    bottomSheet.setValueRange(
+                        MIN_INTENSITY,
+                        MAX_INTENSITY,
+                        filterIntensity,
+                    )
+                    renderEngine.setFilterIntensity(
+                        filterIntensity / MAX_INTENSITY.toFloat(),
+                    )
+                }
+            }
+            bottomSheet.show(supportFragmentManager, SelectionPanelBottomSheet::class.java.simpleName)
         }
     }
 
@@ -323,6 +385,8 @@ class CaptureActivity : FragmentActivity(), SurfaceHolder.Callback, Camera2Liste
     companion object {
         private const val LOG_TAG = "PELabCapture"
         private const val CAPTURE_FILE_NAME = "captured_image.jpg"
+        private const val MIN_INTENSITY = 0
+        private const val MAX_INTENSITY = 100
 
         fun createIntent(context: Context): Intent = Intent(context, CaptureActivity::class.java)
     }
