@@ -35,6 +35,7 @@ public:
             float grain,
             float vignette);
     bool SetLutTexture(const void* pixels, int width, int height, int row_stride);
+    void SetFilterIntensity(float intensity);
     void RenderCameraFrame(const float* texture_matrix);
     void RenderBitmap();
     bool CaptureFrame(void* pixels, int row_stride) const;

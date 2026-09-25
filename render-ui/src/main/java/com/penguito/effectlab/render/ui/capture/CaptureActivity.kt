@@ -50,6 +50,7 @@ class CaptureActivity : FragmentActivity(), SurfaceHolder.Callback, Camera2Liste
     private var outputSurface: Surface? = null
     private var cameraConfiguration: CameraConfiguration? = null
     private var selectedFilterId: String? = null
+    private var filterIntensity = MAX_INTENSITY
     private var zoomRatio = Camera2Manager.MIN_ZOOM_RATIO
     private var filterIconPadding = 0
     private var isCaptureResumed = false
@@ -240,13 +241,19 @@ class CaptureActivity : FragmentActivity(), SurfaceHolder.Callback, Camera2Liste
             )
         }
         filterButton?.setOnClickListener {
-            SelectionPanelBottomSheet().apply {
+            val bottomSheet = SelectionPanelBottomSheet().apply {
                 setPanelName(this@CaptureActivity.getString(R.string.capture_filter))
-                setOnItemSelectedListener { item ->
-                    selectedFilterId = item?.id
-                    val filter = item?.let { filtersById[it.id] }
-                    renderEngine.setFilter(filter?.rootPath)
-                    showFilterIcon(filter?.iconPath)
+                setOnCompareListener(
+                    onStarted = { renderEngine.setFilterIntensity(0F) },
+                    onStopped = {
+                        renderEngine.setFilterIntensity(
+                            filterIntensity / MAX_INTENSITY.toFloat(),
+                        )
+                    },
+                )
+                setOnValueChangedListener {
+                    filterIntensity = it
+                    renderEngine.setFilterIntensity(it / MAX_INTENSITY.toFloat())
                 }
                 setItems(
                     items = filterItems,
@@ -254,7 +261,36 @@ class CaptureActivity : FragmentActivity(), SurfaceHolder.Callback, Camera2Liste
                     showNoneButton = true,
                     selectedItemId = selectedFilterId,
                 )
-            }.show(supportFragmentManager, SelectionPanelBottomSheet::class.java.simpleName)
+                if (selectedFilterId != null) {
+                    setValueRange(
+                        MIN_INTENSITY,
+                        MAX_INTENSITY,
+                        filterIntensity,
+                    )
+                }
+            }
+            bottomSheet.setOnItemSelectedListener { item ->
+                if (item != null && item.id != selectedFilterId) {
+                    filterIntensity = MAX_INTENSITY
+                }
+                selectedFilterId = item?.id
+                val filter = item?.let { filtersById[it.id] }
+                renderEngine.setFilter(filter?.rootPath)
+                showFilterIcon(filter?.iconPath)
+                if (filter == null) {
+                    bottomSheet.hideValueRange()
+                } else {
+                    bottomSheet.setValueRange(
+                        MIN_INTENSITY,
+                        MAX_INTENSITY,
+                        filterIntensity,
+                    )
+                    renderEngine.setFilterIntensity(
+                        filterIntensity / MAX_INTENSITY.toFloat(),
+                    )
+                }
+            }
+            bottomSheet.show(supportFragmentManager, SelectionPanelBottomSheet::class.java.simpleName)
         }
     }
 
@@ -349,6 +385,8 @@ class CaptureActivity : FragmentActivity(), SurfaceHolder.Callback, Camera2Liste
     companion object {
         private const val LOG_TAG = "PELabCapture"
         private const val CAPTURE_FILE_NAME = "captured_image.jpg"
+        private const val MIN_INTENSITY = 0
+        private const val MAX_INTENSITY = 100
 
         fun createIntent(context: Context): Intent = Intent(context, CaptureActivity::class.java)
     }

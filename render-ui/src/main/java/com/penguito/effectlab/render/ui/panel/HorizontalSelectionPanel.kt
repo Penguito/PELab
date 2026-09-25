@@ -222,10 +222,6 @@ class HorizontalSelectionPanel @JvmOverloads constructor(
         valueChangedListener = listener
     }
 
-    fun setCompareVisible(visible: Boolean) {
-        compareButton.visibility = if (visible) VISIBLE else GONE
-    }
-
     fun setOnCompareListener(
         onStarted: () -> Unit,
         onStopped: () -> Unit,

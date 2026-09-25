@@ -48,6 +48,7 @@ class EditorActivity : FragmentActivity(), SurfaceHolder.Callback, RenderEngine.
     private var imageParams = ImageParams.defaults()
     private var selectedFilterId: String? = null
     private var selectedFilterRootPath: String? = null
+    private var filterIntensity = MAX_INTENSITY
     private val originRatio by lazy {
         val options = BitmapFactory.Options().apply { inJustDecodeBounds = true }
         BitmapFactory.decodeFile(imageIntentData.imagePath, options)
@@ -241,7 +242,6 @@ class EditorActivity : FragmentActivity(), SurfaceHolder.Callback, RenderEngine.
         }
         val bottomSheet = SelectionPanelBottomSheet().apply {
             setHeaderVisible(false)
-            setCompareVisible(true)
             setPanelName(panelName)
             setOnCompareListener(
                 onStarted = {
@@ -307,17 +307,19 @@ class EditorActivity : FragmentActivity(), SurfaceHolder.Callback, RenderEngine.
                 icon = SelectionPanelIcon.FilePath(it.iconPath),
             )
         }
-        SelectionPanelBottomSheet().apply {
-            setCompareVisible(true)
+        val bottomSheet = SelectionPanelBottomSheet().apply {
             setPanelName(this@EditorActivity.getString(R.string.editor_filter))
             setOnCompareListener(
-                onStarted = { renderEngine.setFilter(null) },
-                onStopped = { renderEngine.setFilter(selectedFilterRootPath) },
+                onStarted = { renderEngine.setFilterIntensity(0F) },
+                onStopped = {
+                    renderEngine.setFilterIntensity(
+                        filterIntensity / MAX_INTENSITY.toFloat(),
+                    )
+                },
             )
-            setOnItemSelectedListener { item ->
-                selectedFilterId = item?.id
-                selectedFilterRootPath = item?.let { filtersById[it.id]?.rootPath }
-                renderEngine.setFilter(selectedFilterRootPath)
+            setOnValueChangedListener {
+                filterIntensity = it
+                renderEngine.setFilterIntensity(it / MAX_INTENSITY.toFloat())
             }
             setItems(
                 items = filterItems,
@@ -325,7 +327,35 @@ class EditorActivity : FragmentActivity(), SurfaceHolder.Callback, RenderEngine.
                 showNoneButton = true,
                 selectedItemId = selectedFilterId,
             )
-        }.show(supportFragmentManager, SelectionPanelBottomSheet::class.java.simpleName)
+            if (selectedFilterId != null) {
+                setValueRange(
+                    MIN_INTENSITY,
+                    MAX_INTENSITY,
+                    filterIntensity,
+                )
+            }
+        }
+        bottomSheet.setOnItemSelectedListener { item ->
+            if (item != null && item.id != selectedFilterId) {
+                filterIntensity = MAX_INTENSITY
+            }
+            selectedFilterId = item?.id
+            selectedFilterRootPath = item?.let { filtersById[it.id]?.rootPath }
+            renderEngine.setFilter(selectedFilterRootPath)
+            if (item == null) {
+                bottomSheet.hideValueRange()
+            } else {
+                bottomSheet.setValueRange(
+                    MIN_INTENSITY,
+                    MAX_INTENSITY,
+                    filterIntensity,
+                )
+                renderEngine.setFilterIntensity(
+                    filterIntensity / MAX_INTENSITY.toFloat(),
+                )
+            }
+        }
+        bottomSheet.show(supportFragmentManager, SelectionPanelBottomSheet::class.java.simpleName)
     }
 
     private fun materialKey(materialListPath: String, material: ImageEditMaterial): String {
@@ -430,6 +460,9 @@ class EditorActivity : FragmentActivity(), SurfaceHolder.Callback, RenderEngine.
     }
 
     companion object {
+        private const val MIN_INTENSITY = 0
+        private const val MAX_INTENSITY = 100
+
         fun createIntent(
             context: Context,
             imageSource: ImageSource,
